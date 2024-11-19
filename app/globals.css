@@ -2,26 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffff;
+    --background-2: #ffffff;
+    --foreground: #021e57;
+    --card: #fff;
+    --card-foreground: #021e57;
+    --popover: #f1f1f1;
+    --popover-foreground: #021e57;
+    --primary: #021e57;
+    --primary-foreground: #f1f1f1;
+    --secondary: #f1f1f1;
+    --secondary-foreground: #021e57;
+    --muted: #e5e5e5;
+    --muted-foreground: #737373;
+    --accent: #e5e5e5;
+    --accent-foreground: #021e57;
+    --destructive: #d42b2b;
+    --destructive-foreground: #f1f1f1;
+    --border: #e5e5e5;
+    --input: #e5e5e5;
+    --ring: #021e57;
+    --chart-1: #e23b3b;
+    --chart-2: #3a9a73;
+    --chart-3: #365b78;
+    --chart-4: #e5bb23;
+    --chart-5: #f99a2f;
+    --chart-6: #19b159;
+    --radius: 0.4rem;
+    --sidebar-background: #fff;
+    --sidebar-foreground: #021e57;
+    --sidebar-primary: #021e57;
+    --sidebar-primary-foreground: #f1f1f1;
+    --sidebar-accent: #e5e5e5;
+    --sidebar-accent-foreground: #021e57;
+    --sidebar-border: #e5e5e5;
+    --sidebar-ring: #0082d4;
+    --scrollbar: #1a263a;
+  }
+  .dark {
+    --background: #142852;
+    --background-2: #0e1f41;
+    --foreground: #f1f1f1;
+    --card: #04183c;
+    --card-foreground: #f1f1f1;
+    --popover: #021e57;
+    --popover-foreground: #f1f1f1;
+    --primary: #f1f1f1;
+    --primary-foreground: #021e57;
+    --secondary: #c7bcbc;
+    --secondary-foreground: #f1f1f1;
+    --muted: #d4d4d4;
+    --muted-foreground: #a2a2a2;
+    --accent: #d4d4d4;
+    --accent-foreground: #f1f1f1;
+    --destructive: #993131;
+    --destructive-foreground: #f1f1f1;
+    --border: #d6cfcf;
+    --input: #262626;
+    --ring: #d4d4d4;
+    --chart-1: #3384d4;
+    --chart-2: #409a88;
+    --chart-3: #d68a33;
+    --chart-4: #a34fe6;
+    --chart-5: #d94682;
+    --chart-6: #e8e7e6;
+    --sidebar-background: #021e57;
+    --sidebar-foreground: #f1f1f1;
+    --sidebar-primary: #2982d4;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #d3d1d1;
+    --sidebar-accent-foreground: #f1f1f1;
+    --sidebar-border: #c1bdbd;
+    --sidebar-ring: #0082d4;
+    --scrollbar: #021e57;
   }
 }
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
