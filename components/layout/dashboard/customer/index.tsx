@@ -1,4 +1,4 @@
-import { Users, Star, UserCheck, History, TrendingUp, UserPlus, Clock, Repeat, DollarSign, ThumbsUp, HeartHandshake, UserMinus, Coffee, Users2, Medal, Wallet } from "lucide-react"
+import { Users, Star, UserCheck, History, TrendingUp, UserPlus, Clock, Repeat, ThumbsUp, UserMinus, Medal, Wallet } from "lucide-react"
 import { Section1 } from "../Section1"
 import { Section2 } from "./Section2"
 
