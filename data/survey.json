@@ -1,20 +1,4 @@
-"use client"
-
-import { useEffect, useState } from "react"
-import { SurveyCreatorComponent, SurveyCreator } from "survey-creator-react"
-import "survey-core/defaultV2.min.css"
-import "survey-creator-core/survey-creator-core.min.css"
-
-const creatorOptions = {
-  showLogicTab: true,
-  isAutoSave: true, // Activer l'enregistrement automatique
-  showDefaultLanguageInPreviewTab: true,
-  showTranslationTab: true,
-  showThemeTab: true,
-  showHeaderInEmptySurvey: true
-}
-
-const defaultSurveyJson = {
+{
     "title": "Satisfaction client",
     "description": "L'enquête de satisfaction client vise à recueillir des commentaires précieux de nos clients pour améliorer nos produits et services. ",
     "logoPosition": "right",
@@ -131,34 +115,3 @@ const defaultSurveyJson = {
     "pageNextText": "Suivant",
     "showTimerPanelMode": "page"
    }
-
-const SurveyCreatorWidget = () => {
-  const [creator, setCreator] = useState<SurveyCreator | null>(null)
-
-  useEffect(() => {
-    // Initialiser le SurveyCreator
-    const surveyCreator = new SurveyCreator(creatorOptions)
-
-    // Charger les données depuis le localStorage ou utiliser une structure par défaut
-    const savedSurvey = localStorage.getItem("survey-json")
-    surveyCreator.text = savedSurvey || JSON.stringify(defaultSurveyJson)
-
-    // Définir la fonction de sauvegarde
-    surveyCreator.saveSurveyFunc = (saveNo: any, callback: any) => {
-      localStorage.setItem("survey-json", surveyCreator.text)
-      callback(saveNo, true) // Informer que la sauvegarde a réussi
-      alert("Enquête enregistrée avec succès !")
-    }
-
-    setCreator(surveyCreator)
-
-    return () => {
-      // Nettoyage si le composant est démonté
-      setCreator(null)
-    }
-  }, [])
-
-  return <>{creator && <SurveyCreatorComponent creator={creator} />}</>
-}
-
-export default SurveyCreatorWidget

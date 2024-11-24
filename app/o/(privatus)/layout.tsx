@@ -9,6 +9,7 @@ import { Header } from "@/components/layout/header"
 import { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import "./layout.css"
+import { SurveyProvider } from "@/contexts/SurveyContext"
 
 // Charger ThemeProvider dynamiquement sans SSR
 const DynamicThemeProvider = dynamic(() => import("next-themes").then((mod) => mod.ThemeProvider), {
@@ -153,22 +154,24 @@ export default function PrivatusLayout({ children, defaultOpen }: PrivatusLayout
 
   return (
     <>
-      <Head>
-        <title>Admin Section</title>
-        <meta name="description" content="Welcome in admin section" />
-      </Head>
-      <DynamicThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        <SidebarProvider defaultOpen={defaultOpen}>
-          <Header />
-          <div className="relative flex w-screen h-[100vh] transition-all pt-14 bg-secondary">
-            <AppSidebar />
-            <main className="relative flex-1 flex flex-col bg-secondary pe-2 pb-3 px-4 overflow-y-auto max-h-[calc(100vh - 600px)]">
-              <CustomBreadcrumb currentPath={pathname} />
-              <div className="mt-14">{children}</div>
-            </main>
-          </div>
-        </SidebarProvider>
-      </DynamicThemeProvider>
+      <SurveyProvider>
+        <Head>
+          <title>Admin Section</title>
+          <meta name="description" content="Welcome in admin section" />
+        </Head>
+        <DynamicThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <SidebarProvider defaultOpen={defaultOpen}>
+            <Header />
+            <div className="relative flex w-screen h-[100vh] transition-all pt-14 bg-secondary">
+              <AppSidebar />
+              <main className="relative flex-1 flex flex-col bg-secondary pe-2 pb-3 px-4 overflow-y-auto max-h-[calc(100vh - 600px)]">
+                <CustomBreadcrumb currentPath={pathname} />
+                <div className="mt-14">{children}</div>
+              </main>
+            </div>
+          </SidebarProvider>
+        </DynamicThemeProvider>
+      </SurveyProvider>
     </>
   )
 }
