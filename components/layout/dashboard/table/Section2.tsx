@@ -1,7 +1,7 @@
 import * as React from "react"
-import { TableStatisticsChart } from "@/components/features/dashboard/Table/TableStatisticsChart"
-import { TableOrdersChart } from "@/components/features/dashboard/Table/TableOrdersChart"
-import Overview from "@/components/features/dashboard/Table/Overview"
+import { TableStatisticsChart } from "@/components/features/dashboard/table/TableStatisticsChart"
+import { TableOrdersChart } from "@/components/features/dashboard/table/TableOrdersChart"
+import Overview from "@/components/features/dashboard/table/Overview"
 
 export const Section2 = () => {
   return (

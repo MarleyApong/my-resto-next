@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+body {
+  font-family: "Poppins", sans-serif;
+}
+
 @layer base {
   :root {
     --background: #ffff;
@@ -9,10 +13,10 @@
     --foreground: #021e57;
     --card: #fff;
     --card-foreground: #021e57;
-    --popover: #f1f1f1;
+    --popover: #f3f3fb;
     --popover-foreground: #021e57;
     --primary: #021e57;
-    --primary-foreground: #f1f1f1;
+    --primary-foreground: #f3f3fb;
     --secondary: #f1f1f1;
     --secondary-foreground: #021e57;
     --muted: #e5e5e5;
@@ -20,9 +24,11 @@
     --accent: #e5e5e5;
     --accent-foreground: #021e57;
     --destructive: #d42b2b;
-    --destructive-foreground: #f1f1f1;
-    --border: #e5e5e5;
-    --input: #e5e5e5;
+    --destructive-2: #e77d7d;
+    --destructive-foreground: #f3f3fb;
+    --border: #e8ecfa;
+    --input: #e8ecfa;
+    --close: #9c1313;
     --ring: #021e57;
     --chart-1: #e23b3b;
     --chart-2: #3a9a73;
@@ -34,7 +40,7 @@
     --sidebar-background: #fff;
     --sidebar-foreground: #021e57;
     --sidebar-primary: #021e57;
-    --sidebar-primary-foreground: #f1f1f1;
+    --sidebar-primary-foreground: #f3f3fb;
     --sidebar-accent: #e5e5e5;
     --sidebar-accent-foreground: #021e57;
     --sidebar-border: #e5e5e5;
@@ -44,21 +50,21 @@
   .dark {
     --background: #142852;
     --background-2: #0e1f41;
-    --foreground: #f1f1f1;
+    --foreground: #f3f3fb;
     --card: #04183c;
-    --card-foreground: #f1f1f1;
+    --card-foreground: #f3f3fb;
     --popover: #021e57;
-    --popover-foreground: #f1f1f1;
-    --primary: #f1f1f1;
+    --popover-foreground: #f3f3fb;
+    --primary: #f3f3fb;
     --primary-foreground: #021e57;
     --secondary: #c7bcbc;
-    --secondary-foreground: #f1f1f1;
+    --secondary-foreground: #f3f3fb;
     --muted: #d4d4d4;
     --muted-foreground: #a2a2a2;
     --accent: #d4d4d4;
-    --accent-foreground: #f1f1f1;
+    --accent-foreground: #f3f3fb;
     --destructive: #993131;
-    --destructive-foreground: #f1f1f1;
+    --destructive-foreground: #f3f3fb;
     --border: #d6cfcf;
     --input: #262626;
     --ring: #d4d4d4;
@@ -69,11 +75,11 @@
     --chart-5: #d94682;
     --chart-6: #e8e7e6;
     --sidebar-background: #021e57;
-    --sidebar-foreground: #f1f1f1;
+    --sidebar-foreground: #f3f3fb;
     --sidebar-primary: #2982d4;
     --sidebar-primary-foreground: #ffffff;
     --sidebar-accent: #d3d1d1;
-    --sidebar-accent-foreground: #f1f1f1;
+    --sidebar-accent-foreground: #f3f3fb;
     --sidebar-border: #c1bdbd;
     --sidebar-ring: #0082d4;
     --scrollbar: #021e57;

@@ -10,43 +10,43 @@ export const menuItems: MenuItem[] = [
   },
   {
     title: "Organisations",
-    url: "/organisations",
+    url: "/o/organizations",
     icon: Building,
     subItems: []
   },
   {
     title: "Restaurants",
-    url: "/restaurants",
+    url: "/o/restaurants",
     icon: Utensils,
     subItems: []
   },
   {
     title: "Enquêtes",
-    url: "/surveys",
+    url: "/o/surveys",
     icon: ClipboardList,
     subItems: []
   },
   {
     title: "Produits",
-    url: "/products",
+    url: "/o/products",
     icon: Box,
     subItems: []
   },
   {
     title: "Tables",
-    url: "/tables",
+    url: "/o/tables",
     icon: Layout,
     subItems: []
   },
   {
     title: "Clients",
-    url: "/clients",
+    url: "/o/clients",
     icon: Users,
     subItems: []
   },
   {
     title: "Utilisateurs",
-    url: "/users",
+    url: "/o/users",
     icon: User,
     subItems: []
   }

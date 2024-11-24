@@ -36,7 +36,7 @@ const Dashboard: React.FC = () => {
         </TabsList>
 
         {tabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="mt-12">
+          <TabsContent key={tab.value} value={tab.value} className="">
             {tab.content}
           </TabsContent>
         ))}
