@@ -292,13 +292,34 @@ const Page = () => {
 
           {selectedTable && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-3">
-              <div className="w-full min-h-72 border-none shadow-md rounded-sm overflow-hidden flex items-center justify-center">
-                {qrCode && <img src={qrCode} alt="QR Code" className="w-64 h-64" />}
+              <div className="w-full border-none shadow-md rounded-sm overflow-hidden flex items-center justify-center">
+                {qrCode && <img src={qrCode} alt="QR Code" className="w-100 h-100" />}
               </div>
 
               <div className="space-y-4">
                 <div className="flex flex-col gap-2">
                   <h2 className="text-xl font-bold">Details</h2>
+                  <div className="ml-2 space-y-2">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <p>Table: </p>
+                      <p>{selectedTable.tableNumber}</p>
+                    </div>
+                    <div className="flex items-center">
+                      <p className="text-gray-600">Status: {selectedTable.status}</p>
+                    </div>
+                    <div className="flex items-center">
+                      <p className="text-gray-600">Create at: {selectedTable.createAt}</p>
+                    </div>
+                    <Button size="sm" variant="outline">
+                      <HardDriveDownload/>
+                      <a className="Btn" style={{ textDecoration: "none" }} href={qrCode} download={"Table: " + selectedTable?.tableNumber + ".png"}>
+                        Télécharger
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-xl font-bold">Affiliation</h2>
                   <div className="ml-2 space-y-2">
                     <div className="flex items-center gap-2">
                       <Building className="w-4 h-4" />
@@ -307,9 +328,6 @@ const Page = () => {
                     <div className="flex items-center gap-2">
                       <Utensils className="w-4 h-4" />
                       <p className="text-gray-600">Restaurant: {selectedTable.restaurant}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-600">Status: {selectedTable.status}</p>
                     </div>
                   </div>
                 </div>

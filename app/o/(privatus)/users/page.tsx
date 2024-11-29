@@ -36,12 +36,13 @@ import { filterOptionOrganization } from "@/data/optionFilter"
 import Level2 from "@/components/features/Level2"
 
 // Type and Validation Schema
-type Restaurant = {
-  name: string
+type User = {
+  firstname: string
+  lastname?: string
   organization: string
-  description: string
-  city: string
-  neighborhood: string
+  restaurant: string
+  role: string
+  env: string
   phone: string
   email: string
   picture: string
@@ -49,12 +50,12 @@ type Restaurant = {
   createAt: string
 }
 
-const restaurantSchema = z.object({
-  name: z.string().min(1, "Restaurant is required"),
+const userSchema = z.object({
+  firstname: z.string().min(1, "Firstname is required"),
   organization: z.string().min(1, "Organization is required"),
-  description: z.string().min(70, "Description must be at least 70 characters").max(170, "Description must not exceed 170 characters"),
-  city: z.string().min(1, "City is required"),
-  neighborhood: z.string().min(1, "Neighborhood is required"),
+  restaurant: z.string().min(1, "Restaurant is required"),
+  role: z.string().min(1, "Role is required"),
+  env: z.string().min(1, "Environnment is required"),
   phone: z.string().regex(/^\d+$/, "Phone must contain only numbers"),
   picture: z.string().optional(),
   status: z.enum(["active", "inactive"]),
@@ -62,13 +63,14 @@ const restaurantSchema = z.object({
 })
 
 // Dummy Data
-const initialRestaurants: Restaurant[] = [
+const initialRestaurants: User[] = [
   {
-    name: "Restaurant 1",
+    firstname: "Aqwe",
+    lastname: "Ivan",
     organization: "Organization 1",
-    description: "Organisation dédiée à l'excellence culinaire, réunissant des restaurants engagés à offrir des repas de qualité, un accueil chaleureux et une expérience unique.",
-    city: "Paris",
-    neighborhood: "Montmartre",
+    restaurant: "Resto 1",
+    role: "Admin",
+    env: "internal",
     phone: "123456789",
     email: "test@yahoo.fr",
     picture: "/assets/img/avatar/product.jpg",
@@ -76,17 +78,18 @@ const initialRestaurants: Restaurant[] = [
     createAt: "2024-12-22"
   },
   {
-    name: "Restaurant 2",
+    firstname: "Aqwe",
+    lastname: "Ivan",
     organization: "Organization 1",
-    description: "Notre organisation regroupe des restaurants passionnés, offrant des plats savoureux, un service exceptionnel et des expériences culinaires mémorables pour tous.",
-    city: "Lyon",
-    neighborhood: "Bellecour",
-    phone: "987654321",
-    email: "resto@gmail.com",
+    restaurant: "Resto 1",
+    role: "Admin",
+    env: "internal",
+    phone: "123456789",
+    email: "test@yahoo.fr",
     picture: "/assets/img/avatar/product.jpg",
-    status: "inactive",
+    status: "active",
     createAt: "2024-12-22"
-  }
+  },
 ]
 
 const organizations = [
@@ -95,12 +98,18 @@ const organizations = [
   { id: "org3", name: "Organization C" }
 ]
 
+const restaurants = [
+  { id: "resto1", name: "Restaurant A" },
+  { id: "resto2", name: "Restaurant B" },
+  { id: "resto3", name: "Restaurant C" }
+]
+
 const Page = () => {
-  const [isEditing, setIsEditing] = useState<Restaurant | null>(null)
+  const [isEditing, setIsEditing] = useState<User | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [selectedRestaurant, setSelectedOrganization] = useState<Restaurant | null>(null)
+  const [selectedRestaurant, setSelectedRestaurant] = useState<User | null>(null)
   const [filterState, setFilterState] = useState<Params>({
     page: 0,
     size: 20,
@@ -112,7 +121,7 @@ const Page = () => {
     status: "*"
   })
   const [restaurants, setRestaurants] = useState<{
-    data: Restaurant[]
+    data: User[]
     recordsFiltered: number
     recordsTotal: number
   }>({
@@ -150,7 +159,9 @@ const Page = () => {
     }))
   }
 
-  const handleAddOrEdit = (data: Restaurant) => {
+  console.log("filterState", filterState)
+
+  const handleAddOrEdit = (data: User) => {
     if (isEditing) {
       setRestaurants((prevState) => ({
         ...prevState,
@@ -167,9 +178,12 @@ const Page = () => {
   }
 
   const columns = [
-    { accessorKey: "name", header: "Restaurant" },
+    { accessorKey: "firstname", header: "Firstname" },
+    { accessorKey: "lastname", header: "Lastname" },
     { accessorKey: "organization", header: "Organization" },
-    { accessorKey: "city", header: "City" },
+    { accessorKey: "restaurant", header: "Restaurant" },
+    { accessorKey: "role", header: "Role" },
+    { accessorKey: "env", header: "Env" },
     { accessorKey: "phone", header: "Phone" },
     { accessorKey: "email", header: "Email" },
     {
@@ -193,7 +207,7 @@ const Page = () => {
               variant="default"
               size="icon"
               onClick={() => {
-                setSelectedOrganization(org)
+                setSelectedRestaurant(org)
                 setIsViewDialogOpen(true)
               }}
             >
@@ -214,7 +228,7 @@ const Page = () => {
               variant="destructive"
               size="icon"
               onClick={() => {
-                setSelectedOrganization(org)
+                setSelectedRestaurant(org)
                 setIsDeleteDialogOpen(true)
               }}
             >
@@ -228,10 +242,10 @@ const Page = () => {
 
   return (
     <div>
-      <Level2 title="Restaurants">
+      <Level2 title="Users">
         <Button variant="default" size="sm" onClick={() => setIsAddOrEditDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          New Restaurant
+          New User
         </Button>
       </Level2>
 
@@ -251,8 +265,8 @@ const Page = () => {
       <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
         <DialogContent className="max-w-4xl p-0">
           <DialogHeader className="shadow-md px-3 py-2">
-            <DialogTitle className="font-bold">{isEditing ? "Edit Restaurant" : "Add New Restaurant"}</DialogTitle>
-            <DialogDescription>{isEditing ? "Update the details of the selected restaurant." : "Fill in the details to create a new restaurant."}</DialogDescription>
+            <DialogTitle className="font-bold">{isEditing ? "Edit User" : "Add New User"}</DialogTitle>
+            <DialogDescription>{isEditing ? "Update the details of the selected user." : "Fill in the details to create a new user."}</DialogDescription>
           </DialogHeader>
           <AddEditForm defaultValues={isEditing} onSubmit={handleAddOrEdit} onCancel={() => setIsAddOrEditDialogOpen(false)} />
         </DialogContent>
@@ -262,19 +276,19 @@ const Page = () => {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-4xl p-0">
           <DialogHeader className="shadow-md px-3 py-4">
-            <DialogTitle className="font-bold">Restaurant Details: {selectedRestaurant?.name}</DialogTitle>
+            <DialogTitle className="font-bold">User Details: {selectedRestaurant?.firstname + " " + selectedRestaurant?.lastname}</DialogTitle>
           </DialogHeader>
 
           {selectedRestaurant && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-3">
               <div className="w-full min-h-72 border-none shadow-md rounded-sm overflow-hidden">
-                {selectedRestaurant.picture && <img src={selectedRestaurant.picture} alt="Restaurant" className="w-full h-full object-cover" />}
+                {selectedRestaurant.picture && <img src={selectedRestaurant.picture} alt="User" className="w-full h-full object-cover" />}
               </div>
 
               <div className="space-y-4">
                 <h2 className="text-xl font-bold">Description</h2>
 
-                <p className="text-sm text-gray-500 ml-2">{selectedRestaurant.description}</p>
+                {/* <p className="text-sm text-gray-500 ml-2">{selectedRestaurant.description}</p> */}
 
                 {/* Additional Information */}
                 <div className="flex flex-col gap-2 mt-4">
@@ -289,11 +303,6 @@ const Page = () => {
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4" />
                       <p className="text-gray-600 text-sm">{selectedRestaurant.email}</p>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <TowerControl className="w-4 h-4" />
-                      <p className="text-gray-600 text-sm">{selectedRestaurant.city}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -343,7 +352,7 @@ const Page = () => {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
           </DialogHeader>
-          <DialogDescription>Are you sure you want to delete this restaurant?</DialogDescription>
+          <DialogDescription>Are you sure you want to delete this user?</DialogDescription>
           <DialogFooter>
             <Button size="sm" variant="destructive" onClick={handleDelete}>
               <SaveOff className="w-4 h-4" />
@@ -361,32 +370,31 @@ const Page = () => {
 }
 
 // Add/Edit Form
-const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Restaurant | null; onSubmit: (data: Restaurant) => void; onCancel: () => void }) => {
+const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: User | null; onSubmit: (data: User) => void; onCancel: () => void }) => {
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     formState: { errors }
-  } = useForm<Restaurant>({
+  } = useForm<User>({
     defaultValues: defaultValues || {
-      name: "",
+      firstname: "",
+      lastname: "",
       organization: "",
-      description: "",
-      city: "",
-      neighborhood: "",
+      restaurant: "",
+      role: "",
+      env: "",
       phone: "",
       email: "",
       picture: "",
       status: "active"
     },
-    resolver: zodResolver(restaurantSchema)
+    resolver: zodResolver(userSchema)
   })
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pictureUrl = watch("picture")
-  const description = watch("description", "")
-  const remainingChars = 170 - description.length
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -424,19 +432,13 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Re
           {errors.organization && <p className="text-red-600 text-sm">{errors.organization.message}</p>}
         </div>
         <div className="sm:col-span-2 lg:col-span-2">
-          <Label htmlFor="name">Name</Label>
-          <Input id="name" {...register("name")} placeholder="Restaurant Name" />
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          <Label htmlFor="firstname">Firstname</Label>
+          <Input id="firstname" {...register("firstname")} placeholder="Firstname" />
+          {errors.firstname && <p className="text-red-600 text-sm">{errors.firstname.message}</p>}
         </div>
-        <div className="sm:col-span-1 lg:col-span-1">
-          <Label htmlFor="city">City</Label>
-          <Input id="city" {...register("city")} placeholder="City" />
-          {errors.city && <p className="text-red-600 text-sm">{errors.city.message}</p>}
-        </div>
-        <div>
-          <Label htmlFor="neighborhood">Neighborhood</Label>
-          <Input id="neighborhood" {...register("neighborhood")} placeholder="Neighborhood" />
-          {errors.neighborhood && <p className="text-red-600 text-sm">{errors.neighborhood.message}</p>}
+        <div className="sm:col-span-2 lg:col-span-2">
+          <Label htmlFor="lastname">Lastname</Label>
+          <Input id="lastname" {...register("firstname")} placeholder="Lastname" />
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
@@ -459,12 +461,6 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Re
           <Label htmlFor="email">Email</Label>
           <Input id="email" {...register("email")} placeholder="Email" />
           {errors.email && <p className="text-red-600 text-sm">{errors.email.message}</p>}
-        </div>
-        <div className="sm:col-span-2 lg:col-span-3">
-          <Label htmlFor="description">Description</Label>
-          <Textarea id="description" maxLength={170} {...register("description")} placeholder="Description" className="resize-none" rows={4} />
-          <p className="text-xs text-gray-500">{remainingChars} characters remaining</p>
-          {errors.description && <p className="text-red-600 text-sm">{errors.description.message}</p>}
         </div>
       </div>
 

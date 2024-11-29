@@ -1,7 +1,7 @@
 import { SubItem } from "@/types/sidebarTypes"
 import { SidebarMenuSub, SidebarMenuSubItem, SidebarMenuButton } from "../../ui/sidebar"
 import Link from "next/link"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 
 interface SidebarSubItemsProps {
   items: SubItem[]
@@ -19,11 +19,9 @@ export const SidebarSubItems = ({ items }: SidebarSubItemsProps) => {
         return (
           <SidebarMenuSubItem key={subItem.title}>
             <SidebarMenuButton asChild>
-              <Link href={subItem.url} passHref>
-                <a className={`flex items-center font-semibold gap-2 p-2 rounded ${activeClass}`}>
+              <Link href={subItem.url} className={`flex items-center font-semibold gap-2 p-2 rounded ${activeClass}`} passHref>
                   {subItem.icon && <subItem.icon size={14} />}
                   {subItem.title}
-                </a>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuSubItem>

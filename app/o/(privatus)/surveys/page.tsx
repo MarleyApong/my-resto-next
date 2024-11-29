@@ -203,11 +203,7 @@ const Page = () => {
               <Edit className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="printemps"
-              size="icon"
-              onClick={() => router.push("/o/surveys/design/1254")}
-            >
+            <Button variant="printemps" size="icon" onClick={() => router.push("/o/surveys/design/1254")}>
               <PencilRuler className="w-4 h-4" />
             </Button>
             <Button
@@ -264,7 +260,6 @@ const Page = () => {
           <DialogHeader className="shadow-md px-3 py-4">
             <DialogTitle className="font-bold">Surveys Details: {selectedSurvey?.name}</DialogTitle>
           </DialogHeader>
-
           {selectedSurvey && <div className=""></div>}
 
           <DialogFooter className="flex gap-1 justify-end p-1 border-t">
