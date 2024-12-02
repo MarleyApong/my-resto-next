@@ -77,7 +77,7 @@ export function DataTable<TData extends object>({
   enableStatus = true,
   enableDateRange = true,
   className = "shadow-md",
-  height = "calc(100vh - 16rem)",
+  height = "calc(100vh - 13rem)",
   rowIdKey,
   bottomActions,
   totalItems,

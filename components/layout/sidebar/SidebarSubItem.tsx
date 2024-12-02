@@ -14,14 +14,14 @@ export const SidebarSubItems = ({ items }: SidebarSubItemsProps) => {
     <SidebarMenuSub>
       {items.map((subItem) => {
         const isSubItemActive = router.pathname === subItem.url
-        const activeClass = isSubItemActive ? "bg-gray-100" : ""
+        const activeClass = isSubItemActive ? "bg-[var(--sidebar-primary)] text-[var(--sidebar-background)]" : ""
 
         return (
           <SidebarMenuSubItem key={subItem.title}>
             <SidebarMenuButton asChild>
-              <Link href={subItem.url} className={`flex items-center font-semibold gap-2 p-2 rounded ${activeClass}`} passHref>
-                  {subItem.icon && <subItem.icon size={14} />}
-                  {subItem.title}
+              <Link href={subItem.url} className={`flex items-center gap-2 p-2 rounded ${activeClass}`} passHref>
+                {subItem.icon && <subItem.icon size={14} />}
+                {subItem.title}
               </Link>
             </SidebarMenuButton>
           </SidebarMenuSubItem>

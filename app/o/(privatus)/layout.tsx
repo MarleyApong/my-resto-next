@@ -162,10 +162,10 @@ export default function PrivatusLayout({ children, defaultOpen }: PrivatusLayout
         <DynamicThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SidebarProvider defaultOpen={defaultOpen}>
             <Header />
-            <div className="relative flex w-screen h-[100vh] transition-all pt-14 bg-secondary">
+            <div className="relative flex w-screen h-[100vh] transition-all pt- bg-secondary">
               <AppSidebar />
-              <main className="relative flex-1 flex flex-col bg-secondary pe-2 pb-3 px-4 overflow-y-auto max-h-[calc(100vh - 600px)]">
-                <CustomBreadcrumb currentPath={pathname} />
+              <main className="relative flex-1 flex flex-col bg-secondary p-2 mt-5 overflow-y-auto max-h-[calc(100vh - 600px)]">
+                {/* <CustomBreadcrumb currentPath={pathname} /> */}
                 <div className="mt-14">{children}</div>
               </main>
             </div>

@@ -95,7 +95,7 @@ const organizations = [
   { id: "org3", name: "Organization C" }
 ]
 
-const Page = () => {
+const Restaurant = () => {
   const [isEditing, setIsEditing] = useState<Restaurant | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
@@ -506,4 +506,4 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Re
   )
 }
 
-export default Page
+export default Restaurant

@@ -8,28 +8,28 @@ body {
 
 @layer base {
   :root {
-    --background: #ffff;
+    --background: #ffffff;
     --background-2: #ffffff;
-    --foreground: #021e57;
-    --card: #fff;
-    --card-foreground: #021e57;
-    --popover: #f3f3fb;
-    --popover-foreground: #021e57;
-    --primary: #021e57;
-    --primary-foreground: #f3f3fb;
+    --foreground: #05347a;
+    --card: #ffffff;
+    --card-foreground: #05347a;
+    --popover: #e5e5e5;
+    --popover-foreground: #05347a;
+    --primary: #05347a;
+    --primary-foreground: #ffffff;
     --secondary: #f1f1f1;
-    --secondary-foreground: #021e57;
+    --secondary-foreground: #05347a;
     --muted: #e5e5e5;
     --muted-foreground: #737373;
-    --accent: #e5e5e5;
-    --accent-foreground: #021e57;
+    --accent: #d1d9e6;
+    --accent-foreground: #05347a;
     --destructive: #d42b2b;
     --destructive-2: #e77d7d;
-    --destructive-foreground: #f3f3fb;
-    --border: #e8ecfa;
+    --destructive-foreground: #ffffff;
+    --border: #cccccc;
     --input: #9da6cb;
     --close: #9c1313;
-    --ring: #011a4d49;
+    --ring: #0082d4;
     --chart-1: #e23b3b;
     --chart-2: #3a9a73;
     --chart-3: #365b78;
@@ -37,13 +37,22 @@ body {
     --chart-5: #f99a2f;
     --chart-6: #19b159;
     --radius: 0.4rem;
-    --sidebar-background: #fff;
-    --sidebar-foreground: #021e57;
-    --sidebar-primary: #021e57;
-    --sidebar-primary-foreground: #f3f3fb;
-    --sidebar-accent: #e5e5e5;
-    --sidebar-accent-foreground: #021e57;
-    --sidebar-border: #e5e5e5;
+    --header-background: #ffffff;
+    --header-foreground: #05347a;
+    --header-primary: #e5e5e5;
+    --header-primary-foreground: #05347a;
+    --header-accent: #d1d9e6;
+    --header-accent-foreground: #05347a;
+    --header-border: #cccccc;
+    --header-ring: #0082d4;
+
+    --sidebar-background: #ffffff;
+    --sidebar-foreground: #05347a;
+    --sidebar-primary: #e5e5e5;
+    --sidebar-primary-foreground: #05347a;
+    --sidebar-accent: #d1d9e6;
+    --sidebar-accent-foreground: #05347a;
+    --sidebar-border: #cccccc;
     --sidebar-ring: #0082d4;
     --scrollbar: #1a263a;
   }

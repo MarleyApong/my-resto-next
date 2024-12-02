@@ -5,6 +5,7 @@ body {
 }
 
 * {
+  
   scrollbar-width: thin; /* Pour Firefox : barre fine */
   scrollbar-color: var(--scrollbar) transparent; /* Couleurs pour Firefox */
 }

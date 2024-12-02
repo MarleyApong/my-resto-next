@@ -15,7 +15,7 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar variant="floating" className="mt-16 ms-2 border-b bg-background rounded-md backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 p-0 h-[calc(100%-73px)] shadow-lg" collapsible="icon">
+    <Sidebar variant="sidebar" className="border-b bg-[var(--sidebar-background)] backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 p-0 shadow-lg" collapsible="icon">
       <SidebarContent>
         {/* Menu principal */}
         <SidebarGroup>

@@ -2,7 +2,7 @@ import React from "react"
 
 interface Level2Props {
   title: string,
-  children: React.ReactNode
+  children?: React.ReactNode
 }
 
 const Level2 = ({title,children}: Level2Props) => {

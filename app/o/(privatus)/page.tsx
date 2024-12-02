@@ -27,7 +27,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="pt-2">
       <Tabs defaultValue={tabs[0].value} className="w-full">
-        <TabsList className="fixed top-16 flex justify-start gap-4 border-b border-gray-200">
+        <TabsList className="fixed top-[3.5rem] flex justify-start gap-4 border-b border-gray-200">
           {tabs.map((tab) => (
             <TabsTrigger key={tab.value} value={tab.value} className="px-4 py-1 text-sm font-medium text-gray-600 hover:text-gray-900">
               {tab.label}

@@ -1,7 +1,7 @@
 import { MenuItem } from "@/types/sidebarTypes"
 import { SidebarSubItems } from "./SidebarSubItem"
 import { SidebarMenuItem, SidebarMenuButton } from "../../ui/sidebar"
-import { Plus, Minus } from "lucide-react"
+import { Plus, Minus, ChevronRight, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -19,7 +19,7 @@ export const SidebarItem = ({ item, isOpen, onToggle }: SidebarItemProps) => {
     item.subItems.some((subItem) => pathname === subItem.url)
 
   const renderNavLink = () => {
-    const activeClass = isActive ? "bg-gray-200" : ""
+    const activeClass = isActive ? "bg-gray-200 text-blue-900" : ""
 
     if (item.url) {
       return (
@@ -28,12 +28,12 @@ export const SidebarItem = ({ item, isOpen, onToggle }: SidebarItemProps) => {
           onClick={() => onToggle(item.title)}
           className={`flex items-center justify-between mb-2 p-2 rounded ${activeClass}`}
         >
-          <div className="flex items-center font-semibold">
+          <div className="flex items-center">
             <item.icon size={20} />
             <span className="ml-2">{item.title}</span>
           </div>
           {item.subItems.length > 0 &&
-            (isOpen ? <Minus size={14} /> : <Plus size={14} />)}
+            (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
         </Link>
       )
     }
@@ -49,7 +49,7 @@ export const SidebarItem = ({ item, isOpen, onToggle }: SidebarItemProps) => {
           <span className="ml-2">{item.title}</span>
         </div>
         {item.subItems.length > 0 &&
-          (isOpen ? <Minus size={14} /> : <Plus size={14} />)}
+          (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
       </button>
     )
   }

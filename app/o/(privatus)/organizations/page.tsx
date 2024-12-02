@@ -63,7 +63,7 @@ const initialOrganizations: Organization[] = [
   }
 ]
 
-const Page = () => {
+const Organization = () => {
   const [isEditing, setIsEditing] = useState<Organization | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
@@ -442,4 +442,4 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Or
   )
 }
 
-export default Page
+export default Organization

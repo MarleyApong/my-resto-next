@@ -92,7 +92,7 @@ const restaurants = [
   { id: "resto3", name: "Restaurant C" }
 ]
 
-const Page = () => {
+const Table = () => {
   const [isEditing, setIsEditing] = useState<Table | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
@@ -506,4 +506,4 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Ta
   )
 }
 
-export default Page
+export default Table

@@ -90,7 +90,7 @@ const categories = [
   { id: "resto3", name: "Chef’s Specials" }
 ]
 
-const Page = () => {
+const Product = () => {
   const [isEditing, setIsEditing] = useState<Product | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
@@ -534,4 +534,4 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Pr
   )
 }
 
-export default Page
+export default Product

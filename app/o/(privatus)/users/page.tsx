@@ -42,7 +42,6 @@ type User = {
   organization: string
   restaurant: string
   role: string
-  env: string
   phone: string
   email: string
   picture: string
@@ -70,7 +69,6 @@ const initialRestaurants: User[] = [
     organization: "Organization 1",
     restaurant: "Resto 1",
     role: "Admin",
-    env: "internal",
     phone: "123456789",
     email: "test@yahoo.fr",
     picture: "/assets/img/avatar/product.jpg",
@@ -83,13 +81,12 @@ const initialRestaurants: User[] = [
     organization: "Organization 1",
     restaurant: "Resto 1",
     role: "Admin",
-    env: "internal",
     phone: "123456789",
     email: "test@yahoo.fr",
     picture: "/assets/img/avatar/product.jpg",
     status: "active",
     createAt: "2024-12-22"
-  },
+  }
 ]
 
 const organizations = [
@@ -104,7 +101,7 @@ const restaurants = [
   { id: "resto3", name: "Restaurant C" }
 ]
 
-const Page = () => {
+const User = () => {
   const [isEditing, setIsEditing] = useState<User | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
@@ -183,7 +180,6 @@ const Page = () => {
     { accessorKey: "organization", header: "Organization" },
     { accessorKey: "restaurant", header: "Restaurant" },
     { accessorKey: "role", header: "Role" },
-    { accessorKey: "env", header: "Env" },
     { accessorKey: "phone", header: "Phone" },
     { accessorKey: "email", header: "Email" },
     {
@@ -286,12 +282,7 @@ const Page = () => {
               </div>
 
               <div className="space-y-4">
-                <h2 className="text-xl font-bold">Description</h2>
-
-                {/* <p className="text-sm text-gray-500 ml-2">{selectedRestaurant.description}</p> */}
-
-                {/* Additional Information */}
-                <div className="flex flex-col gap-2 mt-4">
+                <div className="flex flex-col gap-2">
                   <h2 className="text-xl font-bold">More</h2>
 
                   <div className="flex flex-col gap-2 ml-2">
@@ -327,15 +318,27 @@ const Page = () => {
                     </div>
                   </div>
                 </div>
+
+                <div className="flex flex-col gap-2 mt-4">
+                  <h2 className="text-xl font-bold">Privilèges</h2>
+
+                  <div className="flex flex-col gap-2 ml-2">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4" />
+                      <p className="text-gray-600 text-sm">{selectedRestaurant.organization}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Cctv className="w-4 h-4" />
+                      <p className="text-gray-600 text-sm">Boss</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           <DialogFooter className="flex gap-1 justify-end p-1 border-t">
-            <Button size="sm" variant="secondary" disabled>
-              <ConciergeBell className="w-4 h-4" /> Show order
-            </Button>
-
             <Button size="sm" variant="secondary" onClick={() => setIsViewDialogOpen(false)}>
               <Edit className="w-4 h-4" /> Edit
             </Button>
@@ -384,7 +387,6 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Us
       organization: "",
       restaurant: "",
       role: "",
-      env: "",
       phone: "",
       email: "",
       picture: "",
@@ -502,4 +504,4 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Us
   )
 }
 
-export default Page
+export default User

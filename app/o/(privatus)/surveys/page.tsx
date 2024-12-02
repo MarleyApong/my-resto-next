@@ -85,7 +85,7 @@ const restaurants = [
   { id: "resto3", name: "restaurant C" }
 ]
 
-const Page = () => {
+const Survey = () => {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState<Surveys | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -387,4 +387,4 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Su
   )
 }
 
-export default Page
+export default Survey
