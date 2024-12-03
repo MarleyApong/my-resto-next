@@ -1,5 +1,5 @@
 import { MenuItem } from "@/types/sidebarTypes"
-import { Home, Utensils, ClipboardList, Box, Layout, Users, User, LayoutDashboard, Wallet, UserRoundCog, Milestone, Package, HandPlatter, ChartColumnBig, Network, HardHat, Store } from "lucide-react"
+import { Home, Utensils, ClipboardList, Box, Layout, Users, User, LayoutDashboard, Wallet, UserRoundCog, Milestone, Package, HandPlatter, ChartColumnBig, Network, HardHat, Store, AppWindow } from "lucide-react"
 
 export const menuItems: MenuItem[] = [
   {
@@ -41,9 +41,59 @@ export const menuItems: MenuItem[] = [
       },
       {
         id: "orders",
-        title: "Orders",
+        title: "Commandes",
         url: "/o/orders",
         icon: HandPlatter,
+      }
+    ]
+  },
+  {
+    id: "pos-system",
+    title: "Système POS",
+    url: null,
+    icon: Store,
+    subItems: [
+      {
+        id: "sales-terminal",
+        title: "Terminal de vente",
+        url: "/o/pos/sales-terminal",
+        icon: AppWindow,
+        subItems: []
+      },
+      {
+        id: "sales-history",
+        title: "Historique des ventes",
+        url: "/o/pos/sales-history",
+        icon: ClipboardList,
+        subItems: []
+      },
+      {
+        id: "inventory",
+        title: "Inventaire",
+        url: "/o/pos/inventory",
+        icon: Package,
+        subItems: []
+      },
+      {
+        id: "payments",
+        title: "Paiements",
+        url: "/o/pos/payments",
+        icon: Wallet,
+        subItems: []
+      },
+      {
+        id: "reports",
+        title: "Rapports",
+        url: "/o/pos/reports",
+        icon: ChartColumnBig,
+        subItems: []
+      },
+      {
+        id: "pos-settings",
+        title: "Paramètres POS",
+        url: "/o/pos/settings",
+        icon: UserRoundCog,
+        subItems: []
       }
     ]
   },
@@ -84,7 +134,7 @@ export const menuItems: MenuItem[] = [
     subItems: [
       {
         id: "employees",
-        title: "Employes",
+        title: "Employés",
         url: "/o/users",
         icon: HardHat,
         subItems: []
@@ -98,7 +148,7 @@ export const menuItems: MenuItem[] = [
       },
       {
         id: "modules-permissions",
-        title: "modules & permi.",
+        title: "Modules & permi.",
         url: "/o/modules-permissions",
         icon: Package,
         subItems: []
@@ -121,3 +171,4 @@ export const menuItems: MenuItem[] = [
     ]
   }
 ]
+
