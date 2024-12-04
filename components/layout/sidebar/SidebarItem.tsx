@@ -13,43 +13,31 @@ interface SidebarItemProps {
 
 export const SidebarItem = ({ item, isOpen, onToggle }: SidebarItemProps) => {
   const pathname = usePathname()
-  
-  const isActive =
-    pathname === item.url ||
-    item.subItems.some((subItem) => pathname === subItem.url)
+
+  const isActive = pathname === item.url || item.subItems.some((subItem) => pathname === subItem.url)
 
   const renderNavLink = () => {
-    const activeClass = isActive ? "bg-gray-200 text-blue-900" : ""
+    const activeClass = isActive ? "bg-primary text-white" : ""
 
     if (item.url) {
       return (
-        <Link 
-          href={item.url}
-          onClick={() => onToggle(item.title)}
-          className={`flex items-center justify-between mb-2 p-2 rounded ${activeClass}`}
-        >
+        <Link href={item.url} onClick={() => onToggle(item.title)} className={`flex items-center justify-between mb-2 p-2 rounded ${activeClass}`}>
           <div className="flex items-center">
-            <item.icon size={20} />
+            <span className={`${isActive ? "text-white": "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
             <span className="ml-2">{item.title}</span>
           </div>
-          {item.subItems.length > 0 &&
-            (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
+          {item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
         </Link>
       )
     }
 
     return (
-      <button
-        type="button"
-        className={`w-full flex items-center justify-between mb-2 p-2 rounded ${activeClass}`}
-        onClick={() => onToggle(item.title)}
-      >
-        <div className="flex items-center font-semibold">
-          <item.icon size={20} />
+      <button type="button" className={`w-full flex items-center justify-between mb-2 p-2 rounded ${activeClass}`} onClick={() => onToggle(item.title)}>
+        <div className="flex items-center">
+          <span className={`${isActive ? "text-white": "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
           <span className="ml-2">{item.title}</span>
         </div>
-        {item.subItems.length > 0 &&
-          (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
+        {item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
       </button>
     )
   }
