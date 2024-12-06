@@ -1,8 +1,5 @@
-"use client"
-
-import React, { useState } from "react"
 import OrderCart from "@/components/features/OrderCart"
-import { Button } from "@/components/ui/button"
+import React from "react"
 
 type MenuCategory = {
   name: string
@@ -30,13 +27,12 @@ const SalesTerminal = () => {
     { name: "Boisson", count: 75 }
   ]
 
-  const initialProducts: Product[] = [
+  const products: Product[] = [
     {
       id: "1",
       picture: "/assets/img/test.jpg",
       name: "Burger",
       price: "1500",
-      specialPrice: "1200",
       quantity: 25
     },
     {
@@ -51,16 +47,9 @@ const SalesTerminal = () => {
       picture: "/assets/img/test.jpg",
       name: "Pizza",
       price: "2000",
-      specialPrice: "1800",
       quantity: 10
     }
   ]
-
-  const [products, setProducts] = useState(initialProducts)
-
-  const handleQuantityChange = (id: string | number, delta: number) => {
-    setProducts((prev) => prev.map((product) => (product.id === id ? { ...product, quantity: Math.max(0, product.quantity + delta) } : product)))
-  }
 
   return (
     <div className="mx-5">
@@ -86,41 +75,18 @@ const SalesTerminal = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium">{product.name}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-sm ${product.specialPrice ? "line-through text-[var(--muted-foreground)]" : ""}`}>{product.price} fcfa</span>
-                {product.specialPrice && <span className="text-sm text-[var(--destructive)] font-bold">{product.specialPrice} fcfa</span>}
+              <div className="flex justify-between items-center gap-2">
+                <span className="text-sm">{product.price} fcfa</span>
               </div>
-              {/* Quantity Controls */}
-              <div className="flex items-center justify-between gap-4 mt-2">
-                <Button
-                  onClick={() => handleQuantityChange(product.id, -1)}
-                  className="bg-[var(--muted)] text-[var(--foreground)] px-2 py-1 rounded hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)]"
-                  size="icon"
-                >
-                  -
-                </Button>
-                <span className="text-sm font-medium">{product.quantity}</span>
-                <Button
-                  onClick={() => handleQuantityChange(product.id, 1)}
-                  className="bg-[var(--muted)] text-[var(--foreground)] px-2 py-1 rounded hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)]"
-                  size="icon"
-                >
-                  +
-                </Button>
-              </div>
-
-              {/* Add to Cart Button */}
               <div className="flex justify-center">
-                <Button className="w-full px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded shadow hover:bg-[var(--primary-foreground)] hover:text-[var(--primary)]">
+                <button className="px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded shadow hover:bg-[var(--primary-foreground)] hover:text-[var(--primary)]">
                   Ajouter au panier
-                </Button>
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
-
-      <OrderCart />
     </div>
   )
 }

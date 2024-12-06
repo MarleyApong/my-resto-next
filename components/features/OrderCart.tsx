@@ -37,13 +37,13 @@ const OrderCart = () => {
             <div key={food.id} className="border rounded-md h-16 flex gap-2 p-1 text-xs">
               <img src={food.picture} alt={food.name} className="rounded-md w-14 h-full border border-gray-100 object-cover" />
               <div className="flex flex-col justify-between w-full">
-                <div className="text-sm font-semibold">{food.name}</div>
+                <div className="text-xs font-medium">{food.name}</div>
                 <div className="flex justify-between w-full">
                   <div className="flex gap-1">
-                    <span>{food.price}</span>
-                    <span className="text-gray-600">{food.quantity} x</span>
+                    <span className="text-xs">{food.price}</span>
+                    <span className="text-gray-600 text-xs">{food.quantity} x</span>
                   </div>
-                  <div className="px-1 bg-primary rounded-md text-white">{food.price * food.quantity} FCFA</div>
+                  <div className="px-1 bg-primary rounded-md text-white text-xs font-medium">{food.price * food.quantity} FCFA</div>
                 </div>
               </div>
             </div>
@@ -52,15 +52,15 @@ const OrderCart = () => {
 
         <div className="p-2 mt-2">
           <div className="bg-secondary rounded-md p-4">
-            <div className="flex justify-between text-gray-700 font-xs text-sm">
+            <div className="flex justify-between text-gray-700 font-xs text-xs">
               <span>Sub total</span>
               <span>2000</span>
             </div>
-            <div className="flex justify-between text-gray-700 font-xs text-sm">
+            <div className="flex justify-between text-gray-700 font-xs text-xs">
               <span>Tax 5%</span>
               <span>20</span>
             </div>
-            <div className="text-sm flex justify-between font-bold border-t-2 border-dashed mt-3 pt-2">
+            <div className="text-xs flex justify-between font-semibold border-t-2 border-dashed mt-3 pt-2">
               <span>Total amount</span>
               <span className="px-1 bg-primary rounded-md text-white">2500 FCFA</span>
             </div>
