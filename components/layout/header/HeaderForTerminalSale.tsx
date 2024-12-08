@@ -32,13 +32,13 @@ export const HeaderForTerminalSale = () => {
       ? "w-[calc(100%-21rem)]" // Rétractation totale en mode tablette avec OrderCart
       : "w-[calc(100%-1rem)]" // Largeur standard en overlay
     : state === "collapsed"
-      ? "w-[calc(100%-1rem)]"
+      ? "w-[calc(100%-4rem)]"
       : isOrderCartVisible
         ? "w-[calc(100%-37rem)]" // 17rem (sidebar) + 20rem (OrderCart)
         : "w-[calc(100%-17rem)]" // Largeur normale avec sidebar
 
   // Calcul de la position gauche
-  const headerLeft = isTabletOverlay ? "left-2" : state === "collapsed" ? "left-2" : "left-[16.5rem]"
+  const headerLeft = isTabletOverlay ? "left-2" : state === "collapsed" ? "left-14" : "left-[16.5rem]"
 
   return (
     <header
