@@ -1,17 +1,39 @@
 "use client"
 
-import React from "react"
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu } from "@/components/ui/sidebar"
+import React, { useEffect } from "react"
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, useSidebar } from "@/components/ui/sidebar"
 import { useState } from "react"
 import { SidebarItem } from "./SidebarItem"
 import { menuItems } from "@/data/mainMenu"
 
 export function AppSidebar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
-  // const [hasAdminAccess, setHasAdminAccess] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState<boolean>(false)
+
+  const { toggleSidebar } = useSidebar()
 
   const toggleMenu = (title: string) => {
     setOpenMenu(openMenu === title ? null : title)
+  }
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobileMediaQuery = window.matchMedia("(max-width: 768px)")
+      setIsMobile(mobileMediaQuery.matches)
+    }
+
+    checkMobile() // Call
+    window.addEventListener("resize", checkMobile) // update
+
+    return () => {
+      window.removeEventListener("resize", checkMobile) // clear
+    }
+  }, [])
+
+  const closeSidebar = () => {
+    if (isMobile) {
+      toggleSidebar()
+    }
   }
 
   return (
@@ -23,7 +45,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
-                <SidebarItem key={item.title} item={item} isOpen={openMenu === item.title} onToggle={toggleMenu} />
+                <SidebarItem key={item.title} item={item} isOpen={openMenu === item.title} onToggle={toggleMenu} closeSidebar={closeSidebar} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

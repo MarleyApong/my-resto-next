@@ -54,35 +54,41 @@ export const menuItems: MenuItem[] = [
     icon: Store,
     subItems: [
       {
-        id: "sales-terminal",
+        id: "pos-sales-terminal",
         title: "Terminal de vente",
         url: "/o/pos/sales-terminal",
         icon: AppWindow,
         subItems: []
       },
       {
-        id: "sales-history",
+        id: "pos-orders",
+        title: "Commandes",
+        url: "/o/pos/orders",
+        icon: HandPlatter,
+      },
+      {
+        id: "pos-sales-history",
         title: "Historique des ventes",
         url: "/o/pos/sales-history",
         icon: ClipboardList,
         subItems: []
       },
       {
-        id: "inventory",
+        id: "pos-inventory",
         title: "Inventaire",
         url: "/o/pos/inventory",
         icon: Package,
         subItems: []
       },
       {
-        id: "payments",
+        id: "pos-payments",
         title: "Paiements",
         url: "/o/pos/payments",
         icon: Wallet,
         subItems: []
       },
       {
-        id: "reports",
+        id: "pos-reports",
         title: "Rapports",
         url: "/o/pos/reports",
         icon: ChartColumnBig,

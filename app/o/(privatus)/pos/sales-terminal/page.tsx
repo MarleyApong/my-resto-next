@@ -1,126 +1,92 @@
 "use client"
 
 import React, { useState } from "react"
-import OrderCart from "@/components/features/OrderCart"
 import { Button } from "@/components/ui/button"
-
-type MenuCategory = {
-  name: string
-  count: number
-}
-
-type Product = {
-  id: string | number
-  picture: string
-  name: string
-  price: string | number
-  quantity: number
-  specialPrice?: string | number
-  description?: string
-}
+import TableSelector from "@/components/features/TableSelector"
+import ProductList, { Product } from "@/components/features/ProductList"
+import OrderCart, { CartItem } from "@/components/features/OrderCart"
 
 const SalesTerminal = () => {
-  const menuCategories: MenuCategory[] = [
+  const [orderMode, setOrderMode] = useState<"dine-in" | "takeaway">("dine-in")
+  const [selectedTable, setSelectedTable] = useState<string | null>(null)
+  const [cart, setCart] = useState<CartItem[]>([])
+
+  const tables = [
+    { id: "1", name: "Table 1", status: "free" },
+    { id: "2", name: "Table 2", status: "occupied" }
+  ]
+
+  const products: Product[] = [
+    { id: "1", picture: "/assets/img/test.jpg", name: "Burger", price: 1500, quantity: 10 },
+    { id: "2", picture: "/assets/img/test.jpg", name: "Salad", price: 1200, quantity: 10 }
+  ]
+
+  const menuCategories = [
     { name: "All", count: 575 },
-    { name: "Breakfast", count: 200 },
-    { name: "Soup", count: 25 },
-    { name: "Pasta", count: 25 },
-    { name: "Main course", count: 150 },
-    { name: "Burger", count: 50 },
-    { name: "Boisson", count: 75 }
+    { name: "Burger", count: 50 }
   ]
 
-  const initialProducts: Product[] = [
-    {
-      id: "1",
-      picture: "/assets/img/test.jpg",
-      name: "Burger",
-      price: "1500",
-      specialPrice: "1200",
-      quantity: 25
-    },
-    {
-      id: "2",
-      picture: "/assets/img/test.jpg",
-      name: "Salad",
-      price: "1200",
-      quantity: 15
-    },
-    {
-      id: "3",
-      picture: "/assets/img/test.jpg",
-      name: "Pizza",
-      price: "2000",
-      specialPrice: "1800",
-      quantity: 10
-    }
-  ]
+  const handleAddToCart = (product: Product) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find((item) => item.id === product.id)
+      if (existingItem) {
+        return prevCart.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item))
+      }
+      return [...prevCart, { ...product, quantity: 1 }]
+    })
+  }
 
-  const [products, setProducts] = useState(initialProducts)
+  const handleUpdateQuantity = (id: string | number, delta: number) => {
+    setCart((prevCart) => prevCart.map((item) => (item.id === id ? { ...item, quantity: item.quantity + delta } : item)).filter((item) => item.quantity > 0))
+  }
 
-  const handleQuantityChange = (id: string | number, delta: number) => {
-    setProducts((prev) => prev.map((product) => (product.id === id ? { ...product, quantity: Math.max(0, product.quantity + delta) } : product)))
+  const handleRemoveItem = (id: string | number) => {
+    setCart((prevCart) => prevCart.filter((item) => item.id !== id))
+  }
+
+  const handlePlaceOrder = () => {
+    console.log("Order placed", { mode: orderMode, table: selectedTable, items: cart })
+    setCart([]) // Clear cart
+    setSelectedTable(null) // Reset table
+  }
+
+  const handleTableChange = (newTableId: string | null) => {
+    setSelectedTable(newTableId)
+    setOrderMode(newTableId ? "dine-in" : "takeaway") // Switch mode based on table selection
   }
 
   return (
-    <div className="mx-5">
-      {/* Menu Categories */}
-      <div className="menu-categories flex gap-8">
-        {menuCategories.map((category, index) => (
-          <div
-            className="shadow-md rounded-md bg-[var(--secondary)] text-[var(--foreground)] px-2 py-1 text-sm relative min-w-24 cursor-pointer border-2 border-[var(--card)] hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)]"
-            key={index}
+    <div className="flex">
+      <div className="flex-grow mx-5">
+        <div className="flex gap-4 mb-4">
+          <Button
+            variant={orderMode === "dine-in" ? "default" : "outline"}
+            onClick={() => {
+              setOrderMode("dine-in")
+              setSelectedTable(null)
+            }}
           >
-            {category.name}
-            <div className="absolute rounded-md bg-[var(--primary)] text-[var(--primary-foreground)] px-2 -top-4 -right-3">{category.count}</div>
-          </div>
-        ))}
+            Sur place
+          </Button>
+          <Button
+            variant={orderMode === "takeaway" ? "default" : "outline"}
+            onClick={() => {
+              setOrderMode("takeaway")
+              setSelectedTable(null)
+            }}
+          >
+            À emporter
+          </Button>
+        </div>
+
+        {orderMode === "dine-in" && !selectedTable && <TableSelector tables={tables} onSelectTable={setSelectedTable} />}
+
+        {(orderMode === "takeaway" || selectedTable) && (
+          <ProductList products={products} menuCategories={menuCategories} handleQuantityChange={handleUpdateQuantity} onAddToCart={handleAddToCart} items={cart} />
+        )}
       </div>
 
-      {/* Products */}
-      <div className="grid grid-cols-4 gap-4 mb-16 mt-3">
-        {products.map((product) => (
-          <div key={product.id} className="flex items-center border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] rounded-lg p-2 gap-2 overflow-hidden">
-            <img src={product.picture} alt={product.name} className="rounded-md w-32 h-32 border border-[var(--border)] object-cover" />
-            <div className="flex flex-col justify-center gap-2 flex-1">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">{product.name}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-sm ${product.specialPrice ? "line-through text-[var(--muted-foreground)]" : ""}`}>{product.price} fcfa</span>
-                {product.specialPrice && <span className="text-sm text-[var(--destructive)] font-bold">{product.specialPrice} fcfa</span>}
-              </div>
-              {/* Quantity Controls */}
-              <div className="flex items-center justify-between gap-4 mt-2">
-                <Button
-                  onClick={() => handleQuantityChange(product.id, -1)}
-                  className="bg-[var(--muted)] text-[var(--foreground)] px-2 py-1 rounded hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)]"
-                  size="icon"
-                >
-                  -
-                </Button>
-                <span className="text-sm font-medium">{product.quantity}</span>
-                <Button
-                  onClick={() => handleQuantityChange(product.id, 1)}
-                  className="bg-[var(--muted)] text-[var(--foreground)] px-2 py-1 rounded hover:bg-[var(--primary)] hover:text-[var(--primary-foreground)]"
-                  size="icon"
-                >
-                  +
-                </Button>
-              </div>
-
-              {/* Add to Cart Button */}
-              <div className="flex justify-center">
-                <Button className="w-full px-3 py-1 text-xs font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded shadow hover:bg-[var(--primary-foreground)] hover:text-[var(--primary)]">
-                  Ajouter au panier
-                </Button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <OrderCart />
+      <OrderCart items={cart} tableNumber={selectedTable || undefined} onPlaceOrder={handlePlaceOrder} tables={tables} onTableChange={handleTableChange} />
     </div>
   )
 }

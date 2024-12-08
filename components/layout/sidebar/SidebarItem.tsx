@@ -9,19 +9,26 @@ interface SidebarItemProps {
   item: MenuItem
   isOpen: boolean
   onToggle: (title: string) => void
+  closeSidebar: () => void 
 }
 
-export const SidebarItem = ({ item, isOpen, onToggle }: SidebarItemProps) => {
+export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarItemProps) => {
   const pathname = usePathname()
-
   const isActive = pathname === item.url || item.subItems.some((subItem) => pathname === subItem.url)
+
+  const handleClick = () => {
+    onToggle(item.title)
+    if (item.url !== null) {
+      closeSidebar()
+    }      
+  }
 
   const renderNavLink = () => {
     const activeClass = isActive ? "bg-primary text-white" : ""
 
     if (item.url) {
       return (
-        <Link href={item.url} onClick={() => onToggle(item.title)} className={`flex items-center justify-between mb-2 p-2 rounded ${activeClass}`}>
+        <Link href={item.url} onClick={handleClick} className={`flex items-center justify-between mb-2 p-2 rounded ${activeClass}`}>
           <div className="flex items-center">
             <span className={`${isActive ? "text-white": "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
             <span className="ml-2">{item.title}</span>
@@ -32,7 +39,7 @@ export const SidebarItem = ({ item, isOpen, onToggle }: SidebarItemProps) => {
     }
 
     return (
-      <button type="button" className={`w-full flex items-center justify-between mb-2 p-2 rounded ${activeClass}`} onClick={() => onToggle(item.title)}>
+      <button type="button" className={`w-full flex items-center justify-between mb-2 p-2 rounded ${activeClass}`} onClick={handleClick}>
         <div className="flex items-center">
           <span className={`${isActive ? "text-white": "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
           <span className="ml-2">{item.title}</span>
@@ -45,7 +52,7 @@ export const SidebarItem = ({ item, isOpen, onToggle }: SidebarItemProps) => {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild>{renderNavLink()}</SidebarMenuButton>
-      {item.subItems.length > 0 && isOpen && <SidebarSubItems items={item.subItems} />}
+      {item.subItems.length > 0 && isOpen && <SidebarSubItems items={item.subItems} closeSidebar={closeSidebar} />}
     </SidebarMenuItem>
   )
 }
