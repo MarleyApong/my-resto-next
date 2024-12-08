@@ -63,7 +63,7 @@ const OrderCart: React.FC<OrderCartProps> = ({
           : 'translate-x-full'}
       `}
     >
-      <div className="title h-11 p-2 border-b flex justify-between">
+      <div className="title h-10 p-2 border-b flex justify-between shadow-md">
         <div className="font-bold">{tableNumber ? `Table ${tableNumber}` : "Panier"}</div>
         {tableNumber && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
