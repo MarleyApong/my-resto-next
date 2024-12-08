@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Banknote, CreditCard, PenLine, Smartphone, X } from "lucide-react"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { useOrderCart } from "@/hooks/useOrderCart"
 
 export type CartItem = {
   id: string | number
@@ -21,8 +22,16 @@ type OrderCartProps = {
   onTableChange: (newTableId: string | null) => void
 }
 
-const OrderCart: React.FC<OrderCartProps> = ({ items, tableNumber, onPlaceOrder, tables, onTableChange }) => {
+const OrderCart: React.FC<OrderCartProps> = ({ 
+  items, 
+  tableNumber, 
+  onPlaceOrder, 
+  tables, 
+  onTableChange 
+}) => {
+  const { isOrderCartVisible } = useOrderCart()
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  
   const calculateSubtotal = () => items.reduce((total, item) => total + item.price * item.quantity, 0)
 
   const tax = calculateSubtotal() * 0.05
@@ -36,7 +45,24 @@ const OrderCart: React.FC<OrderCartProps> = ({ items, tableNumber, onPlaceOrder,
   }
 
   return (
-    <div className="fixed top-0 right-0 z-50 w-80 bg-background shadow-md h-screen">
+    <div 
+      className={`
+        fixed 
+        top-0 
+        right-0 
+        z-50 
+        w-80 
+        bg-background 
+        shadow-md 
+        h-screen 
+        transition-transform 
+        duration-300 
+        ease-in-out 
+        ${isOrderCartVisible 
+          ? 'translate-x-0' 
+          : 'translate-x-full'}
+      `}
+    >
       <div className="title h-11 p-2 border-b flex justify-between">
         <div className="font-bold">{tableNumber ? `Table ${tableNumber}` : "Panier"}</div>
         {tableNumber && (

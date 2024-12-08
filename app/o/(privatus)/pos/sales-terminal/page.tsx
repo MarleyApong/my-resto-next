@@ -56,29 +56,28 @@ const SalesTerminal = () => {
   }
 
   return (
-    <div className="flex">
-      <div className="flex-grow mx-5">
-        <div className="flex gap-4 mb-4">
-          <Button
-            variant={orderMode === "dine-in" ? "default" : "outline"}
-            onClick={() => {
-              setOrderMode("dine-in")
-              setSelectedTable(null)
-            }}
-          >
-            Sur place
-          </Button>
-          <Button
-            variant={orderMode === "takeaway" ? "default" : "outline"}
-            onClick={() => {
-              setOrderMode("takeaway")
-              setSelectedTable(null)
-            }}
-          >
-            À emporter
-          </Button>
-        </div>
-
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-4 shadow-md p-1 border rounded-sm bg-background">
+        <Button
+          variant={orderMode === "dine-in" ? "default" : "outline"}
+          onClick={() => {
+            setOrderMode("dine-in")
+            setSelectedTable(null)
+          }}
+        >
+          Sur place
+        </Button>
+        <Button
+          variant={orderMode === "takeaway" ? "default" : "outline"}
+          onClick={() => {
+            setOrderMode("takeaway")
+            setSelectedTable(null)
+          }}
+        >
+          À emporter
+        </Button>
+      </div>
+      <div className="flex-grow bg-background min-h-[calc(100vh-8rem)] border rounded-sm p-2">
         {orderMode === "dine-in" && !selectedTable && <TableSelector tables={tables} onSelectTable={setSelectedTable} />}
 
         {(orderMode === "takeaway" || selectedTable) && (

@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import "./layout.css"
 import { SurveyProvider } from "@/contexts/SurveyContext"
 import { HeaderForTerminalSale } from "@/components/layout/header/HeaderForTerminalSale"
+import { OrderCartProvider } from "@/contexts/OrderCartContext"
 
 // Charger ThemeProvider dynamiquement sans SSR
 const DynamicThemeProvider = dynamic(() => import("next-themes").then((mod) => mod.ThemeProvider), {
@@ -162,14 +163,16 @@ export default function PrivatusLayout({ children, defaultOpen }: PrivatusLayout
         </Head>
         <DynamicThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SidebarProvider defaultOpen={defaultOpen}>
+            <OrderCartProvider>
             {pathname.includes("sales-terminal") ? <HeaderForTerminalSale /> : <Header />}
             <div className="relative flex w-screen h-[100vh] transition-all pt- bg-secondary">
               <AppSidebar />
-              <main className="relative flex-1 flex flex-col bg-secondary p-2 mt-5 overflow-y-auto max-h-[calc(100vh - 600px)]">
+              <main className={`relative flex-1 flex flex-col bg-secondary p-2 ${!pathname.includes("sales-terminal") && "mt-5"} overflow-y-auto max-h-[calc(100vh - 600px)]`}>
                 {/* <CustomBreadcrumb currentPath={pathname} /> */}
                 <div className="mt-14">{children}</div>
               </main>
             </div>
+            </OrderCartProvider>
           </SidebarProvider>
         </DynamicThemeProvider>
       </SurveyProvider>

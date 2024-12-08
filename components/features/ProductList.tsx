@@ -47,7 +47,7 @@ const ProductList: React.FC<ProductListProps> = ({ products, menuCategories, han
           const cartItem = items.find((item) => item.id === product.id)
 
           return (
-            <div key={product.id} className="flex flex-col border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] rounded-sm p-2 gap-2 overflow-hidden">
+            <div key={product.id} className="flex flex-col border shadow-md bg-card text-[var(--card-foreground)] rounded-sm p-2 gap-2 overflow-hidden">
               <img src={product.picture} alt={product.name} className="rounded-sm w-full h-32 border border-[var(--border)] object-cover" />
               <div className="flex flex-col gap-2 flex-1">
                 <div className="flex justify-between items-center font-semibold">
