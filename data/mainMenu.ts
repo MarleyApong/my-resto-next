@@ -74,17 +74,10 @@ export const menuItems: MenuItem[] = [
         subItems: []
       },
       {
-        id: "pos-inventory",
-        title: "Inventaire",
-        url: "/o/pos/inventory",
+        id: "pos-stock",
+        title: "Stock",
+        url: "/o/pos/stock",
         icon: Package,
-        subItems: []
-      },
-      {
-        id: "pos-payments",
-        title: "Paiements",
-        url: "/o/pos/payments",
-        icon: Wallet,
         subItems: []
       },
       {
