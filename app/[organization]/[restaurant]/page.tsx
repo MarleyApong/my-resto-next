@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import home from "@/public/assets/img/home/home.jpg"
 import Image from "next/image"
@@ -13,28 +13,27 @@ interface RestaurantData {
 
 const Webpage: React.FC = () => {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const organization = pathname.split("/")[1]
-  const restaurant = pathname.split("/")[2]
+  const pathParts = pathname.split("/").filter(Boolean)
+  const organization = pathParts[0]
+  const restaurant = pathParts[1]
 
   const [data, setData] = useState<RestaurantData>({})
 
   const handleNavToOrder = () => {
-    const query = searchParams.toString()
-    window.location.href = `/${organization}/${restaurant}/order?${query}`
+    window.location.href = `/${organization}/${restaurant}/order`
   }
 
   const handleNavToNote = () => {
-    const query = searchParams.toString()
-    window.location.href = `/${organization}/${restaurant}/note?${query}`
+    window.location.href = `/${organization}/${restaurant}/note`
   }
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Remplacez par un appel à une API réelle
         const fetchedData = {
-          picture: "https://via.placeholder.com/800x600",
-          description: "Découvrez nos plats délicieux et savoureux !"
+          picture: "/assets/img/home/home.jpg",
+          description: `Bienvenue chez ${restaurant} de ${organization}! Découvrez nos plats délicieux et savoureux !`
         }
         setData(fetchedData)
       } catch (err) {
@@ -42,8 +41,8 @@ const Webpage: React.FC = () => {
       }
     }
 
-    if (restaurant) loadData()
-  }, [restaurant])
+    if (organization && restaurant) loadData()
+  }, [organization, restaurant])
 
   return (
     <div className="flex h-screen relative overflow-hidden">
@@ -59,7 +58,7 @@ const Webpage: React.FC = () => {
           <Button variant="printemps" className="hover:bg-white hover:text-black" onClick={handleNavToOrder}>
             Commander
           </Button>
-          <Button variant="secondary" onClick={handleNavToNote}>
+          <Button variant="secondary" className="bg-blue-600 hover:bg-white hover:text-blue-600" onClick={handleNavToNote}>
             Notez-nous
           </Button>
         </div>

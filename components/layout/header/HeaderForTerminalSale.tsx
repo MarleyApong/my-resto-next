@@ -1,7 +1,7 @@
 "use client"
 
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
-import { Search, Route } from "lucide-react"
+import { Search, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/ui/mode-toggle"
 import { UserNav } from "./UserNav"
@@ -67,7 +67,7 @@ export const HeaderForTerminalSale = () => {
         <div className="flex items-center h-8 gap-4 bg-[var(--header-background)] border rounded-sm shadow-md p-1">
           <ModeToggle />
           <Button size="icon" variant="outline" className="p-3 hover:bg-gray-200 transition" onClick={toggleOrderCart}>
-            <Route className="text-gray-600" size={20} />
+            <ShoppingCart className="text-gray-600" size={20} />
           </Button>
           <UserNav />
         </div>
