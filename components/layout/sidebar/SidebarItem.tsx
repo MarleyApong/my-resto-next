@@ -1,7 +1,7 @@
 import { MenuItem } from "@/types/sidebarTypes"
 import { SidebarSubItems } from "./SidebarSubItem"
 import { SidebarMenuItem, SidebarMenuButton } from "../../ui/sidebar"
-import { Plus, Minus, ChevronRight, ChevronDown } from "lucide-react"
+import { ChevronRight, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -14,7 +14,7 @@ interface SidebarItemProps {
 
 export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarItemProps) => {
   const pathname = usePathname()
-  const isActive = pathname === item.url || item.subItems.some((subItem) => pathname === subItem.url)
+  const isActive = pathname === item.url || item.subItems.some((subItem) => pathname.includes(subItem.url))
 
   const handleClick = () => {
     onToggle(item.title)

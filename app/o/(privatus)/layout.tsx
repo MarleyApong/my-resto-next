@@ -164,18 +164,18 @@ export default function PrivatusLayout({ children, defaultOpen }: PrivatusLayout
         <DynamicThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <SidebarProvider defaultOpen={defaultOpen}>
             <OrderCartProvider>
-            {pathname.includes("sales-terminal") ? <HeaderForTerminalSale /> : <Header />}
+            {pathname.includes("sales-terminal") ? <HeaderForTerminalSale /> : !pathname.includes("surveys/design/") && <Header />}
             <div className="relative flex w-screen h-[100vh] transition-all pt- bg-secondary">
               <AppSidebar />
-              <main className={`relative flex-1 flex flex-col bg-secondary p-2 ${!pathname.includes("sales-terminal") && "mt-5"} overflow-y-auto max-h-[calc(100vh - 600px)]`}>
+              <main className={`relative flex-1 flex flex-col bg-secondary ${!pathname.includes("sales-terminal") || !pathname.includes("surveys/design/") ? "mt-0 p-2 pt-0": "mt-5 p-2"} overflow-y-auto max-h-[calc(100vh - 600px)]`}>
                 {/* <CustomBreadcrumb currentPath={pathname} /> */}
-                <div className="mt-14">{children}</div>
+                <div className={`${!pathname.includes("surveys/design/") && "mt-14"}`}>{children}</div>
               </main>
             </div>
             </OrderCartProvider>
           </SidebarProvider>
         </DynamicThemeProvider>
-      </SurveyProvider>
+      </SurveyProvider> 
     </>
   )
 }
