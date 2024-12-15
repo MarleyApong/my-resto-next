@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import home from "@/public/assets/img/home/home.jpg"
 import Image from "next/image"
@@ -13,6 +13,7 @@ interface RestaurantData {
 
 const Webpage: React.FC = () => {
   const pathname = usePathname()
+  const router = useRouter()
   const pathParts = pathname.split("/").filter(Boolean)
   const organization = pathParts[0]
   const restaurant = pathParts[1]
@@ -20,17 +21,16 @@ const Webpage: React.FC = () => {
   const [data, setData] = useState<RestaurantData>({})
 
   const handleNavToOrder = () => {
-    window.location.href = `/${organization}/${restaurant}/order`
+    router.push(`/${organization}/${restaurant}/menu`)
   }
 
   const handleNavToNote = () => {
-    window.location.href = `/${organization}/${restaurant}/note`
+    router.push(`/${organization}/${restaurant}/note`)
   }
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Remplacez par un appel à une API réelle
         const fetchedData = {
           picture: "/assets/img/home/home.jpg",
           description: `Bienvenue chez ${restaurant} de ${organization}! Découvrez nos plats délicieux et savoureux !`
@@ -58,7 +58,7 @@ const Webpage: React.FC = () => {
           <Button variant="printemps" className="hover:bg-white hover:text-black" onClick={handleNavToOrder}>
             Commander
           </Button>
-          <Button variant="secondary" className="bg-blue-600 hover:bg-white hover:text-blue-600" onClick={handleNavToNote}>
+          <Button variant="secondary"  onClick={handleNavToNote}>
             Notez-nous
           </Button>
         </div>
