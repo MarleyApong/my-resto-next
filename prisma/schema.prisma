@@ -37,7 +37,8 @@ model Status {
   surveys       Survey[]
   customers     Customer[]
   products      Product[]
-  Order         Order[]
+  orders        Order[]
+  modules       Module[]
 }
 
 model Role {
@@ -140,24 +141,27 @@ model UserOrganization {
 }
 
 model Restaurant {
-  id           String    @id @default(cuid())
+  id           String         @id @default(cuid())
   name         String
-  description  String    @db.VarChar(185)
-  phone        String    @db.VarChar(15)
-  email        String    @unique
+  description  String         @db.VarChar(185)
+  phone        String         @db.VarChar(15)
+  email        String         @unique
   city         String
   neighborhood String
   picture      Bytes
+  webpage      String
   statusId     String
-  status       Status    @relation(fields: [statusId], references: [id])
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  status       Status         @relation(fields: [statusId], references: [id])
+  modules      EntityModule[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   deletedAt    DateTime?
 
   users            UserRestaurant[]
   primaryCustomers Customer[]           @relation("PrimaryCustomerRestaurant")
   customers        CustomerRestaurant[]
-  Order            Order[]
+  orders           Order[]
+  tables           Table[]
 }
 
 model UserRestaurant {
@@ -188,12 +192,11 @@ model Survey {
 }
 
 model Answer {
-  id             String @id @default(cuid())
+  id             String    @id @default(cuid())
   name           String
   surveyFormData Json?
-
-  customerId String?
-  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id])
 
   surveys   SurveyAnswer[]
   createdAt DateTime       @default(now())
@@ -285,18 +288,6 @@ model ProductCategory {
   products    Product[]
 }
 
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-}
-
-enum PaymentMethod {
-  CASH
-  CARD
-  ONLINE
-}
-
 model Product {
   id                String          @id @default(cuid())
   name              String
@@ -314,22 +305,40 @@ model Product {
   orderProduct      OrderProduct[]
 }
 
+model PaymentStatus {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PaymentMethod {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Order {
-  id            String         @id @default(cuid())
-  orderNumber   String         @unique
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  paymentStatus PaymentStatus
-  paymentMethod PaymentMethod
-  totalAmount   Float
-  notes         String?
-  customerId    String?
-  customer      Customer?      @relation(fields: [customerId], references: [id])
-  restaurantId  String
-  restaurant    Restaurant     @relation(fields: [restaurantId], references: [id])
-  products      OrderProduct[]
-  status        Status?        @relation(fields: [statusId], references: [id])
-  statusId      String?
+  id              String         @id @default(cuid())
+  orderNumber     String         @unique
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  paymentStatusId String
+  paymentStatus   PaymentStatus  @relation(fields: [paymentStatusId], references: [id])
+  paymentMethodId String
+  paymentMethod   PaymentMethod  @relation(fields: [paymentMethodId], references: [id])
+  totalAmount     Float
+  notes           String?
+  customerId      String?
+  customer        Customer?      @relation(fields: [customerId], references: [id])
+  restaurantId    String
+  restaurant      Restaurant     @relation(fields: [restaurantId], references: [id])
+  products        OrderProduct[]
+  statusId        String?
+  status          Status?        @relation(fields: [statusId], references: [id])
 }
 
 model OrderProduct {
@@ -354,4 +363,42 @@ model Stock {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
+}
+
+model Table {
+  id           String     @id @default(cuid())
+  name         String
+  capacity     Int
+  webpage      String
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+}
+
+model Module {
+  id          String         @id @default(cuid())
+  name        String
+  description String
+  statusId    String
+  status      Status?        @relation(fields: [statusId], references: [id])
+  entities    EntityModule[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+}
+
+model EntityModule {
+  id           String     @id @default(cuid())
+  moduleId     String
+  restaurantId String
+  type         String
+  module       Module     @relation(fields: [moduleId], references: [id])
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  @@unique([moduleId, restaurantId]) // Contrainte unique pour éviter les doublons
 }
