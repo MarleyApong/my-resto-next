@@ -1,22 +1,22 @@
 export enum StatusUserEnum {
-  ACTIVE = "active",
-  INACTIVE = "inactive"
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE"
   // SUSPENDED = "suspended",
   // BLOCKED = "blocked",
 }
 
 export enum StatusRestaurantEnum {
-  ACTIVE = "active",
-  INACTIVE = "inactive"
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE"
 }
 
 export enum StatusOrganizationEnum {
-  ACTIVE = "active",
-  INACTIVE = "inactive"
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE"
 }
 
 export enum StatusSurveyEnum {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  DRAFT = "draft",
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  DRAFT = "DRAFT",
 }
