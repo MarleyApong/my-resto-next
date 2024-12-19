@@ -7,11 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed": "tsx prisma/seeders/index.ts"
+    "seed": "tsx prisma/seeders/index.ts",
+    "migrate": "npx prisma migrate dev"
   },
   "type": "module",
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seeders/index.ts"
+    "seed": "tsx prisma/seeders/index.ts"
   },
   "dependencies": {
     "@fontsource/poppins": "^5.1.0",

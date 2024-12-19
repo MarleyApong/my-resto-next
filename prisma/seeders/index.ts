@@ -1,8 +1,93 @@
 import { PrismaClient } from "@prisma/client"
+import {
+  StatusUserEnum,
+  StatusRestaurantEnum,
+  StatusOrganizationEnum,
+  StatusSurveyEnum,
+  StatusCustomerEnum,
+  StatusProductEnum,
+  StatusOrderEnum,
+  StatusModuleEnum
+} from "@/enums/statusEnum"
 import { PaymentMethod } from "@/enums/paymentMethodEnum"
 import { PaymentStatus } from "@/enums/paymentStatusEnum"
+import { menuItems } from "@/data/mainMenu"
 
 const prisma = new PrismaClient()
+
+async function seedSuperAdminRole() {
+  // Création du rôle "Super Admin"
+  const superAdminRole = await prisma.role.upsert({
+    where: { name: "" },
+    update: {},
+    create: {
+      name: "Super Admin",
+      menuIds: JSON.stringify(menuItems.map((item) => item.id)) // Ajouter tous les menus
+    }
+  })
+
+  // Attribution de toutes les permissions pour tous les menus et sous-menus du "Super Admin"
+  for (const item of menuItems) {
+    for (const subItem of item.subItems || []) {
+      await prisma.permission.upsert({
+        where: { roleId_menuId: { roleId: superAdminRole.id, menuId: subItem.id } },
+        update: {},
+        create: {
+          menuId: subItem.id,
+          roleId: superAdminRole.id,
+          view: true,
+          create: true,
+          update: true,
+          delete: true // Accès complet
+        }
+      })
+    }
+  }
+
+  console.log("Super Admin role seeded with all permissions.")
+}
+
+async function seedSuperAdminUser() {
+  // Création de l'utilisateur Super Admin (vous)
+  const superAdminUser = await prisma.user.create({
+    data: {
+      firstName: "Super",
+      lastName: "Admin",
+      phone: "0123456789",
+      email: "marlex@test.com", 
+      city: "Douala",
+      neighborhood: "Japoma",
+      picture: new Uint8Array(),
+      password: "super123",
+      temporyPassword: "hashedpassword123",
+      expiryPassword: new Date(),
+      roleId: "Super Admin",
+      statusId: StatusUserEnum.ACTIVE
+    }
+  })
+
+  console.log(`Super Admin user ${superAdminUser.firstName} ${superAdminUser.lastName} seeded.`)
+}
+
+async function seedStatusType(name: string, statuses: string[]) {
+  const createdStatusType = await prisma.statusType.upsert({
+    where: { name },
+    update: {},
+    create: { name: name.toLowerCase() }
+  })
+
+  for (const status of statuses) {
+    await prisma.status.upsert({
+      where: { name: status },
+      update: {},
+      create: {
+        name: status,
+        statusTypeId: createdStatusType.id
+      }
+    })
+  }
+  console.log(`${name} statuses seeded.`)
+}
 
 async function seedPaymentStatuses() {
   const paymentStatuses = Object.values(PaymentStatus).map((status) => ({
@@ -35,8 +120,19 @@ async function seedPaymentMethods() {
 }
 
 async function main() {
+  await seedStatusType("User", Object.values(StatusUserEnum))
+  await seedStatusType("Restaurant", Object.values(StatusRestaurantEnum))
+  await seedStatusType("Organization", Object.values(StatusOrganizationEnum))
+  await seedStatusType("Survey", Object.values(StatusSurveyEnum))
+  await seedStatusType("Customer", Object.values(StatusCustomerEnum))
+  await seedStatusType("Product", Object.values(StatusProductEnum))
+  await seedStatusType("Order", Object.values(StatusOrderEnum))
+  // await seedStatusType("Module", Object.values(StatusModuleEnum))
   await seedPaymentStatuses()
   await seedPaymentMethods()
+
+  await seedSuperAdminRole()
+  await seedSuperAdminUser()
 }
 
 main()

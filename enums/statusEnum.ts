@@ -1,22 +1,57 @@
 export enum StatusUserEnum {
   ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE"
-  // SUSPENDED = "suspended",
-  // BLOCKED = "blocked",
+  INACTIVE = "INACTIVE",
+  SUSPENDED = "SUSPENDED",
+  BLOCKED = "BLOCKED"
 }
 
 export enum StatusRestaurantEnum {
   ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE"
+  INACTIVE = "INACTIVE",
+  CLOSED = "CLOSED",
+  PENDING_APPROVAL = "PENDING_APPROVAL"
 }
 
 export enum StatusOrganizationEnum {
   ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE"
+  INACTIVE = "INACTIVE",
+  SUSPENDED = "SUSPENDED",
+  ARCHIVED = "ARCHIVED"
 }
 
 export enum StatusSurveyEnum {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
   DRAFT = "DRAFT",
+  PUBLISHED = "PUBLISHED",
+  ARCHIVED = "ARCHIVED"
+}
+
+export enum StatusCustomerEnum {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  BLACKLISTED = "BLACKLISTED",
+  PENDING_VERIFICATION = "PENDING_VERIFICATION"
+}
+
+export enum StatusProductEnum {
+  AVAILABLE = "AVAILABLE",
+  OUT_OF_STOCK = "OUT_OF_STOCK",
+  DISCONTINUED = "DISCONTINUED",
+  PENDING_APPROVAL = "PENDING_APPROVAL"
+}
+
+export enum StatusOrderEnum {
+  PENDING = "PENDING",
+  PROCESSING = "PROCESSING",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED"
+}
+
+export enum StatusModuleEnum {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  UNDER_MAINTENANCE = "UNDER_MAINTENANCE",
+  DEPRECATED = "DEPRECATED"
 }
