@@ -7,7 +7,6 @@ import {
   StatusCustomerEnum,
   StatusProductEnum,
   StatusOrderEnum,
-  StatusModuleEnum
 } from "@/enums/statusEnum"
 import { PaymentMethod } from "@/enums/paymentMethodEnum"
 import { PaymentStatus } from "@/enums/paymentStatusEnum"
@@ -16,17 +15,17 @@ import { menuItems } from "@/data/mainMenu"
 const prisma = new PrismaClient()
 
 async function seedSuperAdminRole() {
-  // Création du rôle "Super Admin"
+  // Create the "Super Admin" role
   const superAdminRole = await prisma.role.upsert({
-    where: { name: "" },
+    where: { name: "Super Admin" },
     update: {},
     create: {
       name: "Super Admin",
-      menuIds: JSON.stringify(menuItems.map((item) => item.id)) // Ajouter tous les menus
+      menuIds: JSON.stringify(menuItems.map((item) => item.id)) // Add all menus
     }
   })
 
-  // Attribution de toutes les permissions pour tous les menus et sous-menus du "Super Admin"
+  // Assign all permissions for all menus and submenus to the "Super Admin"
   for (const item of menuItems) {
     for (const subItem of item.subItems || []) {
       await prisma.permission.upsert({
@@ -38,7 +37,7 @@ async function seedSuperAdminRole() {
           view: true,
           create: true,
           update: true,
-          delete: true // Accès complet
+          delete: true // Full access
         }
       })
     }
@@ -48,25 +47,45 @@ async function seedSuperAdminRole() {
 }
 
 async function seedSuperAdminUser() {
-  // Création de l'utilisateur Super Admin (vous)
-  const superAdminUser = await prisma.user.create({
-    data: {
+  // Find the "Super Admin" role ID
+  const superAdminRole = await prisma.role.findUnique({
+    where: { name: "Super Admin" }
+  })
+
+  if (!superAdminRole) {
+    throw new Error("The 'Super Admin' role does not exist.")
+  }
+
+  // Find the "ACTIVE" status ID
+  const activeStatus = await prisma.status.findUnique({
+    where: { name: StatusUserEnum.ACTIVE }
+  })
+
+  if (!activeStatus) {
+    throw new Error("The 'ACTIVE' status does not exist.")
+  }
+
+  // Create the Super Admin user
+  const superAdminUser = await prisma.user.upsert({
+    where: { email: "marlex@test.com" },
+    update: {},
+    create: {
       firstName: "Super",
       lastName: "Admin",
       phone: "0123456789",
-      email: "marlex@test.com", 
+      email: "marlex@test.com",
       city: "Douala",
       neighborhood: "Japoma",
       picture: new Uint8Array(),
       password: "super123",
       temporyPassword: "hashedpassword123",
       expiryPassword: new Date(),
-      roleId: "Super Admin",
-      statusId: StatusUserEnum.ACTIVE
+      roleId: superAdminRole.id,
+      statusId: activeStatus.id
     }
   })
 
-  console.log(`Super Admin user ${superAdminUser.firstName} ${superAdminUser.lastName} seeded.`)
+  console.log(`Super Admin user created: ${superAdminUser.firstName} ${superAdminUser.lastName}.`)
 }
 
 async function seedStatusType(name: string, statuses: string[]) {
@@ -127,10 +146,8 @@ async function main() {
   await seedStatusType("Customer", Object.values(StatusCustomerEnum))
   await seedStatusType("Product", Object.values(StatusProductEnum))
   await seedStatusType("Order", Object.values(StatusOrderEnum))
-  // await seedStatusType("Module", Object.values(StatusModuleEnum))
   await seedPaymentStatuses()
   await seedPaymentMethods()
-
   await seedSuperAdminRole()
   await seedSuperAdminUser()
 }

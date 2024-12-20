@@ -25,7 +25,6 @@ CREATE TABLE "Status" (
 CREATE TABLE "Role" (
     "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
-    "organizationId" TEXT NOT NULL,
     "menuIds" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -76,7 +75,7 @@ CREATE TABLE "User" (
     "email" VARCHAR(100) NOT NULL,
     "city" VARCHAR(100) NOT NULL,
     "neighborhood" VARCHAR(100) NOT NULL,
-    "picture" BYTEA NOT NULL,
+    "picture" BYTEA,
     "roleId" TEXT NOT NULL,
     "statusId" TEXT NOT NULL,
     "password" VARCHAR(64) NOT NULL,
@@ -356,7 +355,7 @@ CREATE INDEX "Status_statusTypeId_idx" ON "Status"("statusTypeId");
 CREATE INDEX "Status_name_idx" ON "Status"("name");
 
 -- CreateIndex
-CREATE INDEX "Role_organizationId_idx" ON "Role"("organizationId");
+CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
 CREATE INDEX "Role_name_idx" ON "Role"("name");
@@ -477,9 +476,6 @@ CREATE INDEX "Table_webpage_idx" ON "Table"("webpage");
 
 -- AddForeignKey
 ALTER TABLE "Status" ADD CONSTRAINT "Status_statusTypeId_fkey" FOREIGN KEY ("statusTypeId") REFERENCES "StatusType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Role" ADD CONSTRAINT "Role_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Permission" ADD CONSTRAINT "Permission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
