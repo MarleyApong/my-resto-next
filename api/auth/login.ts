@@ -8,7 +8,6 @@ export default async function login(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     const { email, password } = req.body
 
-    // Trouver l'utilisateur dans la base de données
     const user = await prisma.user.findUnique({
       where: { email }
     })
@@ -17,17 +16,14 @@ export default async function login(req: NextApiRequest, res: NextApiResponse) {
       return res.status(401).json({ message: "User not found" })
     }
 
-    // Vérification du mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid password" })
     }
 
-    // Générer les tokens
     const accessToken = generateAccessToken(user.id)
     const refreshToken = generateRefreshToken(user.id)
 
-    // Stocker le refresh token dans un cookie HttpOnly
     res.setHeader(
       "Set-Cookie",
       cookie.serialize("refreshToken", refreshToken, {

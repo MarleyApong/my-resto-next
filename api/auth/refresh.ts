@@ -3,6 +3,12 @@ import { verifyRefreshToken } from "@/lib/jwt"
 import { generateAccessToken } from "@/lib/jwt"
 import prisma from "@/lib/db"
 
+import { JwtPayload } from "jsonwebtoken"
+
+function isJwtPayload(token: string | JwtPayload): token is JwtPayload {
+  return typeof token !== "string" && "userId" in token
+}
+
 export default async function refresh(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     const { refreshToken } = req.cookies
@@ -14,8 +20,12 @@ export default async function refresh(req: NextApiRequest, res: NextApiResponse)
     try {
       const decoded = verifyRefreshToken(refreshToken as string)
 
+      if (!isJwtPayload(decoded)) {
+        return res.status(403).json({ message: "Invalid refresh token" })
+      }
+
       const user = await prisma.user.findUnique({
-        where: { id: decoded.id }
+        where: { id: decoded.userId }
       })
 
       if (!user) {
