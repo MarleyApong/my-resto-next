@@ -1,15 +1,14 @@
-import { NextApiRequest, NextApiResponse } from "next"
+import { NextResponse } from "next/server"
 import { errorHandler } from "./errorHandler"
 
-// wrapper
-export function withErrorHandler(handler: (req: NextApiRequest, res: NextApiResponse) => Promise<void>) {
-  return async (req: NextApiRequest, res: NextApiResponse) => {
+type RouteHandler = (request: Request) => Promise<NextResponse> | NextResponse
+
+export function withErrorHandler(handler: RouteHandler) {
+  return async (request: Request) => {
     try {
-      // Normal
-      await handler(req, res)
+      return await handler(request)
     } catch (err: any) {
-      // Error
-      await errorHandler(err, req, res)
+      return await errorHandler(err)
     }
   }
 }

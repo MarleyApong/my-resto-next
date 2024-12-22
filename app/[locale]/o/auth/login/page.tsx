@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useContext } from "react"
 import { Mail, Key, LogIn, Loader2 } from "lucide-react"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog"
-import * as z from "zod"
 import { useRouter } from "next/navigation"
-import "../auth.css"
+import { AuthContext } from "@/contexts/AuthContext"
+import * as z from "zod"
 import Image from "next/image"
+import "../auth.css"
 
 const loginSchema = z.object({
   email: z.string().email("Veuillez entrer une adresse email valide."),
@@ -15,6 +16,7 @@ const loginSchema = z.object({
 
 const Login: React.FC = () => {
   const router = useRouter()
+  const authContext = useContext(AuthContext)
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -50,13 +52,16 @@ const Login: React.FC = () => {
 
     setIsLoading(true)
     try {
-      setTimeout(() => {
-        setIsLoading(false)
-        router.push("/o")
-      }, 1500)
-    } catch (err) {
+      const res = await authContext?.login(email, password)
+      console.log("res", res);
+      
       setIsLoading(false)
-      setAlert({ title: "Erreur", description: "Une erreur est survenue. Veuillez réessayer." })
+      // router.push("/o") // Rediriger après la connexion réussie
+    } catch (err) {
+      console.log("error", err);
+      
+      setIsLoading(false)
+      setAlert({ title: "Erreur", description: "Identifiants incorrects ou problème de serveur." })
     }
   }
 
@@ -76,8 +81,8 @@ const Login: React.FC = () => {
 
           <div className="flex flex-col items-start">
             <div className="flex items-center w-full border-b rounded-l-sm border-gray-300">
-            <div className="w-10 h-10 bg-primary grid place-content-center rounded-tl-sm rounded-tr-sm rounded-bl-sm rounded-br-none">
-            <Mail className="text-white" />
+              <div className="w-10 h-10 bg-primary grid place-content-center rounded-tl-sm rounded-tr-sm rounded-bl-sm rounded-br-none">
+                <Mail className="text-white" />
               </div>
               <input
                 type="email"
@@ -93,8 +98,8 @@ const Login: React.FC = () => {
 
           <div className="flex flex-col items-start gap-1">
             <div className="flex items-center w-full border-b rounded-l-sm border-gray-300">
-            <div className="w-10 h-10 bg-primary grid place-content-center rounded-tl-sm rounded-tr-sm rounded-bl-sm rounded-br-none">
-            <Key className="text-white" />
+              <div className="w-10 h-10 bg-primary grid place-content-center rounded-tl-sm rounded-tr-sm rounded-bl-sm rounded-br-none">
+                <Key className="text-white" />
               </div>
               <input
                 type="password"

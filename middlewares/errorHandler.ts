@@ -1,8 +1,8 @@
-import { NextApiRequest, NextApiResponse } from "next"
 import { errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
+import { NextResponse } from "next/server"
 
-export const errorHandler = async (err: Error, req: NextApiRequest, res: NextApiResponse) => {
+export async function errorHandler(err: Error): Promise<NextResponse> {
   const t = await getI18n()
   const debugLevel: number = 1
   const debugMessage: string = "Limit error return by the supervisor. Contact him for more details on the problem!"
@@ -10,10 +10,8 @@ export const errorHandler = async (err: Error, req: NextApiRequest, res: NextApi
   let status = 500
   let message = t("api.errors.internalServerError")
 
-  // Déclarez le type de `err.name` comme une clé d'`errors`
-  const errorName = err.name as keyof typeof errors;
+  const errorName = err.name as keyof typeof errors
 
-  // Vérifiez si l'erreur est connue
   if (errorName in errors) {
     status = errors[errorName].status
     message = err.message || message
@@ -21,11 +19,14 @@ export const errorHandler = async (err: Error, req: NextApiRequest, res: NextApi
 
   console.error("New error:", err)
 
-  res.status(status).json({
-    success: false,
-    message,
-    name: err.name,
-    error: debugLevel === 0 ? "" : err,
-    infos: debugLevel === 0 ? debugMessage : ""
-  })
+  return NextResponse.json(
+    {
+      success: false,
+      message,
+      name: err.name,
+      error: debugLevel === 0 ? "" : err,
+      infos: debugLevel === 0 ? debugMessage : ""
+    },
+    { status }
+  )
 }
