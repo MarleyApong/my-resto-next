@@ -1,16 +1,9 @@
 import { PrismaClient } from "@prisma/client"
-import {
-  StatusUserEnum,
-  StatusRestaurantEnum,
-  StatusOrganizationEnum,
-  StatusSurveyEnum,
-  StatusCustomerEnum,
-  StatusProductEnum,
-  StatusOrderEnum,
-} from "@/enums/statusEnum"
+import { StatusUserEnum, StatusRestaurantEnum, StatusOrganizationEnum, StatusSurveyEnum, StatusCustomerEnum, StatusProductEnum, StatusOrderEnum } from "@/enums/statusEnum"
 import { PaymentMethod } from "@/enums/paymentMethodEnum"
 import { PaymentStatus } from "@/enums/paymentStatusEnum"
 import { menuItems } from "@/data/mainMenu"
+import bcrypt from "bcryptjs"
 
 const prisma = new PrismaClient()
 
@@ -47,7 +40,6 @@ async function seedSuperAdminRole() {
 }
 
 async function seedSuperAdminUser() {
-  // Find the "Super Admin" role ID
   const superAdminRole = await prisma.role.findUnique({
     where: { name: "Super Admin" }
   })
@@ -56,7 +48,6 @@ async function seedSuperAdminUser() {
     throw new Error("The 'Super Admin' role does not exist.")
   }
 
-  // Find the "ACTIVE" status ID
   const activeStatus = await prisma.status.findUnique({
     where: { name: StatusUserEnum.ACTIVE }
   })
@@ -65,7 +56,9 @@ async function seedSuperAdminUser() {
     throw new Error("The 'ACTIVE' status does not exist.")
   }
 
-  // Create the Super Admin user
+  const hashedPassword = await bcrypt.hash("super123", 10) // Super admin password haché
+  const temporyHashedPassword = await bcrypt.hash("hashedpassword123", 10) // Temporaire haché si nécessaire
+
   const superAdminUser = await prisma.user.upsert({
     where: { email: "marlex@test.com" },
     update: {},
@@ -77,8 +70,8 @@ async function seedSuperAdminUser() {
       city: "Douala",
       neighborhood: "Japoma",
       picture: new Uint8Array(),
-      password: "super123",
-      temporyPassword: "hashedpassword123",
+      password: hashedPassword,
+      temporyPassword: temporyHashedPassword,
       expiryPassword: new Date(),
       roleId: superAdminRole.id,
       statusId: activeStatus.id

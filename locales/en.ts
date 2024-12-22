@@ -1,4 +1,17 @@
 export default {
   "hello": "",
-  "welcome": ""
+  "welcome": "",
+  "api": {
+    "errors": {
+      "userNotFound": "",
+      "internalServerError": "",
+      "incorrectCredentials": "",
+      "methodNotAllowed": "",
+      "refreshTokenNotFound": "",
+      "invalidRefreshToken": ""
+    },
+    "success": {
+      "loggedOut": ""
+    }
+  }
 } as const;

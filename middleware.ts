@@ -6,8 +6,8 @@ const I18nMiddleware = createI18nMiddleware({
   defaultLocale: 'en'
 })
  
-export function middleware(request: NextRequest) {
-  return I18nMiddleware(request)
+export function middleware(req: NextRequest) {
+  return I18nMiddleware(req)
 }
  
 export const config = {

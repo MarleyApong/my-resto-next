@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 // Paths to search for keys and translation files
-const SEARCH_DIRS = ["app/**/*.ts", "app/**/*.tsx", "data/**/*.ts", "data/**/*.tsx", "api/**/*.ts"]
+const SEARCH_DIRS = ["app/**/*.ts", "app/**/*.tsx", "data/**/*.ts", "data/**/*.tsx", "api/**/*.ts", "middlewares/**/*.ts"]
 const LOCALES_DIR = path.join(__dirname, "..", "locales")
 const LOCALE_FILES = ["en.ts", "fr.ts"]
 

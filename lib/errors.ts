@@ -1,8 +1,6 @@
 import { HttpStatus } from "@/enums/httpStatus"
 
-type ErrorMap = Record<string, { status: HttpStatus; name: string }>
-
-export const errors: ErrorMap = {
+export const errors = {
   // Client Errors
   BadRequestError: {
     status: HttpStatus.BAD_REQUEST,

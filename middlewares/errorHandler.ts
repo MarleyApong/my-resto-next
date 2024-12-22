@@ -1,19 +1,21 @@
 import { NextApiRequest, NextApiResponse } from "next"
-import i18next from "i18next"
 import { errors } from "@/lib/errors"
+import { getI18n } from "@/locales/server"
 
-export const errorHandler = (err: Error, req: NextApiRequest, res: NextApiResponse) => {
+export const errorHandler = async (err: Error, req: NextApiRequest, res: NextApiResponse) => {
+  const t = await getI18n()
   const debugLevel: number = 1
   const debugMessage: string = "Limit error return by the supervisor. Contact him for more details on the problem!"
 
-  const language = req.headers["accept-language"] || "en"
-
   let status = 500
-  let message = i18next.t("backend:internal_server_error", { lng: language })
+  let message = t("api.errors.internalServerError")
+
+  // Déclarez le type de `err.name` comme une clé d'`errors`
+  const errorName = err.name as keyof typeof errors;
 
   // Vérifiez si l'erreur est connue
-  if (err.name in errors) {
-    status = errors[err.name].status
+  if (errorName in errors) {
+    status = errors[errorName].status
     message = err.message || message
   }
 

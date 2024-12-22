@@ -1,10 +1,16 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { generateAccessToken, generateRefreshToken } from "@/lib/jwt"
 import bcrypt from "bcryptjs"
 import cookie from "cookie"
 import prisma from "@/lib/db"
+import { NextApiRequest, NextApiResponse } from "next"
+import { generateAccessToken, generateRefreshToken } from "@/lib/jwt"
+import { HttpStatus } from "@/enums/httpStatus"
+import { getI18n } from "@/locales/server"
+import { createError, errors } from "@/lib/errors"
+import { withErrorHandler } from "@/middlewares/withErrorHandler"
 
-export default async function login(req: NextApiRequest, res: NextApiResponse) {
+async function login(req: NextApiRequest, res: NextApiResponse) {
+  const t = await getI18n()
+
   if (req.method === "POST") {
     const { email, password } = req.body
 
@@ -13,12 +19,12 @@ export default async function login(req: NextApiRequest, res: NextApiResponse) {
     })
 
     if (!user) {
-      return res.status(401).json({ message: "User not found" })
+      throw createError(errors.UnauthorizedError, t("api.errors.incorrectCredentials"))
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid password" })
+      throw createError(errors.UnauthorizedError, t("api.errors.incorrectCredentials"))
     }
 
     const accessToken = generateAccessToken(user.id)
@@ -34,8 +40,10 @@ export default async function login(req: NextApiRequest, res: NextApiResponse) {
       })
     )
 
-    return res.status(200).json({ accessToken })
+    return res.status(HttpStatus.OK).json({ accessToken })
   } else {
-    return res.status(405).json({ message: "Method not allowed" })
+    throw createError(errors.MethodNotAllowedError, t("api.errors.methodNotAllowed"))
   }
 }
+
+export default withErrorHandler(login)

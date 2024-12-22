@@ -4,24 +4,30 @@ import { generateAccessToken } from "@/lib/jwt"
 import prisma from "@/lib/db"
 
 import { JwtPayload } from "jsonwebtoken"
+import { withErrorHandler } from "@/middlewares/withErrorHandler"
+import { getI18n } from "@/locales/server"
+import { createError, errors } from "@/lib/errors"
+import { HttpStatus } from "@/enums/httpStatus"
 
 function isJwtPayload(token: string | JwtPayload): token is JwtPayload {
   return typeof token !== "string" && "userId" in token
 }
 
-export default async function refresh(req: NextApiRequest, res: NextApiResponse) {
+async function refresh(req: NextApiRequest, res: NextApiResponse) {
+  const t = await getI18n()
+
   if (req.method === "POST") {
     const { refreshToken } = req.cookies
 
     if (!refreshToken) {
-      return res.status(401).json({ message: "Refresh token not found" })
+      throw createError(errors.UnauthorizedError, t("api.errors.refreshTokenNotFound"))
     }
 
     try {
       const decoded = verifyRefreshToken(refreshToken as string)
 
       if (!isJwtPayload(decoded)) {
-        return res.status(403).json({ message: "Invalid refresh token" })
+        throw createError(errors.ForbiddenError, t("api.errors.invalidRefreshToken"))
       }
 
       const user = await prisma.user.findUnique({
@@ -29,15 +35,17 @@ export default async function refresh(req: NextApiRequest, res: NextApiResponse)
       })
 
       if (!user) {
-        return res.status(401).json({ message: "User not found" })
+        throw createError(errors.UnauthorizedError, t("api.errors.incorrectCredentials"))
       }
 
       const newAccessToken = generateAccessToken(user.id)
-      return res.status(200).json({ accessToken: newAccessToken })
+      return res.status(HttpStatus.OK).json({ accessToken: newAccessToken })
     } catch (err) {
-      return res.status(403).json({ message: "Invalid refresh token" })
+      throw createError(errors.ForbiddenError, t("api.errors.invalidRefreshToken"))
     }
   } else {
-    return res.status(405).json({ message: "Method not allowed" })
+    throw createError(errors.MethodNotAllowedError, t("api.errors.methodNotAllowed"))
   }
 }
+
+export default withErrorHandler(refresh)

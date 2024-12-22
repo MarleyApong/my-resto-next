@@ -1,80 +1,83 @@
 "use client"
 
 import React, { useState } from "react"
-import { useRouter } from "next/navigation"
-import Image from "next/image"
-// import Swal from "sweetalert2"
 import { Mail, Key, LogIn, Loader2 } from "lucide-react"
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog"
+import * as z from "zod"
+import { useRouter } from "next/navigation"
+import "../auth.css"
+import Image from "next/image"
+
+const loginSchema = z.object({
+  email: z.string().email("Veuillez entrer une adresse email valide."),
+  password: z.string().min(1, "Le mot de passe est requis.")
+})
 
 const Login: React.FC = () => {
   const router = useRouter()
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [alert, setAlert] = useState<{ title: string; description: string } | null>(null)
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
-  const showAlert = (title: string, text: string) => {
-    // Swal.fire({
-    //   icon: "error",
-    //   title: title,
-    //   text: text,
-    //   confirmButtonText: "Ok",
-    // })
+  const validateFields = () => {
+    try {
+      loginSchema.parse({ email, password })
+      setErrors({})
+      return true
+    } catch (e) {
+      if (e instanceof z.ZodError) {
+        const fieldErrors: { [key: string]: string } = {}
+        e.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0]] = err.message
+          }
+        })
+        setErrors(fieldErrors)
+        return false
+      }
+      return false
+    }
   }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (email === "" || password === "") {
-      showAlert("Erreur", "Veuillez remplir tous les champs !")
-    } else if (!validateEmail(email)) {
-      showAlert("Erreur", "Veuillez entrer une adresse email valide !")
-    } else {
-      setIsLoading(true)
-      try {
-        // Simule l'appel d'API et vérifie les informations d'identification
-        setTimeout(() => {
-          setIsLoading(false)
-          router.push("/dashboard") // Redirige vers le tableau de bord
-        }, 1500)
-      } catch (err) {
+    if (!validateFields()) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      setTimeout(() => {
         setIsLoading(false)
-        showAlert("Erreur", "Vérifiez votre connexion ou réessayez plus tard !")
-      }
+        router.push("/o")
+      }, 1500)
+    } catch (err) {
+      setIsLoading(false)
+      setAlert({ title: "Erreur", description: "Une erreur est survenue. Veuillez réessayer." })
     }
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-background">
-      <div className="flex h-[80%] w-[80%] rounded-lg shadow-lg overflow-hidden bg-white">
-        <div
-          className="relative hidden md:flex flex-col items-center justify-center w-3/5 text-white p-6 text-center bg-cover bg-center"
-          style={{ backgroundImage: "url('/assets/img/auth/login.jpg')" }}
-        >
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black opacity-60"></div>
+    <div className="login flex items-center justify-center h-screen bg-cover bg-center relative px-3">
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black opacity-30"></div>
 
-          {/* Contenu */}
-          <h1 className="relative z-10 text-4xl font-semibold">Bienvenue sur Gastro Link</h1>
-          <p className="relative z-10 mt-2">Connectez-vous pour continuer</p>
-          <span className="z-10 absolute bottom-4 text-sm">Copyright &#xa9; Gastro Link 2024</span>
-        </div>
+      {/* Form Section */}
+      <div className="relative z-10 w-full max-w-md bg-white p-4 rounded-sm shadow-md">
+        <form onSubmit={handleLogin} className="flex flex-col gap-6 text-center">
+          <div className="flex flex-col items-center ">
+            <Image src="/assets/img/logo/logo.png" alt="Logo" width={150} height={150} className="mb-2" />
+            <span className="text-lg font-bold uppercase text-primary">Gastro Link</span>
+          </div>
+          <h2 className="text-3xl font-semibold text-gray-500">CONNEXION</h2>
 
-        <div className="flex flex-col justify-center w-full md:w-2/5 p-8">
-          <form onSubmit={handleLogin} className="flex flex-col gap-6 text-center">
-            <div className="flex flex-col items-center mb-4">
-              <Image src="/assets/img/logo/logo.png" alt="Logo" width={100} height={100} className="mb-2" />
-              <span className="text-lg font-bold uppercase text-primary">Gastro Link</span>
-            </div>
-            <h2 className="text-3xl font-semibold text-primary">CONNEXION</h2>
-
-            <div className="flex items-center border-b rounded-l-lg border-gray-300">
-              <div className="w-10 h-10 bg-primary grid place-content-center rounded-lg">
-                <Mail className="text-white" />
+          <div className="flex flex-col items-start">
+            <div className="flex items-center w-full border-b rounded-l-sm border-gray-300">
+            <div className="w-10 h-10 bg-primary grid place-content-center rounded-tl-sm rounded-tr-sm rounded-bl-sm rounded-br-none">
+            <Mail className="text-white" />
               </div>
               <input
                 type="email"
@@ -85,10 +88,13 @@ const Login: React.FC = () => {
                 autoComplete="off"
               />
             </div>
+            {errors.email && <span className="auth-error text-red-600 text-sm">{errors.email}</span>}
+          </div>
 
-            <div className="flex items-center border-b rounded-l-lg border-gray-300">
-              <div className="w-10 h-10 bg-primary grid place-content-center rounded-lg">
-                <Key className="text-white" />
+          <div className="flex flex-col items-start gap-1">
+            <div className="flex items-center w-full border-b rounded-l-sm border-gray-300">
+            <div className="w-10 h-10 bg-primary grid place-content-center rounded-tl-sm rounded-tr-sm rounded-bl-sm rounded-br-none">
+            <Key className="text-white" />
               </div>
               <input
                 type="password"
@@ -99,22 +105,40 @@ const Login: React.FC = () => {
                 autoComplete="off"
               />
             </div>
+            {errors.password && <span className="auth-error text-red-600 text-sm">{errors.password}</span>}
+          </div>
 
-            <div className="mt-4">
-              {isLoading ? (
-                <button disabled className="flex items-center justify-center w-full p-3 bg-primary text-white rounded-lg">
-                  <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                  Vérification...
-                </button>
-              ) : (
-                <button type="submit" className="flex items-center justify-center w-full p-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition duration-300">
-                  <LogIn className="mr-2" /> Se connecter
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
+          <div className="mt-4">
+            {isLoading ? (
+              <button disabled className="flex items-center justify-center w-full p-3 bg-primary text-white rounded-sm">
+                <Loader2 className="animate-spin mr-2 h-5 w-5" />
+                Vérification...
+              </button>
+            ) : (
+              <button type="submit" className="flex items-center justify-center w-full p-3 bg-primary text-white rounded-sm hover:bg-primary-dark transition duration-300">
+                <LogIn className="mr-2" /> Se connecter
+              </button>
+            )}
+          </div>
+        </form>
       </div>
+
+      {/* Alert Dialog */}
+      {alert && (
+        <AlertDialog open={!!alert} onOpenChange={() => setAlert(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{alert.title}</AlertDialogTitle>
+              <AlertDialogDescription>{alert.description}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <button onClick={() => setAlert(null)} className="px-4 py-2 bg-primary text-white rounded-sm hover:bg-primary-dark transition">
+                OK
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   )
 }
