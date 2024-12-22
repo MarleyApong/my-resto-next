@@ -8,10 +8,10 @@ import { AppSidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import "./layout.css"
 import { SurveyProvider } from "@/contexts/SurveyContext"
 import { HeaderForTerminalSale } from "@/components/layout/header/HeaderForTerminalSale"
 import { OrderCartProvider } from "@/contexts/OrderCartContext"
+import "./layout.css"
 
 // Charger ThemeProvider dynamiquement sans SSR
 const DynamicThemeProvider = dynamic(() => import("next-themes").then((mod) => mod.ThemeProvider), {

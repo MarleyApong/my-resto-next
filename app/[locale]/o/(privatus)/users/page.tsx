@@ -34,6 +34,7 @@ import { Params } from "@/types/paramTypes"
 import { statusRestaurant } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
 import Level2 from "@/components/features/Level2"
+import { useTranslation } from "react-i18next"
 
 // Type and Validation Schema
 type User = {
@@ -235,7 +236,7 @@ const User = () => {
       }
     }
   ]
-
+  const { t } = useTranslation();
   return (
     <div>
       <Level2 title="Users">
@@ -245,6 +246,7 @@ const User = () => {
         </Button>
       </Level2>
 
+      <h1>{t('welcome')}</h1>
       <DataTable
         totalItems={restaurants.recordsTotal}
         currentPage={filterState.page}
