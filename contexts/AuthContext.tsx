@@ -19,12 +19,11 @@ export const AuthProvider= ({ children }: AuthProviderProps) => {
 
   const login = async (email: string, password: string) => {
     try {
-      alert()
       const { accessToken } = await authService.login(email, password)
       setAccessToken(accessToken)
       api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`
-    } catch (error) {
-      console.error("Login failed:", error)
+    } catch (err) {
+      throw err
     }
   }
 

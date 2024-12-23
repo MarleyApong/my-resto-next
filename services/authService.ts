@@ -2,10 +2,7 @@ import api from "@/lib/axiosConfig"
 
 export const authService = {
   login: async (email: string, password: string) => {
-    alert("api auth login")
-    const res = await api.post("/auth/login", { email, password })
-    console.log("response", res);
-    
+    const res = await api.post("/auth/login", { email, password })    
     return res.data
   },
 

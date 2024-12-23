@@ -2,9 +2,9 @@
 
 import React, { useState, useContext } from "react"
 import { Mail, Key, LogIn, Loader2 } from "lucide-react"
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog"
 import { useRouter } from "next/navigation"
 import { AuthContext } from "@/contexts/AuthContext"
+import { useError } from "@/hooks/useError"
 import * as z from "zod"
 import Image from "next/image"
 import "../auth.css"
@@ -15,6 +15,8 @@ const loginSchema = z.object({
 })
 
 const Login: React.FC = () => {
+  const { showError } = useError()
+
   const router = useRouter()
   const authContext = useContext(AuthContext)
   const [email, setEmail] = useState<string>("")
@@ -53,15 +55,15 @@ const Login: React.FC = () => {
     setIsLoading(true)
     try {
       const res = await authContext?.login(email, password)
-      console.log("res", res);
-      
+      console.log("res", res)
+
       setIsLoading(false)
       // router.push("/o") // Rediriger après la connexion réussie
     } catch (err) {
-      console.log("error", err);
-      
+      showError(err)
+      console.log("error", err)
+
       setIsLoading(false)
-      setAlert({ title: "Erreur", description: "Identifiants incorrects ou problème de serveur." })
     }
   }
 
@@ -127,23 +129,6 @@ const Login: React.FC = () => {
           </div>
         </form>
       </div>
-
-      {/* Alert Dialog */}
-      {alert && (
-        <AlertDialog open={!!alert} onOpenChange={() => setAlert(null)}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{alert.title}</AlertDialogTitle>
-              <AlertDialogDescription>{alert.description}</AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <button onClick={() => setAlert(null)} className="px-4 py-2 bg-primary text-white rounded-sm hover:bg-primary-dark transition">
-                OK
-              </button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
     </div>
   )
 }
