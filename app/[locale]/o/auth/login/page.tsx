@@ -8,6 +8,7 @@ import { useError } from "@/hooks/useError"
 import * as z from "zod"
 import Image from "next/image"
 import "../auth.css"
+import { authService } from "@/services/authService"
 
 const loginSchema = z.object({
   email: z.string().email("Veuillez entrer une adresse email valide."),
@@ -54,15 +55,11 @@ const Login: React.FC = () => {
 
     setIsLoading(true)
     try {
-      const res = await authContext?.login(email, password)
-      console.log("res", res)
-
+      await authContext.login(email, password)
       setIsLoading(false)
-      // router.push("/o") // Rediriger après la connexion réussie
+      router.push("/o")
     } catch (err) {
       showError(err)
-      console.log("error", err)
-
       setIsLoading(false)
     }
   }

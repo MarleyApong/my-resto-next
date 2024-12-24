@@ -1,9 +1,12 @@
 import api from "@/lib/axiosConfig"
 
 export const authService = {
+  getMe: async () => {
+    return await api.get("/auth/me")
+  },
+
   login: async (email: string, password: string) => {
-    const res = await api.post("/auth/login", { email, password })    
-    return res.data
+    return await api.post("/auth/login", { email, password })
   },
 
   logout: async () => {
@@ -11,7 +14,6 @@ export const authService = {
   },
 
   refresh: async () => {
-    const response = await api.post("/auth/refresh")
-    return response.data
+    return await api.post("/auth/refresh")
   }
 }

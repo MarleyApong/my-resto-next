@@ -1,52 +1,88 @@
-import api from "@/lib/axiosConfig"
+"use client"
+
+import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { useRouter, usePathname } from "next/navigation"
 import { authService } from "@/services/authService"
-import React, { createContext, useState, useEffect } from "react"
 
 interface AuthContextType {
-  accessToken: string | null
+  isAuthenticated: boolean
+  user: any | null
+  loading: boolean
+  setUser: (user: any) => void
+  setIsAuthenticated: (value: boolean) => void
   login: (email: string, password: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
 }
 
-interface AuthProviderProps {
-  children: React.ReactNode
-}
+export const AuthContext = createContext<AuthContextType>({
+  isAuthenticated: false,
+  user: null,
+  loading: true,
+  setUser: () => {},
+  setIsAuthenticated: () => {},
+  login: async () => {},
+  logout: async () => {}
+})
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export const AuthProvider= ({ children }: AuthProviderProps) => {
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const pathname = usePathname()
 
   const login = async (email: string, password: string) => {
-    try {
-      const { accessToken } = await authService.login(email, password)
-      setAccessToken(accessToken)
-      api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`
-    } catch (err) {
-      throw err
-    }
+    await authService.login(email, password)
+    const res = await authService.getMe()
+    setUser(res.data.user)
+    setIsAuthenticated(true)
   }
 
   const logout = async () => {
-    await authService.logout()
-    setAccessToken(null)
-    delete api.defaults.headers.common["Authorization"]
+    try {
+      await authService.logout()
+      setUser(null)
+      setIsAuthenticated(false)
+      router.push("/o/auth/login")
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
   }
 
-  // Rafraîchissement automatique au rechargement de la page
   useEffect(() => {
-    const refreshToken = async () => {
+    const checkAuth = async () => {
+      setLoading(true)
       try {
-        const { accessToken } = await authService.refresh()
-        setAccessToken(accessToken)
-        api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`
+        const res = await authService.getMe()
+        setUser(res.data.user)
+        setIsAuthenticated(true)
       } catch (error) {
-        console.error("Failed to refresh token:", error)
+        setIsAuthenticated(false)
+        setUser(null)
+        if (pathname.startsWith("/o/")) {
+          router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
+        }
+      } finally {
+        setLoading(false)
       }
     }
 
-    refreshToken()
-  }, [])
+    checkAuth()
+  }, [pathname])
 
-  return <AuthContext.Provider value={{ accessToken, login, logout }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        loading,
+        setUser,
+        setIsAuthenticated,
+        login,
+        logout
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }

@@ -12,6 +12,7 @@ import { SurveyProvider } from "@/contexts/SurveyContext"
 import { HeaderForTerminalSale } from "@/components/layout/header/HeaderForTerminalSale"
 import { OrderCartProvider } from "@/contexts/OrderCartContext"
 import "./layout.css"
+import AuthGuard from "@/guards/AuthGuard"
 
 // Charger ThemeProvider dynamiquement sans SSR
 const DynamicThemeProvider = dynamic(() => import("next-themes").then((mod) => mod.ThemeProvider), {
@@ -146,40 +147,6 @@ const CustomBreadcrumb = ({ currentPath }: { currentPath: string }) => {
   )
 }
 
-interface PrivatusLayoutProps {
-  children: React.ReactNode
-  defaultOpen: boolean
-}
-
-export default function PrivatusLayout({ children, defaultOpen }: PrivatusLayoutProps) {
-  const pathname = usePathname()
-
-  return (
-    <>
-      <SurveyProvider>
-        <Head>
-          <title>Admin Section</title>
-          <meta name="description" content="Welcome in admin section" />
-        </Head>
-        <DynamicThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <SidebarProvider defaultOpen={defaultOpen}>
-            <OrderCartProvider>
-            {pathname.includes("sales-terminal") ? <HeaderForTerminalSale /> : !pathname.includes("surveys/design/") && <Header />}
-            <div className="relative flex w-screen h-[100vh] transition-all pt- bg-secondary">
-              <AppSidebar />
-              <main className={`relative flex-1 flex flex-col bg-secondary ${!pathname.includes("sales-terminal") || !pathname.includes("surveys/design/") ? "mt-0 p-2 pt-0": "mt-5 p-2"} overflow-y-auto max-h-[calc(100vh - 600px)]`}>
-                {/* <CustomBreadcrumb currentPath={pathname} /> */}
-                <div className={`${!pathname.includes("surveys/design/") && "mt-14"}`}>{children}</div>
-              </main>
-            </div>
-            </OrderCartProvider>
-          </SidebarProvider>
-        </DynamicThemeProvider>
-      </SurveyProvider> 
-    </>
-  )
-}
-
 async function getCookies() {
   const cookieStore = await import("next/headers").then(({ cookies }) => cookies())
   return cookieStore.get("sidebar:state")?.value === "true"
@@ -189,3 +156,41 @@ export async function generatePrivatusLayout(props: { children: React.ReactNode 
   const defaultOpen = await getCookies()
   return <PrivatusLayout {...props} defaultOpen={defaultOpen} />
 }
+
+interface PrivatusLayoutProps {
+  children: React.ReactNode
+  defaultOpen: boolean
+}
+
+const PrivatusLayout = ({ children, defaultOpen }: PrivatusLayoutProps) => {
+  const pathname = usePathname()
+
+  return (
+    <AuthGuard>
+      <SurveyProvider>
+        <Head>
+          <title>Admin Section</title>
+          <meta name="description" content="Welcome in admin section" />
+        </Head>
+        <DynamicThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <SidebarProvider defaultOpen={defaultOpen}>
+            <OrderCartProvider>
+              {pathname.includes("sales-terminal") ? <HeaderForTerminalSale /> : !pathname.includes("surveys/design/") && <Header />}
+              <div className="relative flex w-screen h-[100vh] transition-all pt- bg-secondary">
+                <AppSidebar />
+                <main
+                  className={`relative flex-1 flex flex-col bg-secondary ${!pathname.includes("sales-terminal") || !pathname.includes("surveys/design/") ? "mt-0 p-2 pt-0" : "mt-5 p-2"} overflow-y-auto max-h-[calc(100vh - 600px)]`}
+                >
+                  {/* <CustomBreadcrumb currentPath={pathname} /> */}
+                  <div className={`${!pathname.includes("surveys/design/") && "mt-14"}`}>{children}</div>
+                </main>
+              </div>
+            </OrderCartProvider>
+          </SidebarProvider>
+        </DynamicThemeProvider>
+      </SurveyProvider>
+    </AuthGuard>
+  )
+}
+
+export default PrivatusLayout
