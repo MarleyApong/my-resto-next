@@ -8,7 +8,6 @@ import { useError } from "@/hooks/useError"
 import * as z from "zod"
 import Image from "next/image"
 import "../auth.css"
-import { authService } from "@/services/authService"
 
 const loginSchema = z.object({
   email: z.string().email("Veuillez entrer une adresse email valide."),
@@ -24,7 +23,6 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
-  const [alert, setAlert] = useState<{ title: string; description: string } | null>(null)
 
   const validateFields = () => {
     try {

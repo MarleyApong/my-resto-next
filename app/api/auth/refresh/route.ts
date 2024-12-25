@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { verifyRefreshToken, generateAccessToken } from "@/lib/jwt"
-import { JwtPayload } from "jsonwebtoken"
+import { JsonWebTokenError, JwtPayload } from "jsonwebtoken"
 import { getI18n } from "@/locales/server"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
@@ -20,7 +20,7 @@ export const POST = withLogging(
     const refreshToken = cookieStore.get("refreshToken")
 
     if (!refreshToken) {
-      throw createError(errors.UnauthorizedError, t("api.errors.refreshTokenNotFound"))
+      throw createError(errors.UnauthorizedError, t("api.errors.sessionExpired"))
     }
 
     try {
@@ -45,12 +45,18 @@ export const POST = withLogging(
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         path: "/",
-        maxAge: 60 * 60 // 1 hour
+        maxAge: 60 // 1 day
       })
 
       return NextResponse.json({ accessToken: newAccessToken }, { status: HttpStatus.OK })
     } catch (err) {
-      throw createError(errors.ForbiddenError, t("api.errors.invalidRefreshToken"))
+      cookies().delete("accessToken")
+      cookies().delete("refreshToken")
+      if (err instanceof JsonWebTokenError) {
+        throw createError(errors.ForbiddenError, t("api.errors.sessionExpired"))
+      }
+
+      throw createError(errors.ForbiddenError, t("api.errors.sessionExpired"))
     }
   })
 )

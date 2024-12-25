@@ -1,7 +1,7 @@
 import { ReactNode, useEffect } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
-import Skeleton from "react-loading-skeleton"
+import { Loader } from "@/components/features/Loader"
 
 interface AuthGuardProps {
   children: ReactNode
@@ -16,16 +16,11 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
       router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
     }
   }, [isAuthenticated, loading])
+  
 
-  // if (loading) {
-  //   return (
-  //     <div style={{ padding: "20px" }}>
-  //       <Skeleton height={40} width="60%" style={{ marginBottom: "10px" }} />
-  //       <Skeleton height={20} width="80%" style={{ marginBottom: "10px" }} />
-  //       <Skeleton height={20} width="40%" />
-  //     </div>
-  //   )
-  // }
+  if (loading) {
+    return <Loader />
+  }
 
   return <>{children}</>
 }

@@ -10,7 +10,7 @@ export const GET = withLogging(
       const user = request.user
 
       // Ne pas renvoyer le mot de passe
-      const { password, ...safeUser } = user
+      const { password, temporyPassword, expiryPassword, ...safeUser } = user
 
       return NextResponse.json({
         user: safeUser

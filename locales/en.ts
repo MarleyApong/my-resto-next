@@ -10,11 +10,16 @@ export default {
       "refreshTokenNotFound": "It seems we couldn't find your session. Please log in again.",
       "invalidRefreshToken": "Your session has expired or is invalid. Please log in to continue.",
       "unauthorized": "",
-      "invalidToken": ""
+      "invalidToken": "",
+      "sessionExpired": "",
+      "invalidInput": "",
+      "inactiveAccount": "",
+      "tokenExpired": ""
     },
     "success": {
       "loggedOut": "You have been logged out successfully. See you next time!",
-      "loggedIn": ""
+      "loggedIn": "",
+      "organizationsRetrieved": ""
     }
   }
 } as const;

@@ -2,7 +2,7 @@ import api from "@/lib/axiosConfig"
 
 export const authService = {
   getMe: async () => {
-    return await api.get("/auth/me")
+    return await api.get("/auth/me");
   },
 
   login: async (email: string, password: string) => {

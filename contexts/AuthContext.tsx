@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { authService } from "@/services/authService"
+import { useError } from "@/hooks/useError"
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -25,11 +26,13 @@ export const AuthContext = createContext<AuthContextType>({
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { showError } = useError()
+  const router = useRouter()
+  const pathname = usePathname()
+
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
-  const pathname = usePathname()
 
   const login = async (email: string, password: string) => {
     await authService.login(email, password)
@@ -44,29 +47,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null)
       setIsAuthenticated(false)
       router.push("/o/auth/login")
-    } catch (error) {
-      console.error("Logout error:", error)
+    } catch (err) {
+      showError(err)
+    }
+  }
+
+  const checkAuth = async () => {
+    setLoading(true)
+    try {
+      if (pathname.includes("o/auth")) {
+        setIsAuthenticated(false)
+        setUser(null)
+        return
+      }
+
+      const res = await authService.getMe()
+      setUser(res.data.user)
+      setIsAuthenticated(true)
+    } catch (err) {
+      setIsAuthenticated(false)
+      setUser(null)
+      if (pathname.startsWith("/o/")) {
+        router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
   useEffect(() => {
-    const checkAuth = async () => {
-      setLoading(true)
-      try {
-        const res = await authService.getMe()
-        setUser(res.data.user)
-        setIsAuthenticated(true)
-      } catch (error) {
-        setIsAuthenticated(false)
-        setUser(null)
-        if (pathname.startsWith("/o/")) {
-          router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
-        }
-      } finally {
-        setLoading(false)
-      }
-    }
-
     checkAuth()
   }, [pathname])
 
