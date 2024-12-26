@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useRouter, usePathname } from "next/navigation"
 import { authService } from "@/services/authService"
 import { useError } from "@/hooks/useError"
+import { createAuthErrorHandler } from "@/hooks/useAuthError"
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -33,12 +34,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isClient, setIsClient] = useState(false)
+
+  // Créer le gestionnaire d'erreurs avec les setters
+  const handleAuthError = createAuthErrorHandler(setLoading, setIsAuthenticated, setUser, showError, router)
 
   const login = async (email: string, password: string) => {
-    await authService.login(email, password)
-    const res = await authService.getMe()
-    setUser(res.data.user)
-    setIsAuthenticated(true)
+    try {
+      await authService.login(email, password)
+      const res = await authService.getMe()
+      setUser(res.data.user)
+      setIsAuthenticated(true)
+    } catch (err) {
+      handleAuthError(err)
+    }
   }
 
   const logout = async () => {
@@ -48,22 +57,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthenticated(false)
       router.push("/o/auth/login")
     } catch (err) {
-      showError(err)
+      handleAuthError(err)
     }
   }
 
   const checkAuth = async () => {
+    if (!isClient) return // Ne pas vérifier l'auth côté serveur
+
     setLoading(true)
     try {
-      if (pathname.includes("o/auth")) {
+      const cleanPathname = pathname.replace(/^\/(en|fr|es)\//, "/")
+      const isAuthRoute = cleanPathname.startsWith("/o/auth")
+      const isProtectedRoute = cleanPathname.startsWith("/o") && !isAuthRoute
+
+      if (isAuthRoute) {
         setIsAuthenticated(false)
         setUser(null)
+        setLoading(false) // Important !
         return
       }
 
-      const res = await authService.getMe()
-      setUser(res.data.user)
-      setIsAuthenticated(true)
+      if (isProtectedRoute) {
+        const res = await authService.getMe()
+        setUser(res.data.user)
+        setIsAuthenticated(true)
+      }
     } catch (err) {
       setIsAuthenticated(false)
       setUser(null)
@@ -71,13 +89,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
       }
     } finally {
-      setLoading(false)
+      setLoading(false) // S'assurer que le loading est toujours mis à false
     }
   }
 
   useEffect(() => {
-    checkAuth()
-  }, [pathname])
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (isClient) {
+      checkAuth()
+    }
+  }, [pathname, isClient])
+
+  if (!isClient) {
+    return null
+  }
 
   return (
     <AuthContext.Provider

@@ -1,29 +1,39 @@
 import { useRef, useState, useEffect } from "react"
-import { useIdleTimer, IdleTimerProps } from "react-idle-timer"
+import { useIdleTimer, IIdleTimer } from "react-idle-timer"
 import Swal from "sweetalert2"
 import withReactContent from "sweetalert2-react-content"
-import { useNavigate, useLocation } from "react-router-dom"
+import { usePathname, useRouter } from "next/navigation"
+import { authService } from "@/services/authService"
+import { useAuth } from "@/hooks/useAuth"
+import { useTokenRefresh } from "@/hooks/useTokenRefresh"
 
 // Initialize SweetAlert with React
 const MySwal = withReactContent(Swal)
 
 const InactivityHandler = () => {
+  const router = useRouter()
+  const pathname = usePathname()
+  const { isAuthenticated } = useAuth()
+
   const [isUserActive, setIsUserActive] = useState<boolean>(false)
   const [isPromptVisible, setIsPromptVisible] = useState<boolean>(false)
-  const idleTimerRef = useRef<IdleTimerProps | null>(null)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const timeout = 100 * 60 * 1000 // 10-minute inactivity timeout
+  const idleTimerRef = useRef<IIdleTimer | null>(null)
+  const timeout = 10 * 60 * 1000 // 10-minute inactivity timeout
   const alertTimeout = 20 * 1000 // 20-second alert timeout
 
   useEffect(() => {
-    // Check if the user is on an authenticated route
-    if (location.pathname.startsWith("/auth") || location.pathname.startsWith("/page")) {
+    if (!isAuthenticated) {
       setIsUserActive(false)
     } else {
       setIsUserActive(true)
     }
-  }, [location.pathname])
+  }, [pathname])
+
+  useEffect(() => {
+    if (isUserActive) {
+      useTokenRefresh()
+    }
+  }, [isUserActive])
 
   const handleOnIdle = () => {
     if (isUserActive && !isPromptVisible) {
@@ -39,7 +49,7 @@ const InactivityHandler = () => {
         allowEscapeKey: false,
         allowEnterKey: false,
         timer: alertTimeout,
-        timerProgressBar: true,
+        timerProgressBar: true
       }).then((result) => {
         setIsPromptVisible(false)
         if (result.dismiss === Swal.DismissReason.timer || result.isDismissed) {
@@ -57,10 +67,11 @@ const InactivityHandler = () => {
     }
   }
 
-  const handleLogout = () => {
-    sessionStorage.clear() // Clear session data
-    navigate("/auth/login") // Redirect to login page
-    setIsUserActive(false) // Update user activity status
+  const handleLogout = async () => {
+    sessionStorage.clear()
+    router.push("/auth/login")
+    await authService.logout()
+    setIsUserActive(false)
   }
 
   useIdleTimer({
@@ -68,15 +79,14 @@ const InactivityHandler = () => {
     onIdle: handleOnIdle, // Call handleOnIdle when user is idle
     debounce: 500,
     ref: idleTimerRef,
-    events: ["mousemove", "keydown", "mousedown", "touchstart"], // Events that reset idle timeout
+    events: ["mousemove", "keydown", "mousedown", "touchstart"] // Events that reset idle timeout
   })
 
-  // Render nothing if user is not active
   if (!isUserActive) {
     return null
   }
 
-  return null // Render null even if user is active
+  return null
 }
 
 export default InactivityHandler

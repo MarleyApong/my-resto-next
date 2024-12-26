@@ -2,7 +2,7 @@ import api from "@/lib/axiosConfig"
 
 export const authService = {
   getMe: async () => {
-    return await api.get("/auth/me");
+    return await api.get("/auth/me")
   },
 
   login: async (email: string, password: string) => {
@@ -10,7 +10,7 @@ export const authService = {
   },
 
   logout: async () => {
-    await api.post("/auth/logout")
+    return await api.post("/auth/logout")
   },
 
   refresh: async () => {

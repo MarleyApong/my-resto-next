@@ -1,5 +1,5 @@
-import { authService } from "@/services/authService"
 import axios from "axios"
+import { authService } from "@/services/authService"
 
 const api = axios.create({
   baseURL: "/api",
@@ -7,15 +7,20 @@ const api = axios.create({
 })
 
 let isRefreshing = false
-let refreshSubscribers: (() => void)[] = []
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void
+  reject: (reason?: any) => void
+}> = []
 
-const subscribeTokenRefresh = (cb: () => void) => {
-  refreshSubscribers.push(cb)
-}
-
-const onTokenRefreshed = () => {
-  refreshSubscribers.forEach((cb) => cb())
-  refreshSubscribers = []
+const processQueue = (error: any = null) => {
+  failedQueue.forEach((promise) => {
+    if (error) {
+      promise.reject(error)
+    } else {
+      promise.resolve()
+    }
+  })
+  failedQueue = []
 }
 
 api.interceptors.response.use(
@@ -23,13 +28,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
+    // Gérer le refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        return new Promise((resolve) => {
-          subscribeTokenRefresh(() => {
-            resolve(api(originalRequest))
-          })
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
         })
+          .then(() => api(originalRequest))
+          .catch((err) => Promise.reject(err))
       }
 
       originalRequest._retry = true
@@ -38,11 +44,12 @@ api.interceptors.response.use(
       try {
         await authService.refresh()
         isRefreshing = false
-        onTokenRefreshed()
+        processQueue()
         return api(originalRequest)
       } catch (refreshError) {
         isRefreshing = false
-        window.location.href = `/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`
+        processQueue(refreshError)
+        // Si le refresh échoue, on rejette simplement l'erreur
         return Promise.reject(refreshError)
       }
     }
