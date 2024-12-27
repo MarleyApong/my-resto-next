@@ -3,7 +3,7 @@ import prisma from "@/lib/db"
 export const SESSION_CONFIGS = {
   SHORT_TIMEOUT: 30 * 60 * 1000, // 30 minutes inactivity timeout
   MAX_AGE: 24 * 60 * 60 * 1000, // 24 hours maximum lifetime
-  CLEANUP_INTERVAL: 15 * 60 * 1000 // Run cleanup every 15 minutes
+  CLEANUP_INTERVAL: 15 * 60 * 1000, // Run cleanup every 15 minutes
 }
 
 export async function cleanupExpiredSessions() {

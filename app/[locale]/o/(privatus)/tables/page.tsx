@@ -16,8 +16,8 @@ import { statusRestaurant } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
 import Level2 from "@/components/features/Level2"
 import Qrcode from "qrcode"
-import { toast } from "sonner"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import toast from "react-hot-toast"
 
 // Type and Validation Schema
 type TableMode = "manual" | "auto"

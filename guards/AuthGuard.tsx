@@ -1,40 +1,39 @@
-import { ReactNode, useEffect, useState } from "react"
-import { useAuth } from "@/hooks/useAuth"
-import { useRouter } from "next/navigation"
+"use client"
+
+import { useEffect } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { useAuthStore } from "@/stores/authStore"
 import { Loader } from "@/components/features/Loader"
 
 interface AuthGuardProps {
-  children: ReactNode
+  children: React.ReactNode
 }
 
-const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { isAuthenticated, loading } = useAuth()
+export const AuthGuard = ({ children }: AuthGuardProps) => {
+  const { isAuthenticated, isLoading, checkAuth } = useAuthStore()
   const router = useRouter()
-  const [isClient, setIsClient] = useState(false)
+  const pathname = usePathname()
 
-  // Set client-side flag after initial render
   useEffect(() => {
-    setIsClient(true)
+    if (!isAuthenticated) {
+      checkAuth()
+    }
   }, [])
 
-  // Handle authentication redirect
   useEffect(() => {
-    if (!loading && isClient && !isAuthenticated) {
-      // Store current URL as callback and redirect to login
-      const callbackUrl = encodeURIComponent(window.location.href)
-      router.replace(`/o/auth/login?callbackUrl=${callbackUrl}`)
+    if (!isLoading && !isAuthenticated) {
+      const locale = pathname.split("/")[1]
+      router.push(`/${locale}/o/auth/login`)
     }
-  }, [isAuthenticated, loading, isClient, router])
+  }, [isLoading, isAuthenticated])
 
-  if (loading && isClient) {
+  if (isLoading) {
     return <Loader />
   }
 
-  if (!isClient || !isAuthenticated) {
+  if (!isAuthenticated) {
     return null
   }
 
-  return children
+  return <>{children}</>
 }
-
-export default AuthGuard

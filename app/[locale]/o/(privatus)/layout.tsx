@@ -11,9 +11,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { SurveyProvider } from "@/contexts/SurveyContext"
 import { HeaderForTerminalSale } from "@/components/layout/header/HeaderForTerminalSale"
 import { OrderCartProvider } from "@/contexts/OrderCartContext"
+import { AuthGuard } from "@/guards/AuthGuard"
+import { InactivityHandler } from "@/guards/InactivityHandlerGuard"
 import "./layout.css"
-import AuthGuard from "@/guards/AuthGuard"
-import InactivityHandler from "@/guards/InactivityHandlerGuard"
 
 // Charger ThemeProvider dynamiquement sans SSR
 const DynamicThemeProvider = dynamic(() => import("next-themes").then((mod) => mod.ThemeProvider), {

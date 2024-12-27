@@ -124,7 +124,6 @@ model Session {
   valid        Boolean  @default(true)
   userAgent    String?  @db.Text
   ipAddress    String?  @db.VarChar(45)
-  fingerprint  String   @db.Text
   lastActivity DateTime @default(now())
   expiresAt    DateTime
   createdAt    DateTime @default(now())

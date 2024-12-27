@@ -78,7 +78,6 @@ export const POST = withLogging(
         userId: user.id,
         userAgent: headersList.get("user-agent") || null,
         ipAddress: (headersList.get("x-forwarded-for") || "::1").split(",")[0],
-        fingerprint: generateFingerprint(req),
         expiresAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000) // 1 day from now
       }
     })

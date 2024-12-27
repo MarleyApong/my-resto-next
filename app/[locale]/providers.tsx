@@ -1,4 +1,3 @@
-import { AuthProvider } from "@/contexts/AuthContext"
 import { ErrorProvider } from "@/contexts/ErrorProvider"
 import { I18nProviderClient } from "@/locales/client"
 import { PropsWithChildren } from "react"
@@ -8,10 +7,8 @@ export const Providers = (props: PropsWithChildren<{ local: string }>) => {
   return (
     <ErrorProvider>
       <I18nProviderClient locale={props.local}>
-        <AuthProvider>
-          <Toaster position="top-center" reverseOrder={true} />
-          {props.children}
-        </AuthProvider>
+        <Toaster position="top-center" reverseOrder={true} />
+        {props.children}
       </I18nProviderClient>
     </ErrorProvider>
   )

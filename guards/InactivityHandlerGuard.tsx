@@ -1,15 +1,15 @@
 import { useRef, useState, useEffect } from "react"
 import { useIdleTimer, IIdleTimer } from "react-idle-timer"
+import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/stores/authStore"
 import Swal from "sweetalert2"
 import withReactContent from "sweetalert2-react-content"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/useAuth"
 
 const MySwal = withReactContent(Swal)
 
-const InactivityHandler = () => {
+export const InactivityHandler = () => {
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated } = useAuthStore()
 
   const [isUserActive, setIsUserActive] = useState<boolean>(false)
   const idleTimerRef = useRef<IIdleTimer | null>(null)
@@ -68,5 +68,3 @@ const InactivityHandler = () => {
 
   return null
 }
-
-export default InactivityHandler

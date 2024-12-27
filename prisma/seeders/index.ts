@@ -18,6 +18,20 @@ async function seedSuperAdminRole() {
     }
   })
 
+  // Include dashboard Id first
+  await prisma.permission.upsert({
+    where: { roleId_menuId: { roleId: superAdminRole.id, menuId: "dashboard" } },
+    update: {},
+    create: {
+      menuId: "dashboard",
+      roleId: superAdminRole.id,
+      view: true,
+      create: true,
+      update: true,
+      delete: true
+    }
+  })
+
   // Assign all permissions for all menus and submenus to the "Super Admin"
   for (const item of menuItems) {
     for (const subItem of item.subItems || []) {

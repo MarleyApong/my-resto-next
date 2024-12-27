@@ -1,15 +1,14 @@
 "use client"
 
-import React, { useState, useContext, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { Mail, Key, LogIn, Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { AuthContext } from "@/contexts/AuthContext"
-import { useError } from "@/hooks/useError"
+import { useI18n } from "@/locales/client"
+import { useAuthStore } from "@/stores/authStore"
 import * as z from "zod"
 import Image from "next/image"
-import "../auth.css"
 import toast from "react-hot-toast"
-import { useI18n } from "@/locales/client"
+import "../auth.css"
 
 const loginSchema = z.object({
   email: z.string().email("Veuillez entrer une adresse email valide."),
@@ -17,28 +16,21 @@ const loginSchema = z.object({
 })
 
 const Login: React.FC = () => {
-  const { showError } = useError()
-
   const router = useRouter()
-  const authContext = useContext(AuthContext)
   const t = useI18n()
+  const searchParams = useSearchParams()
 
+  const { login, isAuthenticated, isLoading } = useAuthStore()
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
-
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     const reason = searchParams.get("reason")
     if (reason === "session_expired") {
-      toast(t("sessionExpired"), {
-        icon: "🫤"
-      })
+      toast(t("sessionExpired"), { icon: "🫤" })
     }
 
-    // Remove "reason" to URL
     const params = new URLSearchParams(window.location.search)
     params.delete("reason")
     const newUrl = `${window.location.pathname}?${params.toString()}`
@@ -68,40 +60,29 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
-    if (!validateFields()) {
-      return
-    }
+    if (!validateFields()) return
 
-    setIsLoading(true)
     try {
-      await authContext.login(email, password)
-      setIsLoading(false)
+      await login(email, password)
 
-      // Get callback URL from query parameters
       const searchParams = new URLSearchParams(window.location.search)
       const callbackUrl = searchParams.get("callbackUrl")
-
-      // Redirect to callback URL if exists, otherwise go to dashboard
       if (callbackUrl && callbackUrl.startsWith("/")) {
         router.push(callbackUrl)
       } else {
         router.push("/o")
       }
     } catch (err) {
-      showError(err)
-      setIsLoading(false)
+      toast.error("Erreur lors de la connexion")
     }
   }
 
   return (
     <div className="login flex items-center justify-center h-screen bg-cover bg-center relative px-3">
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black opacity-30"></div>
-
-      {/* Form Section */}
       <div className="relative z-10 w-full max-w-md bg-white p-4 rounded-sm shadow-md">
         <form onSubmit={handleLogin} className="flex flex-col gap-6 text-center">
-          <div className="flex flex-col items-center ">
+          <div className="flex flex-col items-center">
             <Image src="/assets/img/logo/logo.png" alt="Logo" width={150} height={150} className="mb-2" />
             <span className="text-lg font-bold uppercase text-primary">Gastro Link</span>
           </div>
