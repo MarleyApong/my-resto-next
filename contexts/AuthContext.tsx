@@ -74,9 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await api.get("/auth/me")
       setUser(res.data.user)
       setIsAuthenticated(true)
-    } catch (error: any) {
-      showError(error.response?.data?.message || "Login error")
-      throw error
+    } catch (err: any) {
+      showError(err)
+      throw err
     }
   }
 

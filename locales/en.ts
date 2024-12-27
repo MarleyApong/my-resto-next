@@ -21,5 +21,6 @@ export default {
       "loggedIn": "",
       "organizationsRetrieved": ""
     }
-  }
+  },
+  "sessionExpired": ""
 } as const;

@@ -9,28 +9,38 @@ const I18nMiddleware = createI18nMiddleware({
 export async function middleware(request: NextRequest) {
   const response = await I18nMiddleware(request)
   const pathname = request.nextUrl.pathname
+
+  // Remove locale prefix from pathname for clean route checking
   const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
 
   const isAuthRoute = cleanPathname.startsWith("/o/auth")
   const isProtectedRoute = cleanPathname.startsWith("/o") && !isAuthRoute
 
+  // Get session and locale information
   const sessionId = request.cookies.get("sessionId")?.value
   const locale = pathname.match(/^\/(en|fr)/)?.[1] || "en"
 
-  // Helper function to redirect to login
+  // Helper function to redirect to login with the original URL as callback
   const redirectToLogin = () => {
     const loginUrl = new URL(`/${locale}/o/auth/login`, request.url)
-    loginUrl.searchParams.set("callbackUrl", request.url)
+    const callbackUrl = new URL(request.url).pathname
+    loginUrl.searchParams.set("callbackUrl", callbackUrl)
     return NextResponse.redirect(loginUrl)
   }
 
-  // For protected routes, check session
+  // Protect routes that require authentication
   if (isProtectedRoute && !sessionId) {
     return redirectToLogin()
   }
 
-  // Redirect to dashboard if already authenticated
+  // Handle authenticated users trying to access auth routes
   if (isAuthRoute && sessionId) {
+    // Check if there's a callback URL to redirect to
+    const callbackUrl = request.nextUrl.searchParams.get("callbackUrl")
+    if (callbackUrl && callbackUrl.startsWith("/")) {
+      return NextResponse.redirect(new URL(callbackUrl, request.url))
+    }
+    // Default redirect to dashboard if no callback URL
     return NextResponse.redirect(new URL(`/${locale}/o`, request.url))
   }
 

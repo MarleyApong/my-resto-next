@@ -34,27 +34,12 @@ export const ErrorProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     if (err.response) {
-      switch (err.response.status) {
-        // case 401:
-        //   parsedError = {
-        //     status: 401,
-        //     message: "Your session has expired. Please log in again to continue.",
-        //     requiresRedirect: true,
-        //     redirectPath: "/o/auth/login"
-        //   }
-        //   break
-        // case 500:
-        //   parsedError = {
-        //     status: 500,
-        //     message: "Internal server error. Please try again later."
-        //   }
-        //   break
-        default:
-          parsedError = {
-            status: err.response.status,
-            name: err.response.data.name,
-            message: err.response.data?.message || "An error occurred."
-          }
+      if (err.response.status) {
+        parsedError = {
+          status: err.response.status,
+          name: err.response.data.name,
+          message: err.response.data?.message || "An error occurred."
+        }
       }
     } else if (err.message) {
       parsedError = {

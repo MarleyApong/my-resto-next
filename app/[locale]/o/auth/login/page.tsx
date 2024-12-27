@@ -1,13 +1,15 @@
 "use client"
 
-import React, { useState, useContext } from "react"
+import React, { useState, useContext, useEffect } from "react"
 import { Mail, Key, LogIn, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { AuthContext } from "@/contexts/AuthContext"
 import { useError } from "@/hooks/useError"
 import * as z from "zod"
 import Image from "next/image"
 import "../auth.css"
+import toast from "react-hot-toast"
+import { useI18n } from "@/locales/client"
 
 const loginSchema = z.object({
   email: z.string().email("Veuillez entrer une adresse email valide."),
@@ -19,10 +21,29 @@ const Login: React.FC = () => {
 
   const router = useRouter()
   const authContext = useContext(AuthContext)
+  const t = useI18n()
+
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const reason = searchParams.get("reason")
+    if (reason === "session_expired") {
+      toast(t("sessionExpired"), {
+        icon: "🫤"
+      })
+    }
+
+    // Remove "reason" to URL
+    const params = new URLSearchParams(window.location.search)
+    params.delete("reason")
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, "", newUrl)
+  }, [searchParams])
 
   const validateFields = () => {
     try {
@@ -55,7 +76,17 @@ const Login: React.FC = () => {
     try {
       await authContext.login(email, password)
       setIsLoading(false)
-      router.push("/o")
+
+      // Get callback URL from query parameters
+      const searchParams = new URLSearchParams(window.location.search)
+      const callbackUrl = searchParams.get("callbackUrl")
+
+      // Redirect to callback URL if exists, otherwise go to dashboard
+      if (callbackUrl && callbackUrl.startsWith("/")) {
+        router.push(callbackUrl)
+      } else {
+        router.push("/o")
+      }
     } catch (err) {
       showError(err)
       setIsLoading(false)

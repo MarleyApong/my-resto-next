@@ -39,13 +39,13 @@ model Status {
 }
 
 model Role {
-  id             String       @id @default(cuid()) @db.VarChar(25)
-  name           String       @unique @db.VarChar(100)
-  menuIds        Json?
-  permissions    Permission[]
-  users          User[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id          String       @id @default(cuid()) @db.VarChar(25)
+  name        String       @unique @db.VarChar(100)
+  menuIds     Json?
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@index([name])
 }
@@ -108,7 +108,7 @@ model User {
   restaurants     UserRestaurant[]
   organizations   UserOrganization[]
   surveys         UserSurvey[]
-  sessions Session[]
+  sessions        Session[]
 
   @@index([email])
   @@index([roleId])
@@ -124,6 +124,7 @@ model Session {
   valid        Boolean  @default(true)
   userAgent    String?  @db.Text
   ipAddress    String?  @db.VarChar(45)
+  fingerprint  String   @db.Text
   lastActivity DateTime @default(now())
   expiresAt    DateTime
   createdAt    DateTime @default(now())
@@ -253,8 +254,8 @@ model SurveyAnswer {
   answerId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  survey Survey @relation(fields: [surveyId], references: [id])
-  answer Answer @relation(fields: [answerId], references: [id])
+  survey    Survey   @relation(fields: [surveyId], references: [id])
+  answer    Answer   @relation(fields: [answerId], references: [id])
 
   @@id([surveyId, answerId])
 }

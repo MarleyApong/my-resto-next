@@ -8,6 +8,7 @@ import { z } from "zod"
 import { headers } from "next/headers"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/db"
+import { cleanupExpiredSessions } from "@/lib/session"
 
 const loginSchema = z.object({
   email: z
@@ -27,6 +28,9 @@ const loginSchema = z.object({
 
 export const POST = withLogging(
   withErrorHandler(async (request: Request) => {
+    // Clean session expire
+    await cleanupExpiredSessions()
+
     const t = await getI18n()
     const body = await request.json()
     const headersList = headers()
@@ -74,7 +78,8 @@ export const POST = withLogging(
         userId: user.id,
         userAgent: headersList.get("user-agent") || null,
         ipAddress: (headersList.get("x-forwarded-for") || "::1").split(",")[0],
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        fingerprint: generateFingerprint(req),
+        expiresAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000) // 1 day from now
       }
     })
 
@@ -84,7 +89,7 @@ export const POST = withLogging(
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 7 * 24 * 60 * 60 // 7 days
+      maxAge: 1 * 24 * 60 * 60 // 1 day
     })
 
     return NextResponse.json({

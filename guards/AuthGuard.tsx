@@ -12,13 +12,17 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   const router = useRouter()
   const [isClient, setIsClient] = useState(false)
 
+  // Set client-side flag after initial render
   useEffect(() => {
     setIsClient(true)
   }, [])
 
+  // Handle authentication redirect
   useEffect(() => {
     if (!loading && isClient && !isAuthenticated) {
-      router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
+      // Store current URL as callback and redirect to login
+      const callbackUrl = encodeURIComponent(window.location.href)
+      router.replace(`/o/auth/login?callbackUrl=${callbackUrl}`)
     }
   }, [isAuthenticated, loading, isClient, router])
 

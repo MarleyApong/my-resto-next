@@ -10,27 +10,6 @@ interface ExtendedRequest extends Request {
 
 type RouteHandler = (request: ExtendedRequest) => Promise<NextResponse> | NextResponse
 
-async function cleanupExpiredSessions() {
-  const SHORT_TIMEOUT = 30 * 60 * 1000 // 30 minutes for restaurant application
-  const MAX_SESSION_AGE = 12 * 60 * 60 * 1000 // 12 hours maximum session lifetime
-
-  await prisma.session.updateMany({
-    where: {
-      OR: [
-        { expiresAt: { lt: new Date() } }, // Absolute session expiry
-        {
-          lastActivity: {
-            lt: new Date(Date.now() - SHORT_TIMEOUT)
-          }
-        } // Inactivity timeout
-      ]
-    },
-    data: {
-      valid: false
-    }
-  })
-}
-
 export function withAuth(handler: RouteHandler) {
   return async (request: Request) => {
     const t = await getI18n()
@@ -144,7 +123,7 @@ export function withAuth(handler: RouteHandler) {
       return handler(requestWithUser)
     } catch (err: any) {
       // In case of any error, clean up cookie and throw error
-      cookies().set("sessionId", "", { path: "/", expires: new Date(0) }) // Supprime le cookie
+      cookies().set("sessionId", "", { path: "/", expires: new Date(0) })
       throw createError(errors.UnauthorizedError, t("api.errors.unauthorized"))
     }
   }
