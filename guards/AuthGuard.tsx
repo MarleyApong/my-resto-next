@@ -17,24 +17,19 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
   }, [])
 
   useEffect(() => {
-    // Si on n'est plus en chargement, qu'on est côté client et pas authentifié
     if (!loading && isClient && !isAuthenticated) {
       router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
-      return
     }
-  }, [isAuthenticated, loading, isClient])
+  }, [isAuthenticated, loading, isClient, router])
 
-  // Afficher le loader uniquement pendant le chargement initial et côté client
   if (loading && isClient) {
     return <Loader />
   }
 
-  // Ne rien rendre côté serveur ou si pas authentifié
   if (!isClient || !isAuthenticated) {
     return null
   }
 
-  // Rendre les enfants uniquement si authentifié
   return children
 }
 

@@ -1,4 +1,4 @@
-import api from "@/lib/axiosConfig"
+import { api } from "@/lib/axiosConfig"
 
 export const authService = {
   getMe: async () => {
@@ -11,9 +11,5 @@ export const authService = {
 
   logout: async () => {
     return await api.post("/auth/logout")
-  },
-
-  refresh: async () => {
-    return await api.post("/auth/refresh")
   }
 }

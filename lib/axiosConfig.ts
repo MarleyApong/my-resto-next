@@ -1,61 +1,31 @@
 import axios from "axios"
-import { authService } from "@/services/authService"
+import Swal from "sweetalert2"
 
 const api = axios.create({
-  baseURL: "/api",
-  withCredentials: true
+  baseURL: "/api"
 })
 
-let isRefreshing = false
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void
-  reject: (reason?: any) => void
-}> = []
-
-const processQueue = (error: any = null) => {
-  failedQueue.forEach((promise) => {
-    if (error) {
-      promise.reject(error)
-    } else {
-      promise.resolve()
-    }
-  })
-  failedQueue = []
-}
-
+// Simple error handling interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config
+    if (error.response?.status === 401) {
+      const pathname = window.location.pathname
+      const locale = pathname.split("/")[1]
+      window.location.href = `/${locale}/o/auth/login?reason=session_expired`
+      return Promise.reject(error)
+    }
 
-    // Gérer le refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        })
-          .then(() => api(originalRequest))
-          .catch((err) => Promise.reject(err))
-      }
-
-      originalRequest._retry = true
-      isRefreshing = true
-
-      try {
-        await authService.refresh()
-        isRefreshing = false
-        processQueue()
-        return api(originalRequest)
-      } catch (refreshError) {
-        isRefreshing = false
-        processQueue(refreshError)
-        // Si le refresh échoue, on rejette simplement l'erreur
-        return Promise.reject(refreshError)
-      }
+    if (error.response?.data?.message) {
+      await Swal.fire({
+        icon: "error",
+        text: error.response.data.message || "An error occurred",
+        confirmButtonColor: "#3085d6"
+      })
     }
 
     return Promise.reject(error)
   }
 )
 
-export default api
+export { api }

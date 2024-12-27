@@ -4,26 +4,37 @@ import { createI18nMiddleware } from "next-international/middleware"
 const I18nMiddleware = createI18nMiddleware({
   locales: ["en", "fr"],
   defaultLocale: "en"
-})    
+})
 
 export async function middleware(request: NextRequest) {
-  const isPrivateRoute = request.nextUrl.pathname.startsWith("/o") && request.nextUrl.pathname !== "/o/auth/login"
+  const response = await I18nMiddleware(request)
+  const pathname = request.nextUrl.pathname
+  const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
 
-  if (isPrivateRoute) {
-    const accessToken = request.cookies.get("accessToken")
+  const isAuthRoute = cleanPathname.startsWith("/o/auth")
+  const isProtectedRoute = cleanPathname.startsWith("/o") && !isAuthRoute
 
-    if (!accessToken) {
-      return redirectToLogin(request)
-    }
+  const sessionId = request.cookies.get("sessionId")?.value
+  const locale = pathname.match(/^\/(en|fr)/)?.[1] || "en"
+
+  // Helper function to redirect to login
+  const redirectToLogin = () => {
+    const loginUrl = new URL(`/${locale}/o/auth/login`, request.url)
+    loginUrl.searchParams.set("callbackUrl", request.url)
+    return NextResponse.redirect(loginUrl)
   }
 
-  return I18nMiddleware(request)
-}
+  // For protected routes, check session
+  if (isProtectedRoute && !sessionId) {
+    return redirectToLogin()
+  }
 
-function redirectToLogin(request: NextRequest) {
-  const loginUrl = new URL("/o/auth/login", request.url)
-  loginUrl.searchParams.set("callbackUrl", request.nextUrl.href)
-  return NextResponse.redirect(loginUrl)
+  // Redirect to dashboard if already authenticated
+  if (isAuthRoute && sessionId) {
+    return NextResponse.redirect(new URL(`/${locale}/o`, request.url))
+  }
+
+  return response
 }
 
 export const config = {

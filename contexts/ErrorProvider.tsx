@@ -1,3 +1,5 @@
+"use client"
+
 import React, { createContext, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog"

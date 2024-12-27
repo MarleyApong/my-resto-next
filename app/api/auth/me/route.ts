@@ -6,10 +6,10 @@ import { withAuth } from "@/middlewares/withAuth"
 export const GET = withLogging(
   withErrorHandler(
     withAuth(async (request: Request) => {
-      // @ts-ignore
+      // @ts-ignore - withAuth middleware adds user to request
       const user = request.user
 
-      // Ne pas renvoyer le mot de passe
+      // Filter out sensitive data
       const { password, temporyPassword, expiryPassword, ...safeUser } = user
 
       return NextResponse.json({

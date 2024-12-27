@@ -1,11 +1,11 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { generateAccessToken, generateRefreshToken } from "@/lib/jwt"
 import { getI18n } from "@/locales/server"
 import { createError, errors } from "@/lib/errors"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
 import { z } from "zod"
+import { headers } from "next/headers"
 import bcrypt from "bcryptjs"
 import prisma from "@/lib/db"
 
@@ -29,6 +29,7 @@ export const POST = withLogging(
   withErrorHandler(async (request: Request) => {
     const t = await getI18n()
     const body = await request.json()
+    const headersList = headers()
 
     try {
       loginSchema.parse(body)
@@ -67,23 +68,23 @@ export const POST = withLogging(
       throw createError(errors.UnauthorizedError, t("api.errors.inactiveAccount"))
     }
 
-    const accessToken = generateAccessToken(user.id)
-    const refreshToken = generateRefreshToken(user.id)
-
-    cookies().set("accessToken", accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-      maxAge: 60,
-      sameSite: "strict"
+    // Create new session
+    const session = await prisma.session.create({
+      data: {
+        userId: user.id,
+        userAgent: headersList.get("user-agent") || null,
+        ipAddress: (headersList.get("x-forwarded-for") || "::1").split(",")[0],
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      }
     })
 
-    cookies().set("refreshToken", refreshToken, {
+    // Set session cookie
+    cookies().set("sessionId", session.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       path: "/",
-      maxAge: 1 * 24 * 60 * 60,
-      sameSite: "strict"
+      maxAge: 7 * 24 * 60 * 60 // 7 days
     })
 
     return NextResponse.json({

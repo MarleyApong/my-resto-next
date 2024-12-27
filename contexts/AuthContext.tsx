@@ -1,10 +1,9 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react"
+import { createContext, useState, useEffect, ReactNode } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { authService } from "@/services/authService"
+import { api } from "@/lib/axiosConfig"
 import { useError } from "@/hooks/useError"
-import { createAuthErrorHandler } from "@/hooks/useAuthError"
 
 interface AuthContextType {
   isAuthenticated: boolean
@@ -16,15 +15,7 @@ interface AuthContextType {
   logout: () => Promise<void>
 }
 
-export const AuthContext = createContext<AuthContextType>({
-  isAuthenticated: false,
-  user: null,
-  loading: true,
-  setUser: () => {},
-  setIsAuthenticated: () => {},
-  login: async () => {},
-  logout: async () => {}
-})
+export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { showError } = useError()
@@ -36,60 +27,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
 
-  // Créer le gestionnaire d'erreurs avec les setters
-  const handleAuthError = createAuthErrorHandler(setLoading, setIsAuthenticated, setUser, showError, router)
-
-  const login = async (email: string, password: string) => {
-    try {
-      await authService.login(email, password)
-      const res = await authService.getMe()
-      setUser(res.data.user)
-      setIsAuthenticated(true)
-    } catch (err) {
-      handleAuthError(err)
-    }
-  }
-
-  const logout = async () => {
-    try {
-      await authService.logout()
-      setUser(null)
-      setIsAuthenticated(false)
-      router.push("/o/auth/login")
-    } catch (err) {
-      handleAuthError(err)
-    }
-  }
-
   const checkAuth = async () => {
-    if (!isClient) return // Ne pas vérifier l'auth côté serveur
+    if (!isClient) return
 
     setLoading(true)
     try {
-      const cleanPathname = pathname.replace(/^\/(en|fr|es)\//, "/")
+      const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
       const isAuthRoute = cleanPathname.startsWith("/o/auth")
       const isProtectedRoute = cleanPathname.startsWith("/o") && !isAuthRoute
 
       if (isAuthRoute) {
         setIsAuthenticated(false)
         setUser(null)
-        setLoading(false) // Important !
         return
       }
 
       if (isProtectedRoute) {
-        const res = await authService.getMe()
+        const res = await api.get("/auth/me")
         setUser(res.data.user)
         setIsAuthenticated(true)
       }
-    } catch (err) {
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        document.cookie = "sessionId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;"
+      }
       setIsAuthenticated(false)
       setUser(null)
-      if (pathname.startsWith("/o/")) {
-        router.replace(`/o/auth/login?callbackUrl=${encodeURIComponent(window.location.href)}`)
-      }
     } finally {
-      setLoading(false) // S'assurer que le loading est toujours mis à false
+      setLoading(false)
     }
   }
 
@@ -102,6 +67,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       checkAuth()
     }
   }, [pathname, isClient])
+
+  const login = async (email: string, password: string) => {
+    try {
+      await api.post("/auth/login", { email, password })
+      const res = await api.get("/auth/me")
+      setUser(res.data.user)
+      setIsAuthenticated(true)
+    } catch (error: any) {
+      showError(error.response?.data?.message || "Login error")
+      throw error
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout")
+      setUser(null)
+      setIsAuthenticated(false)
+      const locale = pathname.split("/")[1]
+      router.push(`/${locale}/o/auth/login`)
+    } catch (error: any) {
+      showError(error.response?.data?.message || "Logout error")
+    }
+  }
 
   if (!isClient) {
     return null

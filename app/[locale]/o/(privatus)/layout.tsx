@@ -13,6 +13,7 @@ import { HeaderForTerminalSale } from "@/components/layout/header/HeaderForTermi
 import { OrderCartProvider } from "@/contexts/OrderCartContext"
 import "./layout.css"
 import AuthGuard from "@/guards/AuthGuard"
+import InactivityHandler from "@/guards/InactivityHandlerGuard"
 
 // Charger ThemeProvider dynamiquement sans SSR
 const DynamicThemeProvider = dynamic(() => import("next-themes").then((mod) => mod.ThemeProvider), {
@@ -167,6 +168,7 @@ const PrivatusLayout = ({ children, defaultOpen }: PrivatusLayoutProps) => {
 
   return (
     <AuthGuard>
+      <InactivityHandler />
       <SurveyProvider>
         <Head>
           <title>Admin Section</title>
