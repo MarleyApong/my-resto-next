@@ -73,6 +73,8 @@ const Login: React.FC = () => {
         router.push("/o")
       }
     } catch (err) {
+      console.log("err", err);
+      
       toast.error("Erreur lors de la connexion")
     }
   }

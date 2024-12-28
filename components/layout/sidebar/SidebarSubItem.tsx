@@ -10,6 +10,7 @@ interface SidebarSubItemsProps {
 
 export const SidebarSubItems = ({ items, closeSidebar }: SidebarSubItemsProps) => {
   const pathname = usePathname()
+  const normalizedPath = pathname.replace(/^\/(en|fr)/, "")
 
   const handleClick = () => {
     closeSidebar()
@@ -18,7 +19,7 @@ export const SidebarSubItems = ({ items, closeSidebar }: SidebarSubItemsProps) =
   return (
     <SidebarMenuSub>
       {items.map((subItem) => {
-        const isSubItemActive = pathname === subItem.url
+        const isSubItemActive = normalizedPath === subItem.url
         const activeClass = isSubItemActive ? "bg-[var(--sidebar-primary)] text-primary" : ""
 
         return (

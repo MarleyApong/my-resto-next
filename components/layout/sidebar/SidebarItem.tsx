@@ -9,18 +9,19 @@ interface SidebarItemProps {
   item: MenuItem
   isOpen: boolean
   onToggle: (title: string) => void
-  closeSidebar: () => void 
+  closeSidebar: () => void
 }
 
 export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarItemProps) => {
   const pathname = usePathname()
-  const isActive = pathname === item.url || item.subItems.some((subItem) => pathname.includes(subItem.url))
+  const normalizedPath = pathname.replace(/^\/(en|fr)/, "")
+  const isActive = normalizedPath === item.url || item.subItems.some((subItem) => normalizedPath.includes(subItem.url))
 
   const handleClick = () => {
     onToggle(item.title)
     if (item.url !== null) {
       closeSidebar()
-    }      
+    }
   }
 
   const renderNavLink = () => {
@@ -30,7 +31,7 @@ export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarIte
       return (
         <Link href={item.url} onClick={handleClick} className={`flex items-center justify-between mb-2 p-2 rounded ${activeClass}`}>
           <div className="flex items-center">
-            <span className={`${isActive ? "text-white": "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
+            <span className={`${isActive ? "text-white" : "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
             <span className="ml-2">{item.title}</span>
           </div>
           {item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
@@ -41,7 +42,7 @@ export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarIte
     return (
       <button type="button" className={`w-full flex items-center justify-between mb-2 p-2 rounded ${activeClass}`} onClick={handleClick}>
         <div className="flex items-center">
-          <span className={`${isActive ? "text-white": "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
+          <span className={`${isActive ? "text-white" : "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
           <span className="ml-2">{item.title}</span>
         </div>
         {item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
