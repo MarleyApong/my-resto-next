@@ -1,4 +1,27 @@
 -- CreateTable
+CREATE TABLE "Action" (
+    "id" VARCHAR(25) NOT NULL,
+    "name" VARCHAR(25) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Action_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AuditLog" (
+    "id" VARCHAR(25) NOT NULL,
+    "actionId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "entityId" TEXT NOT NULL,
+    "entityType" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "StatusType" (
     "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(50) NOT NULL,
@@ -75,7 +98,7 @@ CREATE TABLE "User" (
     "email" VARCHAR(100) NOT NULL,
     "city" VARCHAR(100) NOT NULL,
     "neighborhood" VARCHAR(100) NOT NULL,
-    "picture" BYTEA,
+    "picture" TEXT,
     "roleId" TEXT NOT NULL,
     "statusId" TEXT NOT NULL,
     "password" VARCHAR(64) NOT NULL,
@@ -112,7 +135,7 @@ CREATE TABLE "Organization" (
     "email" VARCHAR(100) NOT NULL,
     "city" VARCHAR(100),
     "neighborhood" VARCHAR(100),
-    "picture" BYTEA NOT NULL,
+    "picture" TEXT NOT NULL,
     "menuIds" JSONB,
     "statusId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -141,7 +164,7 @@ CREATE TABLE "Restaurant" (
     "email" VARCHAR(100) NOT NULL,
     "city" TEXT NOT NULL,
     "neighborhood" TEXT NOT NULL,
-    "picture" BYTEA NOT NULL,
+    "picture" TEXT NOT NULL,
     "webpage" TEXT NOT NULL,
     "statusId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -217,7 +240,7 @@ CREATE TABLE "Customer" (
     "email" TEXT,
     "city" TEXT,
     "neighborhood" TEXT,
-    "picture" BYTEA,
+    "picture" TEXT,
     "statusId" TEXT NOT NULL,
     "password" VARCHAR(64),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -266,7 +289,7 @@ CREATE TABLE "Product" (
     "name" TEXT NOT NULL,
     "description" TEXT,
     "price" DECIMAL(65,30) NOT NULL,
-    "picture" BYTEA NOT NULL,
+    "picture" TEXT NOT NULL,
     "statusId" TEXT NOT NULL,
     "productCategoryId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -353,6 +376,21 @@ CREATE TABLE "Table" (
 
     CONSTRAINT "Table_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Action_name_key" ON "Action"("name");
+
+-- CreateIndex
+CREATE INDEX "Action_name_idx" ON "Action"("name");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_actionId_idx" ON "AuditLog"("actionId");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_userId_idx" ON "AuditLog"("userId");
+
+-- CreateIndex
+CREATE INDEX "AuditLog_entityType_entityId_idx" ON "AuditLog"("entityType", "entityId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "StatusType_name_key" ON "StatusType"("name");
@@ -497,6 +535,12 @@ CREATE INDEX "Table_restaurantId_idx" ON "Table"("restaurantId");
 
 -- CreateIndex
 CREATE INDEX "Table_webpage_idx" ON "Table"("webpage");
+
+-- AddForeignKey
+ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_actionId_fkey" FOREIGN KEY ("actionId") REFERENCES "Action"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Status" ADD CONSTRAINT "Status_statusTypeId_fkey" FOREIGN KEY ("statusTypeId") REFERENCES "StatusType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

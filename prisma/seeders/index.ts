@@ -4,6 +4,7 @@ import { PaymentMethod } from "@/enums/paymentMethodEnum"
 import { PaymentStatus } from "@/enums/paymentStatusEnum"
 import { menuItems } from "@/data/mainMenu"
 import bcrypt from "bcryptjs"
+import { ACTION } from "@/enums/action"
 
 const prisma = new PrismaClient()
 
@@ -83,7 +84,6 @@ async function seedSuperAdminUser() {
       email: "marlex@test.com",
       city: "Douala",
       neighborhood: "Japoma",
-      picture: new Uint8Array(),
       password: hashedPassword,
       temporyPassword: temporyHashedPassword,
       expiryPassword: new Date(),
@@ -115,7 +115,7 @@ async function seedStatusType(name: string, statuses: string[]) {
   console.log(`${name} statuses seeded.`)
 }
 
-async function seedPaymentStatuses() {
+async function seedPaymentStatus() {
   const paymentStatuses = Object.values(PaymentStatus).map((status) => ({
     name: status
   }))
@@ -127,7 +127,7 @@ async function seedPaymentStatuses() {
       create: status
     })
   }
-  console.log("Payment statuses seeded.")
+  console.log("Payment status seeded.")
 }
 
 async function seedPaymentMethods() {
@@ -145,6 +145,21 @@ async function seedPaymentMethods() {
   console.log("Payment methods seeded.")
 }
 
+async function seedActions() {
+  const actions = Object.values(ACTION).map((action) => ({
+    name: action
+  }))
+
+  for (const action of actions) {
+    await prisma.action.upsert({
+      where: { name: action.name },
+      update: {},
+      create: action
+    })
+  }
+  console.log("Action for audit log seeded.")
+}
+
 async function main() {
   await seedStatusType("User", Object.values(StatusUserEnum))
   await seedStatusType("Restaurant", Object.values(StatusRestaurantEnum))
@@ -153,7 +168,8 @@ async function main() {
   await seedStatusType("Customer", Object.values(StatusCustomerEnum))
   await seedStatusType("Product", Object.values(StatusProductEnum))
   await seedStatusType("Order", Object.values(StatusOrderEnum))
-  await seedPaymentStatuses()
+  await seedActions()
+  await seedPaymentStatus()
   await seedPaymentMethods()
   await seedSuperAdminRole()
   await seedSuperAdminUser()
