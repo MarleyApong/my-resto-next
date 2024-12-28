@@ -31,7 +31,7 @@ interface AuthState {
   isLoading: boolean
   setLoading: (value: boolean) => void
   login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
+  logout: (redirect: (path: string) => void) => Promise<void>
   checkAuth: () => Promise<void>
 }
 
@@ -52,17 +52,19 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true,
         isLoading: false
       })
+
     } catch (error: any) {
       set({ isLoading: false })
       throw error
     }
   },
 
-  logout: async () => {
+  logout: async (redirect) => {
     set({ isLoading: true })
     try {
       await api.post("/auth/logout")
       set({ user: null, isAuthenticated: false, isLoading: false })
+      redirect(`/o/auth/login`)
     } catch (error) {
       set({ isLoading: false })
       throw error

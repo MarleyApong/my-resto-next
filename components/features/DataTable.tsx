@@ -32,11 +32,11 @@ interface OptionType {
 
 export interface FilterState {
   order: string
-  filterBy: string | null
+  filter: string
   status: string | null
-  type: string | null
-  dateRange: DateRange | null
   searchValue: string
+  startDate?: Date
+  endDate?: Date
 }
 
 type DataTableProps<TData> = {
@@ -50,8 +50,6 @@ type DataTableProps<TData> = {
   enableOrderBy?: boolean
   enableFilterBy?: boolean
   enableStatus?: boolean
-  enableType?: boolean
-  enableDateRange?: boolean
   enableActions?: boolean
   className?: string
   height?: string
@@ -65,7 +63,6 @@ type DataTableProps<TData> = {
   pageSize: number
   filterByOptions?: OptionType[]
   statusOptions?: OptionType[]
-  typeOptions?: OptionType[]
   onFilterChange: (filters: FilterState) => void
   onPageChange: (page: number) => void
   onSizeChange: (size: number) => void
@@ -83,8 +80,6 @@ export const DataTable = <TData extends object>({
   enableOrderBy = true,
   enableFilterBy = true,
   enableStatus = true,
-  enableType = false,
-  enableDateRange = true,
   className = "shadow-md",
   height = "calc(100vh - 13rem)",
   onSelectedRowsChange,
@@ -98,7 +93,6 @@ export const DataTable = <TData extends object>({
   onSizeChange,
   filterByOptions = [],
   statusOptions = [],
-  typeOptions = [],
   onFilterChange,
   onExport
 }: DataTableProps<TData>) => {
@@ -109,12 +103,12 @@ export const DataTable = <TData extends object>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [filterState, setFilterState] = useState<FilterState>({
-    order: "asc",
-    filterBy: "message",
+    order: "desc",
+    filter: "createdAt",
     status: "*",
-    type: "",
-    dateRange: { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), to: new Date() },
-    searchValue: ""
+    searchValue: "",
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    endDate: new Date()
   })
 
   // Adjust for 0-based index in table but 1-based in UI
@@ -185,6 +179,8 @@ export const DataTable = <TData extends object>({
   }
 
   const PopoverControl = () => {
+    const isDateFilter = filterState.filter === "createdAt" || filterState.filter === "updatedAt"
+
     return (
       <Popover>
         <PopoverTrigger asChild>
@@ -195,31 +191,69 @@ export const DataTable = <TData extends object>({
         <PopoverContent side="bottom" align="start" className="w-80 bg-background p-2 rounded-sm">
           <div className="grid gap-2">
             <div className="space-y-2">
-              <h4 className="font-medium leading-none">Option de filtre</h4>
-              <p className="text-sm text-muted-foreground">Filtrez les données par tri, état, date ou recherche. </p>
+              <h4 className="font-medium leading-none">Filter Options</h4>
+              <p className="text-sm text-muted-foreground">Filter data by order, status, date or search.</p>
             </div>
 
             <div className="grid gap-2">
               {otherFeactures}
+
+              {/* Order By Selection */}
               {enableOrderBy && (
                 <div className="flex items-center gap-2">
-                  <Label className="w-24 text-sm">Order by</Label>
-                  <Select disabled={isLoading} value={filterState.order} onValueChange={(value) => setFilterState((prev) => ({ ...prev, order: value }))}>
+                  <Label className="w-24 text-sm">Order</Label>
+                  <Select disabled={isLoading} value={filterState.order} onValueChange={(value: "asc" | "desc") => setFilterState((prev) => ({ ...prev, order: value }))}>
                     <SelectTrigger className="w-[180px] flex-1">
                       <SelectValue placeholder="Select order" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="asc">Croissant</SelectItem>
-                      <SelectItem value="desc">Decroissant</SelectItem>
+                      <SelectItem value="asc">Ascending</SelectItem>
+                      <SelectItem value="desc">Descending</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               )}
 
+              {/* Filter By Selection */}
+              {enableFilterBy && filterByOptions.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Label className="w-24 text-sm">Filter by</Label>
+                  <Select
+                    disabled={isLoading}
+                    value={filterState.filter}
+                    onValueChange={(value) => {
+                      setFilterState((prev) => ({
+                        ...prev,
+                        filter: value,
+                        // Reset search value when switching to date filter
+                        searchValue: value === "createdAt" || value === "updatedAt" ? "" : prev.searchValue,
+                        // Reset dates when switching to non-date filter
+                        startDate: value === "createdAt" || value === "updatedAt" ? prev.startDate : undefined,
+                        endDate: value === "createdAt" || value === "updatedAt" ? prev.endDate : undefined
+                      }))
+                    }}
+                  >
+                    <SelectTrigger className="w-[180px] flex-1">
+                      <SelectValue placeholder="Select filter" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filterByOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="createdAt">Created At</SelectItem>
+                      <SelectItem value="updatedAt">Updated At</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Status Selection */}
               {enableStatus && statusOptions.length > 0 && (
                 <div className="flex items-center gap-2">
                   <Label className="w-24 text-sm">Status</Label>
-                  <Select disabled={isLoading} value={filterState.status || undefined} onValueChange={(value) => setFilterState((prev) => ({ ...prev, status: value }))}>
+                  <Select disabled={isLoading} value={filterState.status || "*"} onValueChange={(value) => setFilterState((prev) => ({ ...prev, status: value }))}>
                     <SelectTrigger className="w-[180px] flex-1">
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -235,78 +269,50 @@ export const DataTable = <TData extends object>({
                 </div>
               )}
 
-              {enableType && typeOptions.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Label className="w-24 text-sm">Type</Label>
-                  <Select disabled={isLoading} value={filterState.type || undefined} onValueChange={(value) => setFilterState((prev) => ({ ...prev, type: value }))}>
-                    <SelectTrigger className="w-[180px] flex-1">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {typeOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {enableDateRange && (
+              {/* Conditional rendering of Date Range or Search Input */}
+              {isDateFilter ? (
                 <div className="flex items-center gap-2">
                   <Label className="w-24 text-sm">Date Range</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-[180px] flex-1">
-                        {filterState.dateRange?.from && filterState.dateRange.to
-                          ? `${format(filterState.dateRange.from, "PP")} - ${format(filterState.dateRange.to, "PP")}`
-                          : "Select date range"}
+                        {filterState.startDate && filterState.endDate ? `${format(filterState.startDate, "PP")} - ${format(filterState.endDate, "PP")}` : "Select date range"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-2 bg-background" align="center">
+                    <PopoverContent className="w-auto p-0 border-none bg-background" align="center">
                       <Calendar
+                      
                         mode="range"
-                        selected={filterState.dateRange ?? undefined}
-                        onSelect={(range) => setFilterState((prev) => ({ ...prev, dateRange: range ?? null }))}
+                        selected={{
+                          from: filterState.startDate!,
+                          to: filterState.endDate!
+                        }}
+                        onSelect={(range) => {
+                          if (range?.from && range?.to) {
+                            setFilterState((prev) => ({
+                              ...prev,
+                              startDate: range.from,
+                              endDate: range.to
+                            }))
+                          }
+                        }}
                         className="rounded-sm border"
                       />
-                      <Button onClick={handleDateRangeSubmit} className="mt-1">
-                        Apply
-                      </Button>
                     </PopoverContent>
                   </Popover>
                 </div>
-              )}
-
-              {enableFilterBy && filterByOptions.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <Label className="w-24 text-sm">Filter by</Label>
-                  <Select disabled={isLoading} value={filterState.filterBy || undefined} onValueChange={(value) => setFilterState((prev) => ({ ...prev, filterBy: value }))}>
-                    <SelectTrigger className="w-[180px] flex-1">
-                      <SelectValue placeholder="Select filter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filterByOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              {enableFiltering && (
-                <div className="flex items-center gap-2">
-                  <Label className="w-24 text-sm">Search</Label>
-                  <Input placeholder="Search..." value={filterState.searchValue} onChange={handleSearchChange} className="w-[180px] flex-1" />
-                </div>
+              ) : (
+                enableFiltering && (
+                  <div className="flex items-center gap-2">
+                    <Label className="w-24 text-sm">Search</Label>
+                    <Input placeholder="Search..." value={filterState.searchValue} onChange={handleSearchChange} className="w-[180px] flex-1" />
+                  </div>
+                )
               )}
 
               <div className="mt-4 flex justify-end">
                 <Button size="sm" disabled={isLoading} onClick={handleFilterSubmit}>
-                  Filter
+                  Apply Filters
                 </Button>
               </div>
             </div>
@@ -346,9 +352,9 @@ export const DataTable = <TData extends object>({
   }
 
   return (
-    <div className={`w-full bg-background rounded-sm px-2 ${className}`}>
+    <div className={`w-full bg-background rounded-sm p-2 border ${className}`}>
       {/* Top Actions */}
-      <div className="flex flex-wrap items-center justify-between p-1 shadow-md gap-4">
+      <div className="flex flex-wrap items-center justify-between mb-2 shadow-m gap-4">
         {enableFiltering && PopoverControl()}
 
         <div className="flex items-center gap-2">

@@ -22,7 +22,7 @@ export const organizationSchema = z.object({
   phone: z.string().min(1, "Phone is required").regex(PHONE_REGEX, "Invalid phone number format").trim(),
   email: z.string().email("Invalid email format").max(100, "Email must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim().toLowerCase(),
   status: z.enum(["active", "inactive"]),
-  picture: z.string().optional()
+  picture: z.instanceof(File).refine((file) => ["image/jpeg", "image/png", "image/gif"].includes(file.type), { message: "Picture must be a valid image (JPEG, PNG, GIF)" })
 })
 
 export type OrganizationInput = z.infer<typeof organizationSchema>

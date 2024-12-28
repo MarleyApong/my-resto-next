@@ -4,8 +4,8 @@ import { withLogging } from "@/middlewares/withLogging"
 import { withAuth } from "@/middlewares/withAuth"
 
 export const GET = withLogging(
-  withErrorHandler(
-    withAuth(async (request: Request) => {
+  withAuth(
+    withErrorHandler(async (request: Request) => {
       // @ts-ignore - withAuth middleware adds user to request
       const user = request.user
 

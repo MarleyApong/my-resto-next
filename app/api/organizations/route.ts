@@ -6,12 +6,11 @@ import { organizationSchema } from "@/schemas/organization"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import prisma from "@/lib/db"
-import sharp from "sharp"
 import fs from "fs/promises"
 import path from "path"
 
 // Fonction utilitaire pour gérer les images
-async function handleImage(imageBase64: string, oldImagePath?: string) {
+async function handleImage(imageBase64: string, oldImagePath?: string, directory: string = 'organizations') {
   // Supprimer l'ancienne image si elle existe
   if (oldImagePath) {
     try {
@@ -28,19 +27,17 @@ async function handleImage(imageBase64: string, oldImagePath?: string) {
     
     // Générer un nom de fichier unique
     const filename = `org_${Date.now()}.webp`
-    const relativePath = `/api/imgs/organizations/${filename}`
+    const relativePath = `/api/imgs/${directory}/${filename}`
     const fullPath = path.join(process.cwd(), 'public', relativePath)
 
-    // Compression et conversion en WebP
-    await sharp(buffer)
-      .resize(800, 800, { fit: 'inside' })
-      .webp({ quality: 80 })
-      .toFile(fullPath)
+    // Sauvegarder l'image sans compression
+    await fs.writeFile(fullPath, buffer)
 
     return relativePath
   }
   return null
 }
+
 
 // GET - Liste des organisations
 export const GET = withLogging(
@@ -129,11 +126,15 @@ export const POST = withLogging(
         throw createError(errors.BadRequestError, t("api.errors.invalidStatus"))
       }
 
+      if (!body.picture) {
+        throw createError(errors.BadRequestError, t("api.errors.invalidPicture"))
+      }
+
+
       // Traiter l'image si présente
-      const picturePath = body.picture ? await handleImage(body.picture) : null
+      const picturePath = await handleImage(body.picture)
 
       const organization = await prisma.$transaction(async (tx) => {
-        // Créer l'organisation
         const org = await tx.organization.create({
           data: {
             name: body.name,

@@ -4,7 +4,7 @@ import { PaymentMethod } from "@/enums/paymentMethodEnum"
 import { PaymentStatus } from "@/enums/paymentStatusEnum"
 import { menuItems } from "@/data/mainMenu"
 import bcrypt from "bcryptjs"
-import { ACTION } from "@/enums/action"
+import { Action } from "@/enums/action"
 
 const prisma = new PrismaClient()
 
@@ -146,7 +146,7 @@ async function seedPaymentMethods() {
 }
 
 async function seedActions() {
-  const actions = Object.values(ACTION).map((action) => ({
+  const actions = Object.values(Action).map((action) => ({
     name: action
   }))
 
