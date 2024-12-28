@@ -10,7 +10,7 @@ interface AuthGuardProps {
 }
 
 export const AuthGuard = ({ children }: AuthGuardProps) => {
-  const { isAuthenticated, isLoading, checkAuth } = useAuthStore()
+  const { isAuthenticated, isLoading, checkAuth, logout } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 

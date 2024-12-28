@@ -16,7 +16,7 @@ export function withAuth(handler: RouteHandler) {
     const sessionId = cookies().get("sessionId")?.value
 
     if (!sessionId) {
-      cookies().set("sessionId", "", { path: "/", expires: new Date(0) }) // Supprime le cookie
+      cookies().set("sessionId", "", { path: "/", expires: new Date(0) })
       throw createError(errors.UnauthorizedError, t("api.errors.unauthorized"))
     }
 

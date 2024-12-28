@@ -13,7 +13,7 @@ export const InactivityHandler = () => {
 
   const [isUserActive, setIsUserActive] = useState<boolean>(false)
   const idleTimerRef = useRef<IIdleTimer | null>(null)
-  const timeout = 2 * 60 * 1000 // 2 minutes inactivity timeout
+  const timeout =  60* 60 * 1000 // 2 minutes inactivity timeout
   const alertTimeout = 20 * 1000 // 20-second alert timeout
 
   // Synchroniser l'état `isUserActive` avec l'authentification

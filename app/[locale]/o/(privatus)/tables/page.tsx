@@ -415,7 +415,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Ta
           <div className="w-36">
             <Label htmlFor="tableNumber">Table Number</Label>
             <Input {...register("tableNumber")} placeholder="T-XX" />
-            {errors.tableNumber && <p className="text-red-600 text-sm">{errors.tableNumber.message}</p>}
+            {errors.tableNumber && <p className="text-red-600 text-xs">{errors.tableNumber.message}</p>}
           </div>
         ) : (
           <>
@@ -423,17 +423,17 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Ta
               <div>
                 <Label htmlFor="prefix">Prefix</Label>
                 <Input {...register("prefix")} placeholder="T- or S-" />
-                {errors.prefix && <p className="text-red-600 text-sm">{errors.prefix.message}</p>}
+                {errors.prefix && <p className="text-red-600 text-xs">{errors.prefix.message}</p>}
               </div>
               <div>
                 <Label htmlFor="numberOfTables">Number of Tables</Label>
                 <Input type="number" {...register("numberOfTables", { valueAsNumber: true })} placeholder="10" />
-                {errors.numberOfTables && <p className="text-red-600 text-sm">{errors.numberOfTables.message}</p>}
+                {errors.numberOfTables && <p className="text-red-600 text-xs">{errors.numberOfTables.message}</p>}
               </div>
               <div>
                 <Label htmlFor="baseNumber">Base Number</Label>
                 <Input type="number" {...register("baseNumber", { valueAsNumber: true })} placeholder="0" />
-                {errors.baseNumber && <p className="text-red-600 text-sm">{errors.baseNumber.message}</p>}
+                {errors.baseNumber && <p className="text-red-600 text-xs">{errors.baseNumber.message}</p>}
               </div>
             </div>
           </>
@@ -455,7 +455,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Ta
                 ))}
               </SelectContent>
             </Select>
-            {errors.organization && <p className="text-red-600 text-sm">{errors.organization.message}</p>}
+            {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
           </div>
 
           <div>
@@ -472,7 +472,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Ta
                 ))}
               </SelectContent>
             </Select>
-            {errors.restaurant && <p className="text-red-600 text-sm">{errors.restaurant.message}</p>}
+            {errors.restaurant && <p className="text-red-600 text-xs">{errors.restaurant.message}</p>}
           </div>
 
           <div>
@@ -486,7 +486,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Ta
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
-            {errors.status && <p className="text-red-600 text-sm">{errors.status.message}</p>}
+            {errors.status && <p className="text-red-600 text-xs">{errors.status.message}</p>}
           </div>
         </div>
       </div>

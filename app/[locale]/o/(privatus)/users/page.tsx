@@ -433,12 +433,12 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Us
               ))}
             </SelectContent>
           </Select>
-          {errors.organization && <p className="text-red-600 text-sm">{errors.organization.message}</p>}
+          {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
         </div>
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="firstname">Firstname</Label>
           <Input id="firstname" {...register("firstname")} placeholder="Firstname" />
-          {errors.firstname && <p className="text-red-600 text-sm">{errors.firstname.message}</p>}
+          {errors.firstname && <p className="text-red-600 text-xs">{errors.firstname.message}</p>}
         </div>
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="lastname">Lastname</Label>
@@ -447,7 +447,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Us
         <div>
           <Label htmlFor="phone">Phone</Label>
           <Input id="phone" {...register("phone")} placeholder="Phone" />
-          {errors.phone && <p className="text-red-600 text-sm">{errors.phone.message}</p>}
+          {errors.phone && <p className="text-red-600 text-xs">{errors.phone.message}</p>}
         </div>
         <div>
           <Label htmlFor="status">Status</Label>
@@ -464,7 +464,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Us
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" {...register("email")} placeholder="Email" />
-          {errors.email && <p className="text-red-600 text-sm">{errors.email.message}</p>}
+          {errors.email && <p className="text-red-600 text-xs">{errors.email.message}</p>}
         </div>
       </div>
 

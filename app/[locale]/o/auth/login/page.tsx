@@ -104,7 +104,7 @@ const Login: React.FC = () => {
                 autoComplete="off"
               />
             </div>
-            {errors.email && <span className="auth-error text-red-600 text-sm">{errors.email}</span>}
+            {errors.email && <span className="auth-error text-red-600 text-xs">{errors.email}</span>}
           </div>
 
           <div className="flex flex-col items-start gap-1">
@@ -121,7 +121,7 @@ const Login: React.FC = () => {
                 autoComplete="off"
               />
             </div>
-            {errors.password && <span className="auth-error text-red-600 text-sm">{errors.password}</span>}
+            {errors.password && <span className="auth-error text-red-600 text-xs">{errors.password}</span>}
           </div>
 
           <div className="mt-4">

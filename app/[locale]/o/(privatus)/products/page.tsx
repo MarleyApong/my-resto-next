@@ -413,7 +413,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Pr
         <div>
           <Label htmlFor="name">Product name</Label>
           <Input id="name" {...register("name")} placeholder="Product Name" />
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
         <div>
           <Label htmlFor="category">Category</Label>
@@ -429,7 +429,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Pr
               ))}
             </SelectContent>
           </Select>
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
         <div>
           <Label htmlFor="organization">Organization</Label>
@@ -445,7 +445,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Pr
               ))}
             </SelectContent>
           </Select>
-          {errors.organization && <p className="text-red-600 text-sm">{errors.organization.message}</p>}
+          {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
         </div>
         <div className="sm:col-span-1 lg:col-span-1">
           <Label htmlFor="restaurant">Restaurant</Label>
@@ -461,25 +461,25 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Pr
               ))}
             </SelectContent>
           </Select>
-          {errors.restaurant && <p className="text-red-600 text-sm">{errors.restaurant.message}</p>}
+          {errors.restaurant && <p className="text-red-600 text-xs">{errors.restaurant.message}</p>}
         </div>
         <div>
           <Label htmlFor="price">Price</Label>
           <Input id="price" {...register("price")} placeholder="Price" />
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
 
         <div>
           <Label htmlFor="specialPrice">Special price</Label>
           <Input id="specialPrice" {...register("specialPrice")} placeholder="Special price" />
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
 
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="description">Description</Label>
           <Input id="description" {...register("description")} placeholder="Description" />
           <p className="text-xs text-gray-500">{remainingChars} characters remaining</p>
-          {errors.description && <p className="text-red-600 text-sm">{errors.description.message}</p>}
+          {errors.description && <p className="text-red-600 text-xs">{errors.description.message}</p>}
         </div>
 
         <div>

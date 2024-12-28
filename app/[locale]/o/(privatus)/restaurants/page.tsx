@@ -421,27 +421,27 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Re
               ))}
             </SelectContent>
           </Select>
-          {errors.organization && <p className="text-red-600 text-sm">{errors.organization.message}</p>}
+          {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
         </div>
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="name">Name</Label>
           <Input id="name" {...register("name")} placeholder="Restaurant Name" />
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
         <div className="sm:col-span-1 lg:col-span-1">
           <Label htmlFor="city">City</Label>
           <Input id="city" {...register("city")} placeholder="City" />
-          {errors.city && <p className="text-red-600 text-sm">{errors.city.message}</p>}
+          {errors.city && <p className="text-red-600 text-xs">{errors.city.message}</p>}
         </div>
         <div>
           <Label htmlFor="neighborhood">Neighborhood</Label>
           <Input id="neighborhood" {...register("neighborhood")} placeholder="Neighborhood" />
-          {errors.neighborhood && <p className="text-red-600 text-sm">{errors.neighborhood.message}</p>}
+          {errors.neighborhood && <p className="text-red-600 text-xs">{errors.neighborhood.message}</p>}
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
           <Input id="phone" {...register("phone")} placeholder="Phone" />
-          {errors.phone && <p className="text-red-600 text-sm">{errors.phone.message}</p>}
+          {errors.phone && <p className="text-red-600 text-xs">{errors.phone.message}</p>}
         </div>
         <div>
           <Label htmlFor="status">Status</Label>
@@ -458,13 +458,13 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Re
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="email">Email</Label>
           <Input id="email" {...register("email")} placeholder="Email" />
-          {errors.email && <p className="text-red-600 text-sm">{errors.email.message}</p>}
+          {errors.email && <p className="text-red-600 text-xs">{errors.email.message}</p>}
         </div>
         <div className="sm:col-span-2 lg:col-span-3">
           <Label htmlFor="description">Description</Label>
           <Textarea id="description" maxLength={170} {...register("description")} placeholder="Description" className="resize-none" rows={4} />
           <p className="text-xs text-gray-500">{remainingChars} characters remaining</p>
-          {errors.description && <p className="text-red-600 text-sm">{errors.description.message}</p>}
+          {errors.description && <p className="text-red-600 text-xs">{errors.description.message}</p>}
         </div>
       </div>
 

@@ -324,7 +324,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Su
         <div className="col-span-2">
           <Label htmlFor="name">Survey name</Label>
           <Input id="name" {...register("name")} placeholder="Survey Name" />
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
         <div className="col-span-2">
           <Label htmlFor="organization">Organization</Label>
@@ -340,7 +340,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Su
               ))}
             </SelectContent>
           </Select>
-          {errors.organization && <p className="text-red-600 text-sm">{errors.organization.message}</p>}
+          {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
         </div>
         <div className="col-span-2">
           <Label htmlFor="organization">Restaurant</Label>
@@ -356,7 +356,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Su
               ))}
             </SelectContent>
           </Select>
-          {errors.organization && <p className="text-red-600 text-sm">{errors.organization.message}</p>}
+          {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
         </div>
         <div>
           <Label htmlFor="status">Status</Label>

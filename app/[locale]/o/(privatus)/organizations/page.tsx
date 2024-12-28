@@ -30,11 +30,11 @@ type Organization = {
 }
 
 const organizationSchema = z.object({
-  name: z.string().min(1, "Name is required"),
+  name: z.string().min(1, "Field is required"),
   description: z.string().min(70, "Description must be at least 70 characters").max(170, "Description must not exceed 170 characters"),
-  city: z.string().min(1, "City is required"),
-  neighborhood: z.string().min(1, "Neighborhood is required"),
-  phone: z.string().regex(/^\d+$/, "Phone must contain only numbers"),
+  city: z.string().min(1, "Field is required"),
+  neighborhood: z.string().min(1, "Field is required"),
+  phone: z.string().min(1, "Field is required").regex(/^\d+$/, "Phone must contain only numbers"),
   picture: z.string().optional(),
   status: z.enum(["active", "inactive"])
 })
@@ -367,22 +367,22 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Or
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="name">Name</Label>
           <Input id="name" {...register("name")} placeholder="Organization Name" />
-          {errors.name && <p className="text-red-600 text-sm">{errors.name.message}</p>}
+          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
         <div className="sm:col-span-1 lg:col-span-1">
           <Label htmlFor="city">City</Label>
           <Input id="city" {...register("city")} placeholder="City" />
-          {errors.city && <p className="text-red-600 text-sm">{errors.city.message}</p>}
+          {errors.city && <p className="text-red-600 text-xs">{errors.city.message}</p>}
         </div>
         <div>
           <Label htmlFor="neighborhood">Neighborhood</Label>
           <Input id="neighborhood" {...register("neighborhood")} placeholder="Neighborhood" />
-          {errors.neighborhood && <p className="text-red-600 text-sm">{errors.neighborhood.message}</p>}
+          {errors.neighborhood && <p className="text-red-600 text-xs">{errors.neighborhood.message}</p>}
         </div>
         <div>
           <Label htmlFor="phone">Phone</Label>
           <Input id="phone" {...register("phone")} placeholder="Phone" />
-          {errors.phone && <p className="text-red-600 text-sm">{errors.phone.message}</p>}
+          {errors.phone && <p className="text-red-600 text-xs">{errors.phone.message}</p>}
         </div>
         <div>
           <Label htmlFor="status">Status</Label>
@@ -400,7 +400,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Or
           <Label htmlFor="description">Description</Label>
           <Textarea id="description" maxLength={170} {...register("description")} placeholder="Description" className="resize-none" rows={4} />
           <p className="text-xs text-gray-500">{remainingChars} characters remaining</p>
-          {errors.description && <p className="text-red-600 text-sm">{errors.description.message}</p>}
+          {errors.description && <p className="text-red-600 text-xs">{errors.description.message}</p>}
         </div>
       </div>
 
