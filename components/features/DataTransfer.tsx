@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { MenuItem } from "@/types/sidebarTypes"
+import { MenuItem } from "@/types/sidebar"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "../ui/label"
 

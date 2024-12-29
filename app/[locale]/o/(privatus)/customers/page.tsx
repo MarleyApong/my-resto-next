@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { DataTable } from "@/components/features/DataTable"
 import Level2 from "@/components/features/Level2"
-import { Params } from "@/types/paramTypes"
+import { Params } from "@/types/param"
 import { statusOrganization } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
 

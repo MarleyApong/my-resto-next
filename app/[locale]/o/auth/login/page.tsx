@@ -21,7 +21,7 @@ const Login: React.FC = () => {
   const t = useI18n()
   const searchParams = useSearchParams()
   const { showError } = useError()
-  const { login, isLoading } = useAuth()
+  const { login, isLoading, setIsLoading } = useAuth()
 
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
@@ -66,12 +66,13 @@ const Login: React.FC = () => {
       return false
     }
   }
+  console.log("isLoading", isLoading)
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     if (!validateFields()) return
-
+    setIsLoading(true)
     try {
       await login(email, password)
 
@@ -84,6 +85,8 @@ const Login: React.FC = () => {
       }
     } catch (err) {
       showError(err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -110,6 +113,7 @@ const Login: React.FC = () => {
                 placeholder="Email"
                 className="flex-1 px-2 outline-none bg-transparent h-full"
                 autoComplete="off"
+                disabled={isLoading}
               />
             </div>
             {errors.email && <span className="auth-error text-red-600 text-xs">{errors.email}</span>}
@@ -127,6 +131,7 @@ const Login: React.FC = () => {
                 placeholder="Mot de passe"
                 className="flex-1 px-2 outline-none bg-transparent h-full"
                 autoComplete="off"
+                disabled={isLoading}
               />
             </div>
             {errors.password && <span className="auth-error text-red-600 text-xs">{errors.password}</span>}

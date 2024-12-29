@@ -5,25 +5,29 @@ import { withLogging } from "@/middlewares/withLogging"
 import { organizationSchema } from "@/schemas/organization"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
-import prisma from "@/lib/db"
 import { imageProcessing } from "@/lib/imageProcessing"
 import { buildWhereClause } from "@/lib/buildWhereClause"
+import prisma from "@/lib/db"
 
-// GET - Liste des organisations
 export const GET = withLogging(
   withAuth(
     withErrorHandler(async (request: Request) => {
       const { searchParams } = new URL(request.url)
       const page = parseInt(searchParams.get("page") || "0")
       const size = parseInt(searchParams.get("size") || "20")
-      const order = searchParams.get("order") || "desc"
+      const order = searchParams.get("order") === "asc" ? "asc" : "desc"
       const filter = searchParams.get("filter") || "createdAt"
       const search = searchParams.get("search") || ""
       const status = searchParams.get("status") || "*"
-      const startDate = searchParams.get("startDate")
-      const endDate = searchParams.get("endDate")
+      const startDate = searchParams.get("startDate") ? new Date(searchParams.get("startDate")!) : undefined
+      const endDate = searchParams.get("endDate") ? new Date(searchParams.get("endDate")!) : undefined
 
-      const whereClause = await buildWhereClause(
+      const {
+        where,
+        order: orderBy,
+        skip,
+        take
+      } = await buildWhereClause(
         {
           page,
           size,
@@ -32,16 +36,17 @@ export const GET = withLogging(
           search,
           status,
           startDate,
-          endDate,
+          endDate
         },
         "ORGANIZATION"
       )
 
       const [organizations, total] = await Promise.all([
         prisma.organization.findMany({
-          whereClause,
-          skip: page * size,
-          take: size,
+          where,
+          orderBy,
+          skip,
+          take,
           select: {
             id: true,
             name: true,
@@ -57,12 +62,9 @@ export const GET = withLogging(
               }
             },
             createdAt: true
-          },
-          orderBy: {
-            createdAt: "desc"
           }
         }),
-        prisma.organization.count({ whereClause })
+        prisma.organization.count({ where })
       ])
 
       return NextResponse.json({
@@ -74,7 +76,6 @@ export const GET = withLogging(
   )
 )
 
-// POST - Création d'une organisation
 export const POST = withLogging(
   withAuth(
     withErrorHandler(async (request: Request & { user?: any }) => {
@@ -84,10 +85,11 @@ export const POST = withLogging(
       try {
         organizationSchema.parse(body)
       } catch (error) {
+        console.log("error", error);
+        
         throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
       }
 
-      // Vérifier les permissions
       const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "organizations" && p.create)
       if (!hasPermission) {
         throw createError(errors.ForbiddenError, t("api.errors.forbidden"))
@@ -104,8 +106,10 @@ export const POST = withLogging(
         throw createError(errors.BadRequestError, t("api.errors.invalidPicture"))
       }
 
-      // Traiter l'image si présente
       const picturePath = await imageProcessing(body.picture)
+      if (!picturePath) {
+        throw createError(errors.BadRequestError, t("api.errors.invalidPicture"))
+      }
 
       const organization = await prisma.$transaction(async (tx) => {
         const org = await tx.organization.create({
@@ -121,7 +125,6 @@ export const POST = withLogging(
           }
         })
 
-        // Créer l'entrée d'audit
         await tx.auditLog.create({
           data: {
             actionId: (await tx.action.findUnique({ where: { name: "CREATE" } }))!.id,

@@ -34,9 +34,8 @@ export interface FilterState {
   order: string
   filter: string
   status: string | null
-  searchValue: string
-  startDate?: Date
-  endDate?: Date
+  search: string
+  dateRange: DateRange | null
 }
 
 type DataTableProps<TData> = {
@@ -53,7 +52,7 @@ type DataTableProps<TData> = {
   enableActions?: boolean
   className?: string
   height?: string
-  onSearchChange?: (searchValue: string) => void
+  onSearchChange?: (search: string) => void
   onSelectedRowsChange?: (selectedRowIds: (string | number)[]) => void
   rowIdKey?: string
   bottomActions?: React.ReactNode
@@ -106,9 +105,8 @@ export const DataTable = <TData extends object>({
     order: "desc",
     filter: "createdAt",
     status: "*",
-    searchValue: "",
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-    endDate: new Date()
+    search: "",
+    dateRange: { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), to: new Date() },
   })
 
   // Adjust for 0-based index in table but 1-based in UI
@@ -164,7 +162,7 @@ export const DataTable = <TData extends object>({
   // Handlers
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value
-    setFilterState((prev) => ({ ...prev, searchValue: value }))
+    setFilterState((prev) => ({ ...prev, search: value }))
     if (!value) {
       handleFilterSubmit()
     }
@@ -226,10 +224,10 @@ export const DataTable = <TData extends object>({
                         ...prev,
                         filter: value,
                         // Reset search value when switching to date filter
-                        searchValue: value === "createdAt" || value === "updatedAt" ? "" : prev.searchValue,
+                        search: value === "createdAt" || value === "updatedAt" ? "" : prev.search,
                         // Reset dates when switching to non-date filter
-                        startDate: value === "createdAt" || value === "updatedAt" ? prev.startDate : undefined,
-                        endDate: value === "createdAt" || value === "updatedAt" ? prev.endDate : undefined
+                        startDate: value === "createdAt" || value === "updatedAt" ? prev.dateRange?.from : undefined,
+                        endDate: value === "createdAt" || value === "updatedAt" ? prev.dateRange?.to : undefined
                       }))
                     }}
                   >
@@ -276,7 +274,7 @@ export const DataTable = <TData extends object>({
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-[180px] flex-1">
-                        {filterState.startDate && filterState.endDate ? `${format(filterState.startDate, "PP")} - ${format(filterState.endDate, "PP")}` : "Select date range"}
+                        {filterState.dateRange?.from && filterState.dateRange.to ? `${format(filterState.dateRange.from, "PP")} - ${format(filterState.dateRange.to, "PP")}` : "Select date range"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 border-none bg-background" align="center">
@@ -284,8 +282,8 @@ export const DataTable = <TData extends object>({
                       
                         mode="range"
                         selected={{
-                          from: filterState.startDate!,
-                          to: filterState.endDate!
+                          from: filterState.dateRange?.from!,
+                          to: filterState.dateRange?.to!
                         }}
                         onSelect={(range) => {
                           if (range?.from && range?.to) {
@@ -305,7 +303,7 @@ export const DataTable = <TData extends object>({
                 enableFiltering && (
                   <div className="flex items-center gap-2">
                     <Label className="w-24 text-sm">Search</Label>
-                    <Input placeholder="Search..." value={filterState.searchValue} onChange={handleSearchChange} className="w-[180px] flex-1" />
+                    <Input placeholder="Search..." value={filterState.search} onChange={handleSearchChange} className="w-[180px] flex-1" />
                   </div>
                 )
               )}

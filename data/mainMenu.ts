@@ -1,4 +1,4 @@
-import { MenuItem } from "@/types/sidebarTypes"
+import { MenuItem } from "@/types/sidebar"
 import { Home, Utensils, ClipboardList, Box, Layout, Users, User, LayoutDashboard, Wallet, UserRoundCog, Milestone, Package, HandPlatter, ChartColumnBig, Network, HardHat, Store, AppWindow } from "lucide-react"
 
 export const menuItems: MenuItem[] = [

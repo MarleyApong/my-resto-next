@@ -1,4 +1,4 @@
-import { MenuItem } from "@/types/sidebarTypes"
+import { MenuItem } from "@/types/sidebar"
 import { SidebarSubItems } from "./SidebarSubItem"
 import { SidebarMenuItem, SidebarMenuButton } from "../../ui/sidebar"
 import { ChevronRight, ChevronDown } from "lucide-react"

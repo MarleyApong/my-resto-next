@@ -27,7 +27,9 @@ export default {
       "loggedOut": "Vous vous êtes déconnecté avec succès. À bientôt !",
       "loggedIn": "",
       "organizationsRetrieved": "",
-      "organizationCreated": ""
+      "organizationCreated": "",
+      "organizationUpdated": "",
+      "organizationDeleted": ""
     }
   },
   "sessionExpired": ""

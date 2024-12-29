@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, ChangeEvent } from "react"
+import { useState, useRef, ChangeEvent, useEffect } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -12,22 +12,14 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Params } from "@/types/paramTypes"
+import { ParamsType } from "@/types/param"
 import { statusOrganization } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
+import { OrganizationType } from "@/types/organization"
 import Level2 from "@/components/features/Level2"
-
-// Type and Validation Schema
-type Organization = {
-  name: string
-  description: string
-  city: string
-  neighborhood: string
-  phone: string
-  picture: string
-  status: "active" | "inactive"
-  createAt: string
-}
+import { organizationService } from "@/services/organizationService"
+import { toast } from "sonner"
+import { useError } from "@/hooks/useError"
 
 const organizationSchema = z.object({
   name: z.string().min(1, "Field is required"),
@@ -40,7 +32,7 @@ const organizationSchema = z.object({
 })
 
 // Dummy Data
-const initialOrganizations: Organization[] = [
+const initialOrganizations: OrganizationType[] = [
   {
     name: "Organization 1",
     description: "Organisation dédiée à l'excellence culinaire, réunissant des restaurants engagés à offrir des repas de qualité, un accueil chaleureux et une expérience unique.",
@@ -64,15 +56,15 @@ const initialOrganizations: Organization[] = [
 ]
 
 const Organization = () => {
-  const [isEditing, setIsEditing] = useState<Organization | null>(null)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(null)
-  const [filterState, setFilterState] = useState<Params>({
+  const { showError } = useError()
+  const [isEditing, setIsEditing] = useState<OrganizationType | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
+  const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState<boolean>(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false)
+  const [selectedOrganization, setSelectedOrganization] = useState<OrganizationType | null>(null)
+  const [filterState, setFilterState] = useState<ParamsType>({
     page: 0,
     size: 20,
-    type: "sms",
     filter: "name",
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(),
@@ -80,7 +72,7 @@ const Organization = () => {
     status: "*"
   })
   const [organizations, setOrganizations] = useState<{
-    data: Organization[]
+    data: OrganizationType[]
     recordsFiltered: number
     recordsTotal: number
   }>({
@@ -93,47 +85,68 @@ const Organization = () => {
     setFilterState((prev) => ({ ...prev, page }))
   }
 
-  const handleSearchChange = (searchValue: string) => {
-    setFilterState((prev) => ({ ...prev, search: searchValue }))
+  const handleSizeChange = (size: number) => {
+    setFilterState((prev) => ({ ...prev, size }))
   }
 
-  const handleDelete = () => {
-    if (selectedOrganization) {
-      setOrganizations((prevState) => ({
-        ...prevState,
-        data: prevState.data.filter((org) => org !== selectedOrganization)
-      }))
-      setIsDeleteDialogOpen(false)
+  const loadData = async () => {
+    try {
+      const res = await organizationService.getAll(filterState)
+      setOrganizations({
+        data: res.data.data,
+        recordsFiltered: res.data.recordsFiltered,
+        recordsTotal: res.data.recordsTotal
+      })
+    } catch (err) {
+      showError(err)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [filterState])
+
+  const handleDelete = async () => {
+    if (selectedOrganization?.id) {
+      try {
+        const res = await organizationService.delete(selectedOrganization.id)
+        toast.success(res.data?.message)
+        loadData()
+        setIsDeleteDialogOpen(false)
+      } catch (err) {
+        showError(err)
+      }
     }
   }
 
   const handleFilterChange = (filters: FilterState) => {
     setFilterState((prev) => ({
       ...prev,
-      filter: filters.filterBy || "name",
+      filter: filters.filter || "name",
       status: filters.status || "*",
       startDate: filters.dateRange?.from || prev.startDate,
       endDate: filters.dateRange?.to || prev.endDate,
-      search: filters.searchValue
+      search: filters.search
     }))
   }
 
   console.log("filterState", filterState)
 
-  const handleAddOrEdit = (data: Organization) => {
-    if (isEditing) {
-      setOrganizations((prevState) => ({
-        ...prevState,
-        data: prevState.data.map((org) => (org === isEditing ? { ...isEditing, ...data } : org))
-      }))
+  const handleAddOrEdit = async (data: OrganizationType) => {
+    try {
+      if (isEditing?.id) {
+        const res = await organizationService.update(isEditing.id, data)
+        toast.success(res.data?.message)
+      } else {
+        const res = await organizationService.create(data)
+        toast.success(res.data?.message)
+      }
+      loadData()
+      setIsAddOrEditDialogOpen(false)
       setIsEditing(null)
-    } else {
-      setOrganizations((prevState) => ({
-        ...prevState,
-        data: [...prevState.data, data]
-      }))
+    } catch (err) {
+      showError(err)
     }
-    setIsAddOrEditDialogOpen(false)
   }
 
   const columns = [
@@ -144,10 +157,10 @@ const Organization = () => {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }: any) => {
-        const status = row.original.status
-        const badgeStyle = status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        const status = row.original.status.name
+        const badgeStyle = status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
 
-        return <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-sm font-medium ${badgeStyle}`}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+        return <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-sm font-medium ${badgeStyle}`}>{status}</span>
       }
     },
     {
@@ -209,6 +222,7 @@ const Organization = () => {
         pageSize={filterState.size}
         onFilterChange={handleFilterChange}
         onPageChange={handlePageChange}
+        onSizeChange={handleSizeChange}
         columns={columns}
         data={organizations.data}
         statusOptions={statusOrganization}
@@ -320,14 +334,14 @@ const Organization = () => {
 }
 
 // Add/Edit Form
-const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Organization | null; onSubmit: (data: Organization) => void; onCancel: () => void }) => {
+const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: OrganizationType | null; onSubmit: (data: OrganizationType) => void; onCancel: () => void }) => {
   const {
     register,
     handleSubmit,
     setValue,
     watch,
     formState: { errors }
-  } = useForm<Organization>({
+  } = useForm<OrganizationType>({
     defaultValues: defaultValues || {
       name: "",
       description: "",

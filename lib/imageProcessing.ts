@@ -18,8 +18,15 @@ export async function imageProcessing(imageBase64: string, oldImagePath?: string
     
     // Générer un nom de fichier unique
     const filename = `org_${Date.now()}.webp`
+    const uploadDir = path.join(process.cwd(), 'public', 'api', 'imgs', directory)
     const relativePath = `/api/imgs/${directory}/${filename}`
-    const fullPath = path.join(process.cwd(), 'public', relativePath)
+    const fullPath = path.join(uploadDir, filename)
+
+    try {
+      await fs.mkdir(uploadDir, { recursive: true })
+    } catch (error) {
+      console.error('Error creating directory:', error)
+    }
 
     // Sauvegarder l'image sans compression
     await fs.writeFile(fullPath, buffer)

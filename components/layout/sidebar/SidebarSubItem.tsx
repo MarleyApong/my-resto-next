@@ -1,4 +1,4 @@
-import { SubItem } from "@/types/sidebarTypes"
+import { SubItem } from "@/types/sidebar"
 import { SidebarMenuSub, SidebarMenuSubItem, SidebarMenuButton } from "../../ui/sidebar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"

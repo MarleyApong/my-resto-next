@@ -1,4 +1,4 @@
-export type Params = {
+export type ParamsType = {
   filter?: string
   search?:string
   status?: string

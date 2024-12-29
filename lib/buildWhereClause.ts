@@ -1,10 +1,8 @@
 import { z } from "zod"
 import prisma from "./db"
 
-// Types for supported entities
 export type EntityType = "ORGANIZATION" | "RESTAURANT" | "USER" | "SURVEY" | "CUSTOMER" | "PRODUCT" | "ORDER"
 
-// Mapping of entity types to their filter fields
 const entityFilterFields: Record<EntityType, string[]> = {
   ORGANIZATION: ["name", "email", "phone", "createdAt", "updatedAt"],
   RESTAURANT: ["name", "email", "phone", "city", "neighborhood", "createdAt", "updatedAt"],
@@ -15,7 +13,6 @@ const entityFilterFields: Record<EntityType, string[]> = {
   ORDER: ["orderNumber", "totalAmount", "createdAt", "updatedAt"]
 }
 
-// Generic filter state interface
 export interface FilterState {
   page?: number
   size?: number
@@ -27,7 +24,6 @@ export interface FilterState {
   endDate?: Date
 }
 
-// Dynamic schema generator based on entity type
 function createFilterSchema(entityType: EntityType) {
   return z.object({
     page: z.coerce.number().min(0).default(0),
@@ -41,14 +37,13 @@ function createFilterSchema(entityType: EntityType) {
   })
 }
 
-// Helper function to sanitize search input
 function sanitizeSearchValue(value: string): string {
   return value.replace(/[<>*%&]/g, "").trim()
 }
 
 export async function buildWhereClause(
   params: FilterState,
-  entityType: EntityType,
+  entityType: EntityType
 ): Promise<{
   where: any
   order: any
@@ -63,7 +58,6 @@ export async function buildWhereClause(
     deletedAt: null
   }
 
-  // Handle status filtering
   if (status && status !== "*") {
     const statusRecord = await prisma.status.findFirst({
       where: {
@@ -79,7 +73,6 @@ export async function buildWhereClause(
     }
   }
 
-  // Handle date filters for createdAt/updatedAt
   if (filter === "createdAt" || filter === "updatedAt") {
     if (startDate && endDate) {
       where[filter] = {
@@ -87,33 +80,23 @@ export async function buildWhereClause(
         lte: new Date(endDate.setHours(23, 59, 59, 999))
       }
     }
-  }
-  // Handle search filters
-  else if (search) {
+  } else if (search) {
     const sanitizedSearch = sanitizeSearchValue(search)
 
-    // Special handling for name fields
     if (filter === "name") {
-      // For entities with firstName/lastName
       if (["USER", "CUSTOMER"].includes(entityType)) {
         where.OR = [{ firstName: { contains: sanitizedSearch, mode: "insensitive" } }, { lastName: { contains: sanitizedSearch, mode: "insensitive" } }]
       } else {
         where.name = { contains: sanitizedSearch, mode: "insensitive" }
       }
-    }
-    // Special handling for numeric fields
-    else if (["price", "totalAmount"].includes(filter)) {
+    } else if (["price", "totalAmount"].includes(filter)) {
       const numericValue = parseFloat(sanitizedSearch)
       if (!isNaN(numericValue)) {
         where[filter] = numericValue
       }
-    }
-    // Phone number handling
-    else if (filter === "phone") {
+    } else if (filter === "phone") {
       where[filter] = { contains: sanitizedSearch }
-    }
-    // Default text search
-    else {
+    } else {
       where[filter] = { contains: sanitizedSearch, mode: "insensitive" }
     }
   }

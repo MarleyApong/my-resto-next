@@ -132,7 +132,7 @@ CREATE TABLE "Organization" (
     "name" VARCHAR(100) NOT NULL,
     "description" VARCHAR(185),
     "phone" VARCHAR(15) NOT NULL,
-    "email" VARCHAR(100) NOT NULL,
+    "email" VARCHAR(100),
     "city" VARCHAR(100),
     "neighborhood" VARCHAR(100),
     "picture" TEXT NOT NULL,
