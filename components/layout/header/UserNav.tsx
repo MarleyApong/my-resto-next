@@ -22,13 +22,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { useAuthStore } from "@/stores/authStore copy"
+import { useAuth } from "@/hooks/useAuth"
 import { LogOut, Settings, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export const UserNav = () => {
   const router = useRouter()
-  const { logout } = useAuthStore()
+  const { logout } = useAuth()
 
   return (
     <DropdownMenu>
@@ -77,7 +77,7 @@ export const UserNav = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={() => logout((path) => router.push(path))}>Log Out</AlertDialogAction>
+              <AlertDialogAction onClick={ logout}>Log Out</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

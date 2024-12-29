@@ -37,7 +37,6 @@ const CustomBreadcrumb = ({ currentPath }: { currentPath: string }) => {
     return null
   }
 
-  // Exemple de structure de navigation - à adapter selon vos besoins
   const navigation: NavigationItem[] = [
     {
       title: "users",
@@ -167,7 +166,7 @@ const PrivatusLayout = ({ children, defaultOpen }: PrivatusLayoutProps) => {
   const pathname = usePathname()
 
   return (
-    <AuthGuard>
+    <>
       <InactivityHandler />
       <SurveyProvider>
         <Head>
@@ -191,7 +190,7 @@ const PrivatusLayout = ({ children, defaultOpen }: PrivatusLayoutProps) => {
           </SidebarProvider>
         </DynamicThemeProvider>
       </SurveyProvider>
-    </AuthGuard>
+    </>
   )
 }
 

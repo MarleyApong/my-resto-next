@@ -4,10 +4,11 @@ import React, { useState, useEffect } from "react"
 import { Mail, Key, LogIn, Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useI18n } from "@/locales/client"
-import { useAuthStore } from "@/stores/authStore"
+import { useError } from "@/hooks/useError"
+import { useAuth } from "@/hooks/useAuth"
+import { toast } from "sonner"
 import * as z from "zod"
 import Image from "next/image"
-import toast from "react-hot-toast"
 import "../auth.css"
 
 const loginSchema = z.object({
@@ -19,8 +20,9 @@ const Login: React.FC = () => {
   const router = useRouter()
   const t = useI18n()
   const searchParams = useSearchParams()
+  const { showError } = useError()
+  const { login, isLoading } = useAuth()
 
-  const { login, isAuthenticated, isLoading } = useAuthStore()
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
@@ -28,7 +30,7 @@ const Login: React.FC = () => {
   useEffect(() => {
     const reason = searchParams.get("reason")
     if (reason === "session_expired") {
-      toast(t("sessionExpired"), { icon: "🫤" })
+      toast.info(t("sessionExpired"), { icon: "🫤" })
     }
 
     const params = new URLSearchParams(window.location.search)
@@ -73,9 +75,7 @@ const Login: React.FC = () => {
         router.push("/o")
       }
     } catch (err) {
-      console.log("err", err);
-      
-      toast.error("Erreur lors de la connexion")
+      showError(err)
     }
   }
 

@@ -4,11 +4,12 @@ import { createContext, useState, useEffect, ReactNode } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { api } from "@/lib/axiosConfig"
 import { useError } from "@/hooks/useError"
+import { toast } from "sonner"
 
 interface AuthContextType {
   isAuthenticated: boolean
   user: any | null
-  loading: boolean
+  isLoading: boolean
   setUser: (user: any) => void
   setIsAuthenticated: (value: boolean) => void
   login: (email: string, password: string) => Promise<void>
@@ -24,13 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
 
   const checkAuth = async () => {
     if (!isClient) return
 
-    setLoading(true)
+    setIsLoading(true)
     try {
       const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
       const isAuthRoute = cleanPathname.startsWith("/o/auth")
@@ -49,12 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (err: any) {
       if (err.response?.status === 401) {
-        document.cookie = "sessionId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT;"
+        logout()
       }
       setIsAuthenticated(false)
       setUser(null)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
@@ -82,13 +83,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post("/auth/logout")
+      const res = await api.post("/auth/logout")
+      toast.info(res.data?.message)
       setUser(null)
       setIsAuthenticated(false)
       const locale = pathname.split("/")[1]
       router.push(`/${locale}/o/auth/login`)
-    } catch (error: any) {
-      showError(error.response?.data?.message || "Logout error")
+    } catch (err: any) {
+      showError(err)
     }
   }
 
@@ -101,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         isAuthenticated,
         user,
-        loading,
+        isLoading,
         setUser,
         setIsAuthenticated,
         login,
