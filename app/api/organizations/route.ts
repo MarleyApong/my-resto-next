@@ -6,38 +6,8 @@ import { organizationSchema } from "@/schemas/organization"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import prisma from "@/lib/db"
-import fs from "fs/promises"
-import path from "path"
-
-// Fonction utilitaire pour gérer les images
-async function handleImage(imageBase64: string, oldImagePath?: string, directory: string = 'organizations') {
-  // Supprimer l'ancienne image si elle existe
-  if (oldImagePath) {
-    try {
-      await fs.unlink(path.join(process.cwd(), 'public', oldImagePath))
-    } catch (error) {
-      console.error('Error deleting old image:', error)
-    }
-  }
-
-  // Traiter et sauvegarder la nouvelle image
-  if (imageBase64) {
-    const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '')
-    const buffer = Buffer.from(base64Data, 'base64')
-    
-    // Générer un nom de fichier unique
-    const filename = `org_${Date.now()}.webp`
-    const relativePath = `/api/imgs/${directory}/${filename}`
-    const fullPath = path.join(process.cwd(), 'public', relativePath)
-
-    // Sauvegarder l'image sans compression
-    await fs.writeFile(fullPath, buffer)
-
-    return relativePath
-  }
-  return null
-}
-
+import { imageProcessing } from "@/lib/imageProcessing"
+import { buildWhereClause } from "@/lib/buildWhereClause"
 
 // GET - Liste des organisations
 export const GET = withLogging(
@@ -46,24 +16,30 @@ export const GET = withLogging(
       const { searchParams } = new URL(request.url)
       const page = parseInt(searchParams.get("page") || "0")
       const size = parseInt(searchParams.get("size") || "20")
+      const order = searchParams.get("order") || "desc"
+      const filter = searchParams.get("filter") || "createdAt"
       const search = searchParams.get("search") || ""
-      const status = searchParams.get("status") || undefined
+      const status = searchParams.get("status") || "*"
+      const startDate = searchParams.get("startDate")
+      const endDate = searchParams.get("endDate")
 
-      const where = {
-        deletedAt: null,
-        ...(status && status !== "*" && { status: { name: status } }),
-        ...(search && {
-          OR: [
-            { name: { contains: search, mode: "insensitive" } },
-            { email: { contains: search, mode: "insensitive" } },
-            { phone: { contains: search } }
-          ]
-        })
-      }
+      const whereClause = await buildWhereClause(
+        {
+          page,
+          size,
+          order,
+          filter,
+          search,
+          status,
+          startDate,
+          endDate,
+        },
+        "ORGANIZATION"
+      )
 
       const [organizations, total] = await Promise.all([
         prisma.organization.findMany({
-          where,
+          whereClause,
           skip: page * size,
           take: size,
           select: {
@@ -86,7 +62,7 @@ export const GET = withLogging(
             createdAt: "desc"
           }
         }),
-        prisma.organization.count({ where })
+        prisma.organization.count({ whereClause })
       ])
 
       return NextResponse.json({
@@ -112,9 +88,7 @@ export const POST = withLogging(
       }
 
       // Vérifier les permissions
-      const hasPermission = request.user?.role.permissions.some(
-        (p: any) => p.menuId === "organizations" && p.create
-      )
+      const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "organizations" && p.create)
       if (!hasPermission) {
         throw createError(errors.ForbiddenError, t("api.errors.forbidden"))
       }
@@ -130,9 +104,8 @@ export const POST = withLogging(
         throw createError(errors.BadRequestError, t("api.errors.invalidPicture"))
       }
 
-
       // Traiter l'image si présente
-      const picturePath = await handleImage(body.picture)
+      const picturePath = await imageProcessing(body.picture)
 
       const organization = await prisma.$transaction(async (tx) => {
         const org = await tx.organization.create({

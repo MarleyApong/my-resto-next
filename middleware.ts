@@ -41,23 +41,40 @@ export async function middleware(request: NextRequest) {
 
   // Strip locale prefix for route checking
   const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
+
+  // Skip middleware for /api/auth/me to prevent recursion
+  if (cleanPathname.startsWith("/api/auth/me")) {
+    return response
+  }
+
   const isAuthRoute = cleanPathname.startsWith("/o/auth")
   const isProtectedRoute = cleanPathname.startsWith("/o") && !isAuthRoute
 
   // Retrieve session and locale
   const sessionId = request.cookies.get("sessionId")?.value
-  const locale = pathname.match(/^\/(en|fr)/)?.[1] || request.cookies.get("Next-Locale")?.value || "en" // Fallback to "en"
+  const locale = pathname.match(/^\/(en|fr)/)?.[1] || request.cookies.get("Next-Locale")?.value || "en"
 
   // Set the locale in cookies for subsequent requests
   response.cookies.set("Next-Locale", locale)
 
-  const redirectToLogin = () => {
+  const redirectToLogin = (reason = "") => {
     const loginUrl = new URL(`/${locale}/o/auth/login`, request.url)
     const callbackUrl = new URL(request.url).pathname
     loginUrl.searchParams.set("callbackUrl", callbackUrl)
-    return NextResponse.redirect(loginUrl)
+    if (reason) loginUrl.searchParams.set("reason", reason)
+
+    const newResponse = NextResponse.redirect(loginUrl)
+    newResponse.cookies.set("sessionId", "", {
+      path: "/",
+      expires: new Date(0),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax"
+    })
+    return newResponse
   }
 
+  // Redirect unauthenticated users to login
   if (isProtectedRoute && !sessionId) {
     return redirectToLogin()
   }
@@ -74,14 +91,36 @@ export async function middleware(request: NextRequest) {
   // Check menu permissions for protected routes
   if (isProtectedRoute && sessionId) {
     try {
+      // Add a cache-control header to prevent caching of the /api/auth/me response
       const userResponse = await fetch(`${request.nextUrl.origin}/api/auth/me`, {
         headers: {
-          Cookie: `sessionId=${sessionId}; Next-Locale=${locale}`
+          Cookie: `sessionId=${sessionId}; Next-Locale=${locale}`,
+          "Cache-Control": "no-store, max-age=0"
         }
       })
 
       if (!userResponse.ok) {
-        return redirectToLogin()
+        const errorData = await userResponse.json()
+        let reason = "session_expired"
+
+        switch (errorData.name) {
+          case "SessionExpiredError":
+            reason = "session_expired"
+            break
+          case "SessionInvalidError":
+            reason = "session_invalid"
+            break
+          case "SessionRevokedError":
+            reason = "session_revoked"
+            break
+          case "InactiveAccountError":
+            reason = "account_inactive"
+            break
+          default:
+            reason = "server_error"
+            break
+        }
+        return redirectToLogin(reason)
       }
 
       const { user } = await userResponse.json()
@@ -100,7 +139,7 @@ export async function middleware(request: NextRequest) {
         }
       }
     } catch (error) {
-      return redirectToLogin()
+      return redirectToLogin("server_error")
     }
   }
 

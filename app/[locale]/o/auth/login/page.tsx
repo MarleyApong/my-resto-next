@@ -27,10 +27,18 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState<string>("")
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
 
+  const reasonMessages: any = {
+    session_expired: "Votre session a expiré. Veuillez vous reconnecter.",
+    session_invalid: "Session invalide. Veuillez vous reconnecter.",
+    session_revoked: "Votre session a été révoquée par un administrateur.",
+    account_inactive: "Votre compte a été désactivé. Contactez un administrateur.",
+    server_error: "Une erreur serveur s'est produite. Veuillez réessayer."
+  }
+
   useEffect(() => {
     const reason = searchParams.get("reason")
-    if (reason === "session_expired") {
-      toast.info(t("sessionExpired"), { icon: "🫤" })
+    if (reason && reasonMessages[reason]) {
+      toast.error(reasonMessages[reason])
     }
 
     const params = new URLSearchParams(window.location.search)

@@ -10,6 +10,10 @@ export const errors = {
     status: HttpStatus.UNAUTHORIZED,
     name: "UnauthorizedError"
   },
+  SessionExpiredError: { status: HttpStatus.UNAUTHORIZED, name: "SessionExpiredError" },
+  SessionInvalidError: { status: HttpStatus.UNAUTHORIZED, name: "SessionInvalidError" },
+  SessionRevokedError: { status: HttpStatus.UNAUTHORIZED, name: "SessionRevokedError" },
+  InactiveAccountError: { status: HttpStatus.UNAUTHORIZED, name: "InactiveAccountError" },
   ForbiddenError: {
     status: HttpStatus.FORBIDDEN,
     name: "ForbiddenError"

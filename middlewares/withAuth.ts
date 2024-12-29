@@ -10,14 +10,25 @@ interface ExtendedRequest extends Request {
 
 type RouteHandler = (request: ExtendedRequest) => Promise<NextResponse> | NextResponse
 
+const clearSessionCookie = () => {
+  cookies().set("sessionId", "", {
+    path: "/",
+    expires: new Date(0),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax"
+  })
+}
+
 export function withAuth(handler: RouteHandler) {
   return async (request: Request) => {
     const t = await getI18n()
     const sessionId = cookies().get("sessionId")?.value
 
+    // Si pas de sessionId dans les cookies
     if (!sessionId) {
-      cookies().set("sessionId", "", { path: "/", expires: new Date(0) })
-      throw createError(errors.UnauthorizedError, t("api.errors.unauthorized"))
+      clearSessionCookie()
+      throw createError(errors.UnauthorizedError, t("api.errors.noSession"))
     }
 
     try {
@@ -82,38 +93,72 @@ export function withAuth(handler: RouteHandler) {
         }
       })
 
-      if (
-        !session ||
-        !session.user ||
-        session.lastActivity < new Date(Date.now() - 30 * 60 * 1000) || // Inactivity timeout
-        session.expiresAt < new Date() // Absolute expiry
-      ) {
-        // Invalidate session and delete cookie
-        cookies().set("sessionId", "", { path: "/", expires: new Date(0) })
+      // Session n'existe pas dans la BD
+      if (!session || !session.user) {
+        clearSessionCookie()
+        throw createError(errors.SessionInvalidError, t("api.errors.invalidSession"))
+      }
+
+      // Vérification de la validité
+      if (!session.valid) {
+        clearSessionCookie()
+        throw createError(errors.SessionRevokedError, t("api.errors.sessionRevoked"))
+      }
+
+      // Vérification de l'expiration absolue
+      if (session.expiresAt < new Date()) {
+        clearSessionCookie()
+        await prisma.session
+          .update({
+            where: { id: sessionId },
+            data: { valid: false }
+          })
+          .catch(() => {})
+        throw createError(errors.SessionExpiredError, t("api.errors.sessionExpired"))
+      }
+
+      // Vérification de l'inactivité
+      if (session.lastActivity < new Date(Date.now() - 30 * 60 * 1000)) {
+        clearSessionCookie()
+        await prisma.session
+          .update({
+            where: { id: sessionId },
+            data: { valid: false }
+          })
+          .catch(() => {})
+        throw createError(errors.SessionExpiredError, t("api.errors.sessionInactive"))
+      }
+
+      try {
+        // Mise à jour de la dernière activité de manière atomique
         await prisma.session.update({
-          where: { id: sessionId },
-          data: { valid: false }
+          where: {
+            id: sessionId,
+            valid: true // Double vérification de sécurité
+          },
+          data: {
+            lastActivity: new Date()
+          }
         })
-
-        throw createError(errors.UnauthorizedError, t("api.errors.unauthorized"))
+      } catch (updateError) {
+        // Si la mise à jour échoue, on continue quand même
+        // mais on log l'erreur pour le debugging
+        console.error("Failed to update session lastActivity:", updateError)
       }
 
-      // Update last activity atomically
-      await prisma.session.update({
-        where: {
-          id: sessionId,
-          valid: true // Extra safety check
-        },
-        data: {
-          lastActivity: new Date()
-        }
-      })
-
-      // Verify user status is active
+      // Vérification du statut de l'utilisateur
       if (session.user.status.name !== "ACTIVE") {
-        throw createError(errors.UnauthorizedError, t("api.errors.inactiveAccount"))
+        clearSessionCookie()
+        await prisma.session
+          .update({
+            where: { id: sessionId },
+            data: { valid: false }
+          })
+          .catch(() => {})
+        throw createError(errors.InactiveAccountError, t("api.errors.inactiveAccount"))
       }
 
+      // Ajout de l'utilisateur à la requête
       const requestWithUser = new Request(request, {
         headers: request.headers
       }) as ExtendedRequest
@@ -122,9 +167,21 @@ export function withAuth(handler: RouteHandler) {
 
       return handler(requestWithUser)
     } catch (err: any) {
-      // In case of any error, clean up cookie and throw error
-      cookies().set("sessionId", "", { path: "/", expires: new Date(0) })
-      throw createError(errors.UnauthorizedError, t("api.errors.unauthorized"))
+      // On ne nettoie le cookie que si c'est une erreur d'authentification
+      // ou si l'erreur vient de Prisma (potentiellement session invalide)
+      if (
+        err.name === "UnauthorizedError" ||
+        err.name === "SessionInvalidError" ||
+        err.name === "SessionExpiredError" ||
+        err.name === "SessionRevokedError" ||
+        err.name === "InactiveAccountError" ||
+        err.status === 401 ||
+        err.code === "P2025" // Prisma error pour record non trouvé
+      ) {
+        clearSessionCookie()
+      }
+
+      throw err
     }
   }
 }

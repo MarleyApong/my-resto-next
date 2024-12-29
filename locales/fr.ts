@@ -14,12 +14,20 @@ export default {
       "sessionExpired": "",
       "invalidInput": "",
       "inactiveAccount": "",
-      "tokenExpired": ""
+      "tokenExpired": "",
+      "forbidden": "",
+      "invalidStatus": "",
+      "invalidPicture": "",
+      "noSession": "",
+      "invalidSession": "",
+      "sessionRevoked": "",
+      "sessionInactive": ""
     },
     "success": {
       "loggedOut": "Vous vous êtes déconnecté avec succès. À bientôt !",
       "loggedIn": "",
-      "organizationsRetrieved": ""
+      "organizationsRetrieved": "",
+      "organizationCreated": ""
     }
   },
   "sessionExpired": ""

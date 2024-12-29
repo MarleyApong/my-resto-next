@@ -10,6 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   user: any | null
   isLoading: boolean
+  setIsLoading: (value: boolean) => void
   setUser: (user: any) => void
   setIsAuthenticated: (value: boolean) => void
   login: (email: string, password: string) => Promise<void>
@@ -31,29 +32,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     if (!isClient) return
 
+    // Évitez de vérifier l'authentification sur les routes d'auth
+    const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
+    if (cleanPathname.startsWith("/o/auth")) {
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     try {
-      const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
-      const isAuthRoute = cleanPathname.startsWith("/o/auth")
-      const isProtectedRoute = cleanPathname.startsWith("/o") && !isAuthRoute
-
-      if (isAuthRoute) {
-        setIsAuthenticated(false)
-        setUser(null)
-        return
-      }
-
-      if (isProtectedRoute) {
-        const res = await api.get("/auth/me")
-        setUser(res.data.user)
-        setIsAuthenticated(true)
-      }
+      const res = await api.get("/auth/me")
+      setUser(res.data.user)
+      setIsAuthenticated(true)
     } catch (err: any) {
       if (err.response?.status === 401) {
-        logout()
+        setUser(null)
+        setIsAuthenticated(false)
+        const locale = pathname.split("/")[1]
+        router.push(`/${locale}/o/auth/login`)
       }
-      setIsAuthenticated(false)
-      setUser(null)
     } finally {
       setIsLoading(false)
     }
@@ -104,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         user,
         isLoading,
+        setIsLoading,
         setUser,
         setIsAuthenticated,
         login,

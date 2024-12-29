@@ -4,16 +4,16 @@ import React, { useEffect, useState } from "react"
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, useSidebar } from "@/components/ui/sidebar"
 import { SidebarItem } from "./SidebarItem"
 import { menuItems } from "@/data/mainMenu"
-import { useAuthStore } from "@/stores/authStore"
+import { useAuth } from "@/hooks/useAuth"
 
 export function AppSidebar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState<boolean>(false)
   const { toggleSidebar } = useSidebar()
-  const { user } = useAuthStore()
+  const { user } = useAuth()
 
   const hasMenuAccess = (menuId: string) => {
-    return user?.role?.permissions?.some((permission) => permission.menuId === menuId && permission.view)
+    return user?.role?.permissions?.some((permission: any) => permission.menuId === menuId && permission.view)
   }
 
   const filteredMenuItems = menuItems

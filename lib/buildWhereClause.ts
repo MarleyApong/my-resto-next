@@ -20,9 +20,9 @@ export interface FilterState {
   page?: number
   size?: number
   order?: "asc" | "desc"
-  filterBy?: string
+  filter?: string
   status?: string
-  searchValue?: string
+  search?: string
   startDate?: Date
   endDate?: Date
 }
@@ -33,9 +33,9 @@ function createFilterSchema(entityType: EntityType) {
     page: z.coerce.number().min(0).default(0),
     size: z.coerce.number().min(1).max(100).default(20),
     order: z.enum(["asc", "desc"]).default("desc"),
-    filterBy: z.enum(entityFilterFields[entityType] as [string, ...string[]]).default("createdAt"),
+    filter: z.enum(entityFilterFields[entityType] as [string, ...string[]]).default("createdAt"),
     status: z.string().optional(),
-    searchValue: z.string().trim().optional(),
+    search: z.string().trim().optional(),
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional()
   })
@@ -51,13 +51,13 @@ export async function buildWhereClause(
   entityType: EntityType,
 ): Promise<{
   where: any
-  orderBy: any
+  order: any
   skip: number
   take: number
 }> {
   const filterSchema = createFilterSchema(entityType)
   const validatedParams = filterSchema.parse(params)
-  const { page, size, order, filterBy, status, searchValue, startDate, endDate } = validatedParams
+  const { page, size, order, filter, status, search, startDate, endDate } = validatedParams
 
   const where: any = {
     deletedAt: null
@@ -80,20 +80,20 @@ export async function buildWhereClause(
   }
 
   // Handle date filters for createdAt/updatedAt
-  if (filterBy === "createdAt" || filterBy === "updatedAt") {
+  if (filter === "createdAt" || filter === "updatedAt") {
     if (startDate && endDate) {
-      where[filterBy] = {
+      where[filter] = {
         gte: startDate,
         lte: new Date(endDate.setHours(23, 59, 59, 999))
       }
     }
   }
   // Handle search filters
-  else if (searchValue) {
-    const sanitizedSearch = sanitizeSearchValue(searchValue)
+  else if (search) {
+    const sanitizedSearch = sanitizeSearchValue(search)
 
     // Special handling for name fields
-    if (filterBy === "name") {
+    if (filter === "name") {
       // For entities with firstName/lastName
       if (["USER", "CUSTOMER"].includes(entityType)) {
         where.OR = [{ firstName: { contains: sanitizedSearch, mode: "insensitive" } }, { lastName: { contains: sanitizedSearch, mode: "insensitive" } }]
@@ -102,26 +102,26 @@ export async function buildWhereClause(
       }
     }
     // Special handling for numeric fields
-    else if (["price", "totalAmount"].includes(filterBy)) {
+    else if (["price", "totalAmount"].includes(filter)) {
       const numericValue = parseFloat(sanitizedSearch)
       if (!isNaN(numericValue)) {
-        where[filterBy] = numericValue
+        where[filter] = numericValue
       }
     }
     // Phone number handling
-    else if (filterBy === "phone") {
-      where[filterBy] = { contains: sanitizedSearch }
+    else if (filter === "phone") {
+      where[filter] = { contains: sanitizedSearch }
     }
     // Default text search
     else {
-      where[filterBy] = { contains: sanitizedSearch, mode: "insensitive" }
+      where[filter] = { contains: sanitizedSearch, mode: "insensitive" }
     }
   }
 
   return {
     where,
-    orderBy: {
-      [filterBy]: order
+    order: {
+      [filter]: order
     },
     skip: page * size,
     take: size

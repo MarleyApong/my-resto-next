@@ -12,7 +12,25 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const pathname = window.location.pathname
       const locale = pathname.split("/")[1]
-      window.location.href = `/${locale}/o/auth/login?reason=session_expired`
+      const errorName = error.response.data?.name
+
+      let reason = "session_expired"
+      switch (errorName) {
+        case "SessionExpiredError":
+          reason = "session_expired"
+          break
+        case "SessionInvalidError":
+          reason = "session_invalid"
+          break
+        case "SessionRevokedError":
+          reason = "session_revoked"
+          break
+        case "InactiveAccountError":
+          reason = "account_inactive"
+          break
+      }
+
+      window.location.href = `/${locale}/o/auth/login?reason=${reason}`
       return Promise.reject(error)
     }
 
