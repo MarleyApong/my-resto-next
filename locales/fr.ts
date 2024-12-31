@@ -21,7 +21,8 @@ export default {
       "noSession": "",
       "invalidSession": "",
       "sessionRevoked": "",
-      "sessionInactive": ""
+      "sessionInactive": "",
+      "invalidImage": ""
     },
     "success": {
       "loggedOut": "Vous vous êtes déconnecté avec succès. À bientôt !",

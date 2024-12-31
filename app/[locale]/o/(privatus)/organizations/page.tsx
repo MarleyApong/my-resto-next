@@ -5,7 +5,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { DataTable, FilterState } from "@/components/features/DataTable"
-import { Trash2, Edit, Eye, Plus, ImagePlus, PhoneIcon, Calendar1, X, HardDriveDownload, ImageUp, SaveOff, TowerControl, Cctv, Utensils } from "lucide-react"
+import { Trash2, Edit, Eye, Plus, ImagePlus, PhoneIcon, Calendar1, X, HardDriveDownload, ImageUp, SaveOff, TowerControl, Cctv, Utensils, HardDriveUpload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -20,6 +20,7 @@ import Level2 from "@/components/features/Level2"
 import { organizationService } from "@/services/organizationService"
 import { toast } from "sonner"
 import { useError } from "@/hooks/useError"
+import { format } from "date-fns"
 
 const organizationSchema = z.object({
   name: z.string().min(1, "Field is required"),
@@ -28,32 +29,8 @@ const organizationSchema = z.object({
   neighborhood: z.string().min(1, "Field is required"),
   phone: z.string().min(1, "Field is required").regex(/^\d+$/, "Phone must contain only numbers"),
   picture: z.string().optional(),
-  status: z.enum(["active", "inactive"])
+  status: z.enum(["ACTIVE", "INACTIVE"])
 })
-
-// Dummy Data
-const initialOrganizations: OrganizationType[] = [
-  {
-    name: "Organization 1",
-    description: "Organisation dédiée à l'excellence culinaire, réunissant des restaurants engagés à offrir des repas de qualité, un accueil chaleureux et une expérience unique.",
-    city: "Paris",
-    neighborhood: "Montmartre",
-    phone: "123456789",
-    picture: "/assets/img/avatar/product.jpg",
-    status: "active",
-    createAt: "2024-12-22"
-  },
-  {
-    name: "Organization 2",
-    description: "Notre organisation regroupe des restaurants passionnés, offrant des plats savoureux, un service exceptionnel et des expériences culinaires mémorables pour tous.",
-    city: "Lyon",
-    neighborhood: "Bellecour",
-    phone: "987654321",
-    picture: "/assets/img/avatar/product.jpg",
-    status: "inactive",
-    createAt: "2024-12-22"
-  }
-]
 
 const Organization = () => {
   const { showError } = useError()
@@ -76,7 +53,7 @@ const Organization = () => {
     recordsFiltered: number
     recordsTotal: number
   }>({
-    data: initialOrganizations,
+    data: [],
     recordsFiltered: 0,
     recordsTotal: 0
   })
@@ -148,6 +125,13 @@ const Organization = () => {
       showError(err)
     }
   }
+
+  const handleCancel = () => {
+    setIsAddOrEditDialogOpen(false)
+    setIsEditing(null)
+  }
+
+  console.log("IsEditing", isEditing)
 
   const columns = [
     { accessorKey: "name", header: "Restaurant" },
@@ -236,7 +220,7 @@ const Organization = () => {
             <DialogTitle className="font-bold">{isEditing ? "Edit Organization" : "Add New Organization"}</DialogTitle>
             <DialogDescription>{isEditing ? "Update the details of the selected organization." : "Fill in the details to create a new organization."}</DialogDescription>
           </DialogHeader>
-          <AddEditForm defaultValues={isEditing} onSubmit={handleAddOrEdit} onCancel={() => setIsAddOrEditDialogOpen(false)} />
+          <AddEditForm defaultValues={isEditing} onSubmit={handleAddOrEdit} onCancel={handleCancel} isEditing={!!isEditing} />
         </DialogContent>
       </Dialog>
 
@@ -270,12 +254,12 @@ const Organization = () => {
 
                     <div className="flex items-center gap-2">
                       <TowerControl className="w-4 h-4" />
-                      <p className="text-gray-600 text-sm">{selectedOrganization.city}</p>
+                      <p className="text-gray-600 text-sm">{`${selectedOrganization.city} - ${selectedOrganization.neighborhood}`}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <Calendar1 className="w-4 h-4" />
-                      <p className="text-gray-600 text-sm">{selectedOrganization.createAt}</p>
+                      <p className="text-gray-600 text-sm">{format(selectedOrganization.createdAt, "yyyy-mm-dd hh:mm:ss")}</p>
                     </div>
                   </div>
                 </div>
@@ -300,7 +284,15 @@ const Organization = () => {
           )}
 
           <DialogFooter className="flex gap-1 justify-end p-1 border-t">
-            <Button size="sm" variant="secondary" onClick={() => setIsViewDialogOpen(false)}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                setIsEditing(selectedOrganization)
+                setIsViewDialogOpen(false)
+                setIsAddOrEditDialogOpen(true)
+              }}
+            >
               <Edit className="w-4 h-4" /> Edit
             </Button>
             <Button size="sm" variant="close" onClick={() => setIsViewDialogOpen(false)}>
@@ -316,7 +308,7 @@ const Organization = () => {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
           </DialogHeader>
-          <DialogDescription>Are you sure you want to delete this organization?</DialogDescription>
+          <DialogDescription>{`Are you sure you want to delete the organization "${selectedOrganization?.name}" ?`}</DialogDescription>
           <DialogFooter>
             <Button size="sm" variant="destructive" onClick={handleDelete}>
               <SaveOff className="w-4 h-4" />
@@ -334,7 +326,17 @@ const Organization = () => {
 }
 
 // Add/Edit Form
-const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: OrganizationType | null; onSubmit: (data: OrganizationType) => void; onCancel: () => void }) => {
+const AddEditForm = ({
+  defaultValues,
+  onSubmit,
+  onCancel,
+  isEditing
+}: {
+  defaultValues?: OrganizationType | null
+  onSubmit: (data: OrganizationType) => void
+  onCancel: () => void
+  isEditing: boolean
+}) => {
   const {
     register,
     handleSubmit,
@@ -349,7 +351,7 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Or
       neighborhood: "",
       phone: "",
       picture: "",
-      status: "active"
+      status: "INACTIVE"
     },
     resolver: zodResolver(organizationSchema)
   })
@@ -400,15 +402,16 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Or
         </div>
         <div>
           <Label htmlFor="status">Status</Label>
-          <Select value={watch("status")} onValueChange={(value) => setValue("status", value as "active" | "inactive")}>
+          <Select value={watch("status")} onValueChange={(value) => setValue("status", value as "ACTIVE" | "INACTIVE")}>
             <SelectTrigger>
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="INACTIVE">Inactive</SelectItem>
             </SelectContent>
           </Select>
+          {errors.status && <p className="text-red-600 text-xs">{errors.status.message}</p>}
         </div>
         <div className="sm:col-span-2 lg:col-span-3">
           <Label htmlFor="description">Description</Label>
@@ -443,9 +446,9 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Or
 
       {/* Footer */}
       <DialogFooter className="flex gap-1 justify-end p-1 col-span-3 border-t">
-        <Button type="submit" size="sm">
-          <HardDriveDownload className="w-4 h-4" />
-          Save
+        <Button type="submit" variant={isEditing ? "sun" : "printemps"} size="sm">
+          {isEditing ? <HardDriveUpload className="w-4 h-4" /> : <HardDriveDownload />}
+          {isEditing ? "Update" : "Add"}
         </Button>
         <Button variant="close" size="sm" onClick={onCancel}>
           <X className="h-4 w-4" />

@@ -6,6 +6,6 @@ export type OrganizationType = {
   neighborhood: string
   phone: string
   picture: string
-  status: "active" | "inactive"
-  createAt: string
+  status: "ACTIVE" | "INACTIVE"
+  createdAt: string
 }

@@ -34,13 +34,13 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    if (error.response?.data?.message) {
-      await Swal.fire({
-        icon: "error",
-        text: error.response.data.message || "An error occurred",
-        confirmButtonColor: "#3085d6"
-      })
-    }
+    // if (error.response?.data?.message) {
+    //   await Swal.fire({
+    //     icon: "error",
+    //     text: error.response.data.message || "An error occurred",
+    //     confirmButtonColor: "#3085d6"
+    //   })
+    // }
 
     return Promise.reject(error)
   }

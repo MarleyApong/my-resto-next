@@ -30,11 +30,11 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Params } from "@/types/param"
+import { ParamsType } from "@/types/param"
 import { statusRestaurant } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
 import Level2 from "@/components/features/Level2"
-import { useTranslation } from "react-i18next"
+import { useI18n } from "@/locales/client"
 
 // Type and Validation Schema
 type User = {
@@ -103,12 +103,14 @@ const restaurants = [
 ]
 
 const User = () => {
+  const t = useI18n()
+
   const [isEditing, setIsEditing] = useState<User | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [selectedRestaurant, setSelectedRestaurant] = useState<User | null>(null)
-  const [filterState, setFilterState] = useState<Params>({
+  const [filterState, setFilterState] = useState<ParamsType>({
     page: 0,
     size: 20,
     type: "sms",
@@ -236,7 +238,7 @@ const User = () => {
       }
     }
   ]
-  const { t } = useTranslation();
+
   return (
     <div>
       <Level2 title="Users">
@@ -246,7 +248,7 @@ const User = () => {
         </Button>
       </Level2>
 
-      <h1>{t('welcome')}</h1>
+      <h1>{t("welcome")}</h1>
       <DataTable
         totalItems={restaurants.recordsTotal}
         currentPage={filterState.page}

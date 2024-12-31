@@ -8,7 +8,7 @@ interface ExtendedRequest extends Request {
   user: any
 }
 
-type RouteHandler = (request: ExtendedRequest) => Promise<NextResponse> | NextResponse
+type RouteHandler = (request: ExtendedRequest, context: any) => Promise<NextResponse> | NextResponse
 
 const clearSessionCookie = () => {
   cookies().set("sessionId", "", {
@@ -21,7 +21,7 @@ const clearSessionCookie = () => {
 }
 
 export function withAuth(handler: RouteHandler) {
-  return async (request: Request) => {
+  return async (request: Request, context: any) => {
     const t = await getI18n()
     const sessionId = cookies().get("sessionId")?.value
 
@@ -165,7 +165,7 @@ export function withAuth(handler: RouteHandler) {
 
       requestWithUser.user = session.user
 
-      return handler(requestWithUser)
+      return handler(requestWithUser, context)
     } catch (err: any) {
       // On ne nettoie le cookie que si c'est une erreur d'authentification
       // ou si l'erreur vient de Prisma (potentiellement session invalide)

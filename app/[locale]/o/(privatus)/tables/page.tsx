@@ -11,13 +11,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Params } from "@/types/param"
+import { ParamsType } from "@/types/param"
 import { statusRestaurant } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
 import Level2 from "@/components/features/Level2"
 import Qrcode from "qrcode"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import toast from "react-hot-toast"
+import toast from "sonner"
 
 // Type and Validation Schema
 type TableMode = "manual" | "auto"
@@ -98,7 +98,7 @@ const Table = () => {
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [selectedTable, setSelectedRestaurant] = useState<Table | null>(null)
-  const [filterState, setFilterState] = useState<Params>({
+  const [filterState, setFilterState] = useState<ParamsType>({
     page: 0,
     size: 20,
     type: "sms",
