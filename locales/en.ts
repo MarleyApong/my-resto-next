@@ -30,7 +30,9 @@ export default {
       "organizationsRetrieved": "",
       "organizationCreated": "",
       "organizationUpdated": "",
-      "organizationDeleted": ""
+      "organizationDeleted": "",
+      "organizationStatusUpdated": "",
+      "organizationPictureUpdated": ""
     }
   },
   "sessionExpired": ""

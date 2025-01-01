@@ -1,8 +1,9 @@
+// api/organizations/[id]/route.ts
 import { NextResponse } from "next/server"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
-import { organizationUpdateSchema } from "@/schemas/organization"
+import { organizationUpdateSchema, organizationUpdatePictureSchema, organizationUpdateStatusSchema } from "@/schemas/organization"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { imageProcessing } from "@/lib/imageProcessing"
@@ -59,31 +60,6 @@ export const PUT = withLogging(
         throw createError(errors.NotFoundError, "Organization not found")
       }
 
-      // Find the status for the organization
-      const status = await prisma.status.findFirst({
-        where: { name: body.status.toUpperCase() }
-      })
-      if (!status) {
-        throw createError(errors.BadRequestError, t("api.errors.invalidStatus"))
-      }
-
-      // Handle the picture field
-      let picturePath: string = organization.picture!
-      if (body.picture && body.picture !== organization.picture) {
-        // If the picture is a base64 string, process it
-        if (body.picture.startsWith("data:image/")) {
-          picturePath = await imageProcessing(body.picture)
-        }
-        // If the picture is a path, use it directly
-        else if (body.picture.startsWith("/api/imgs/organizations/")) {
-          picturePath = body.picture
-        }
-        // If the picture is invalid, throw an error
-        else {
-          throw createError(errors.BadRequestError, t("api.errors.invalidImage"))
-        }
-      }
-
       // Update the organization in a transaction
       const updatedOrganization = await prisma.$transaction(async (tx) => {
         const org = await tx.organization.update({
@@ -93,10 +69,7 @@ export const PUT = withLogging(
             description: body.description,
             city: body.city,
             neighborhood: body.neighborhood,
-            phone: body.phone,
-            email: body.email,
-            picture: picturePath,
-            statusId: status.id
+            phone: body.phone
           }
         })
 

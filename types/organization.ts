@@ -1,5 +1,5 @@
 export type OrganizationType = {
-  id?: string
+  id: string
   name: string
   description: string
   city: string
