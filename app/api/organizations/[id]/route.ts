@@ -27,7 +27,9 @@ export const GET = withLogging(
         throw createError(errors.NotFoundError, "Organization not found")
       }
 
-      return NextResponse.json({ data: organization })
+      const organizationsWithFlatStatus = {...organization, status: organization.status.name}
+
+      return NextResponse.json({ data: organizationsWithFlatStatus })
     })
   )
 )

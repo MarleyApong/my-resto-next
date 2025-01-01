@@ -182,7 +182,7 @@ const PrivatusLayout = ({ children, defaultOpen }: PrivatusLayoutProps) => {
                 <main
                   className={`relative flex-1 flex flex-col bg-secondary ${!pathname.includes("sales-terminal") || !pathname.includes("surveys/design/") ? "mt-0 p-2 pt-0" : "mt-5 p-2"} overflow-y-auto max-h-[calc(100vh - 600px)]`}
                 >
-                  {/* <CustomBreadcrumb currentPath={pathname} /> */}
+                  <CustomBreadcrumb currentPath={pathname} />
                   <div className={`${!pathname.includes("surveys/design/") && "mt-14"}`}>{children}</div>
                 </main>
               </div>

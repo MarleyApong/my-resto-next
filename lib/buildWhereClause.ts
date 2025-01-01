@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { ParamsType } from "@/types/param"
 import prisma from "./db"
 
 export type EntityType = "ORGANIZATION" | "RESTAURANT" | "USER" | "SURVEY" | "CUSTOMER" | "PRODUCT" | "ORDER"
@@ -11,17 +12,6 @@ const entityFilterFields: Record<EntityType, string[]> = {
   CUSTOMER: ["firstName", "lastName", "email", "phone", "city", "createdAt", "updatedAt"],
   PRODUCT: ["name", "description", "price", "createdAt", "updatedAt"],
   ORDER: ["orderNumber", "totalAmount", "createdAt", "updatedAt"]
-}
-
-export interface FilterState {
-  page?: number
-  size?: number
-  order?: "asc" | "desc"
-  filter?: string
-  status?: string
-  search?: string
-  startDate?: Date
-  endDate?: Date
 }
 
 function createFilterSchema(entityType: EntityType) {
@@ -42,7 +32,7 @@ function sanitizeSearchValue(value: string): string {
 }
 
 export async function buildWhereClause(
-  params: FilterState,
+  params: ParamsType,
   entityType: EntityType
 ): Promise<{
   where: any
@@ -58,6 +48,9 @@ export async function buildWhereClause(
     deletedAt: null
   }
 
+  console.log("status", status);
+  
+
   if (status && status !== "*") {
     const statusRecord = await prisma.status.findFirst({
       where: {
@@ -67,6 +60,9 @@ export async function buildWhereClause(
         }
       }
     })
+
+    console.log("statusRecord", statusRecord);
+    
 
     if (statusRecord) {
       where.statusId = statusRecord.id

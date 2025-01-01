@@ -80,7 +80,7 @@ export const DataTable = <TData extends object>({
   enableFilterBy = true,
   enableStatus = true,
   className = "shadow-md",
-  height = "calc(100vh - 13rem)",
+  height = "calc(100vh - 25rem)",
   onSelectedRowsChange,
   rowIdKey,
   bottomActions,
@@ -103,7 +103,7 @@ export const DataTable = <TData extends object>({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [filterState, setFilterState] = useState<FilterState>({
     order: "desc",
-    filter: "createdAt",
+    filter: "name",
     status: "*",
     search: "",
     dateRange: { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), to: new Date() },
@@ -241,7 +241,7 @@ export const DataTable = <TData extends object>({
                         </SelectItem>
                       ))}
                       <SelectItem value="createdAt">Created At</SelectItem>
-                      <SelectItem value="updatedAt">Updated At</SelectItem>
+                      {/* <SelectItem value="updatedAt">Updated At</SelectItem> */}
                     </SelectContent>
                   </Select>
                 </div>

@@ -5,17 +5,9 @@ import { ParamsType } from "@/types/param"
 
 export const organizationService = {
   getAll: async (params: ParamsType) => {
-    const searchParams = new URLSearchParams()
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (value instanceof Date) {
-          searchParams.append(key, value.toISOString())
-        } else {
-          searchParams.append(key, String(value))
-        }
-      }
-    })
-    return await api.get(`/organizations?${searchParams.toString()}`)
+    return await api.get(
+      `/organizations?order=${params.order}&filter=${params.filter}&search=${params.search}&status=${params.status}&startDate=${params.startDate}&endDate=${params.endDate}&page=${params.page}&size=${params.size}`
+    )
   },
 
   getById: async (id: string) => {

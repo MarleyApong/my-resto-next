@@ -1,9 +1,9 @@
 export const statusOrganization = [
-  { value: "active", label: 'Active' },
-  { value: "inactive", label: 'Inactive' },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" }
 ]
 
 export const statusRestaurant = [
-  { value: "active", label: 'Active' },
-  { value: "inactive", label: 'Inactive' },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" }
 ]

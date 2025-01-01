@@ -99,7 +99,7 @@ async function seedStatusType(name: string, statuses: string[]) {
   const createdStatusType = await prisma.statusType.upsert({
     where: { name },
     update: {},
-    create: { name: name.toLowerCase() }
+    create: { name: name.toUpperCase() }
   })
 
   for (const status of statuses) {
@@ -112,7 +112,7 @@ async function seedStatusType(name: string, statuses: string[]) {
       }
     })
   }
-  console.log(`${name} statuses seeded.`)
+  console.log(`${name} status seeded.`)
 }
 
 async function seedPaymentStatus() {

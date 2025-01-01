@@ -66,9 +66,13 @@ export const GET = withLogging(
         }),
         prisma.organization.count({ where })
       ])
+      const organizationsWithFlatStatus = organizations.map((org) => ({
+        ...org,
+        status: org.status.name
+      }))
 
       return NextResponse.json({
-        data: organizations,
+        data: organizationsWithFlatStatus,
         recordsFiltered: total,
         recordsTotal: total
       })
@@ -85,8 +89,8 @@ export const POST = withLogging(
       try {
         organizationSchema.parse(body)
       } catch (error) {
-        console.log("error", error);
-        
+        console.log("error", error)
+
         throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
       }
 

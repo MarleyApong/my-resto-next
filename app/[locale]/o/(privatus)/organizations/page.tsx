@@ -21,16 +21,7 @@ import { organizationService } from "@/services/organizationService"
 import { toast } from "sonner"
 import { useError } from "@/hooks/useError"
 import { format } from "date-fns"
-
-const organizationSchema = z.object({
-  name: z.string().min(1, "Field is required"),
-  description: z.string().min(70, "Description must be at least 70 characters").max(170, "Description must not exceed 170 characters"),
-  city: z.string().min(1, "Field is required"),
-  neighborhood: z.string().min(1, "Field is required"),
-  phone: z.string().min(1, "Field is required").regex(/^\d+$/, "Phone must contain only numbers"),
-  picture: z.string().optional(),
-  status: z.enum(["ACTIVE", "INACTIVE"])
-})
+import { organizationSchema, organizationUpdateSchema } from "@/schemas/organization"
 
 const Organization = () => {
   const { showError } = useError()
@@ -42,6 +33,7 @@ const Organization = () => {
   const [newStatus, setNewStatus] = useState<"ACTIVE" | "INACTIVE">("ACTIVE")
   const [selectedOrganization, setSelectedOrganization] = useState<OrganizationType | null>(null)
   const [filterState, setFilterState] = useState<ParamsType>({
+    order: "desc",
     page: 0,
     size: 20,
     filter: "name",
@@ -59,6 +51,7 @@ const Organization = () => {
     recordsFiltered: 0,
     recordsTotal: 0
   })
+  const [tempImage, setTempImage] = useState<string | null>(null)
 
   const handlePageChange = (page: number) => {
     setFilterState((prev) => ({ ...prev, page }))
@@ -66,6 +59,18 @@ const Organization = () => {
 
   const handleSizeChange = (size: number) => {
     setFilterState((prev) => ({ ...prev, size }))
+  }
+
+  const handleFilterChange = (filters: FilterState) => {
+    setFilterState((prev) => ({
+      ...prev,
+      order: filters.order || "desc",
+      filter: filters.filter || "name",
+      status: filters.status || "*",
+      startDate: filters.dateRange?.from || prev.startDate,
+      endDate: filters.dateRange?.to || prev.endDate,
+      search: filters.search
+    }))
   }
 
   const loadData = async () => {
@@ -89,7 +94,10 @@ const Organization = () => {
     if (selectedOrganization) {
       try {
         const res = await organizationService.updateStatus(selectedOrganization.id, newStatus)
+        const updatedOrg = await organizationService.getById(selectedOrganization.id)
         toast.success(res.data?.message)
+
+        setSelectedOrganization(updatedOrg.data.data)
         loadData()
         setIsStatusDialogOpen(false)
       } catch (err) {
@@ -101,17 +109,10 @@ const Organization = () => {
   const handleUpdatePicture = async (id: string, picture: string) => {
     try {
       const res = await organizationService.updatePicture(id, picture)
-      toast.success(res.data?.message)
-      loadData()
-    } catch (err) {
-      showError(err)
-    }
-  }
+      const updatedOrg = await organizationService.getById(selectedOrganization!.id)
 
-  const handleUpdateStatus = async (id: string, status: "ACTIVE" | "INACTIVE") => {
-    try {
-      const res = await organizationService.updateStatus(id, status)
       toast.success(res.data?.message)
+      setSelectedOrganization(updatedOrg.data.data)
       loadData()
     } catch (err) {
       showError(err)
@@ -129,17 +130,6 @@ const Organization = () => {
         showError(err)
       }
     }
-  }
-
-  const handleFilterChange = (filters: FilterState) => {
-    setFilterState((prev) => ({
-      ...prev,
-      filter: filters.filter || "name",
-      status: filters.status || "*",
-      startDate: filters.dateRange?.from || prev.startDate,
-      endDate: filters.dateRange?.to || prev.endDate,
-      search: filters.search
-    }))
   }
 
   console.log("filterState", filterState)
@@ -166,7 +156,32 @@ const Organization = () => {
     setIsEditing(null)
   }
 
-  console.log("IsEditing", isEditing)
+  const handleImageChange = (e: Event) => {
+    const fileInput = e.target as HTMLInputElement
+    const file = fileInput.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setTempImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleImageClick = () => {
+    const fileInput = document.createElement("input")
+    fileInput.type = "file"
+    fileInput.accept = "image/*"
+    fileInput.onchange = handleImageChange
+    fileInput.click()
+  }
+
+  const handleUploadPicture = () => {
+    if (tempImage && selectedOrganization) {
+      handleUpdatePicture(selectedOrganization.id, tempImage)
+      setTempImage(null)
+    }
+  }
 
   const columns = [
     { accessorKey: "name", header: "Restaurant" },
@@ -176,7 +191,7 @@ const Organization = () => {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }: any) => {
-        const status = row.original.status.name
+        const status = row.original.status
         const badgeStyle = status === "ACTIVE" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
 
         return <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-sm font-medium ${badgeStyle}`}>{status}</span>
@@ -193,6 +208,7 @@ const Organization = () => {
               variant="default"
               size="icon"
               onClick={() => {
+                setNewStatus(org?.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
                 setSelectedOrganization(org)
                 setIsViewDialogOpen(true)
               }}
@@ -250,7 +266,7 @@ const Organization = () => {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
-        <DialogContent className="max-w-4xl p-0">
+        <DialogContent className={`${!isEditing ? "max-w-4xl" : "max-w-xl"} p-0`}>
           <DialogHeader className="shadow-md p-2">
             <DialogTitle className="font-bold">{isEditing ? "Edit Organization" : "Add New Organization"}</DialogTitle>
             <DialogDescription>{isEditing ? "Update the details of the selected organization." : "Fill in the details to create a new organization."}</DialogDescription>
@@ -268,30 +284,10 @@ const Organization = () => {
 
           {selectedOrganization && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-3">
-              <div className="w-full min-h-72 border-none shadow-md rounded-sm overflow-hidden">
-                {selectedOrganization.picture && <img src={selectedOrganization.picture} alt="Organization" className="w-full h-full object-cover" />}
-                <Button
-                  variant="secondary"
-                  className="mt-2 w-full"
-                  onClick={() => {
-                    // Handle image change
-                    const fileInput = document.createElement("input")
-                    fileInput.type = "file"
-                    fileInput.accept = "image/*"
-                    fileInput.onchange = (e) => {
-                      const file = (e.target as HTMLInputElement).files?.[0]
-                      if (file) {
-                        const reader = new FileReader()
-                        reader.onloadend = () => {
-                          handleUpdatePicture(selectedOrganization.id, reader.result as string)
-                        }
-                        reader.readAsDataURL(file)
-                      }
-                    }
-                    fileInput.click()
-                  }}
-                >
-                  {selectedOrganization.picture ? "Update Picture" : "Change Picture"}
+              <div className="w-full min-h-72 border-none shadow-md rounded-sm overflow-hidden" onClick={handleImageClick}>
+                {(tempImage || selectedOrganization.picture) && <img src={tempImage || selectedOrganization.picture} alt="Organization" className="w-full h-full object-cover" />}
+                <Button variant="secondary" className="mt-2 w-full" onClick={tempImage ? handleUploadPicture : handleImageClick}>
+                  {tempImage ? "Upload" : selectedOrganization.picture ? "Update Picture" : "Choose Picture"}
                 </Button>
               </div>
 
@@ -342,36 +338,17 @@ const Organization = () => {
           )}
 
           <DialogFooter className="flex gap-1 justify-end p-1 border-t">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                const fileInput = document.createElement("input")
-                fileInput.type = "file"
-                fileInput.accept = "image/*"
-                fileInput.onchange = (e) => {
-                  const file = (e.target as HTMLInputElement).files?.[0]
-                  if (file) {
-                    const reader = new FileReader()
-                    reader.onloadend = () => {
-                      handleUpdatePicture(selectedOrganization!.id, reader.result as string)
-                    }
-                    reader.readAsDataURL(file)
-                  }
-                }
-                fileInput.click()
-              }}
-            >
-              {selectedOrganization?.picture ? "Update Picture" : "Change Picture"}
+            <Button variant="sun" onClick={tempImage ? handleUploadPicture : handleImageClick}>
+              {tempImage ? "Upload" : selectedOrganization?.picture ? "Update Picture" : "Choose Picture"}
             </Button>
 
             <Button
               variant={selectedOrganization?.status === "ACTIVE" ? "destructive" : "default"}
               onClick={() => {
-                setNewStatus(selectedOrganization?.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
                 setIsStatusDialogOpen(true)
               }}
             >
-              {selectedOrganization?.status === "ACTIVE" ? "Deactivate" : "Activate"}
+              {selectedOrganization?.status === "ACTIVE" ? "Desactivate" : "Activate"}
             </Button>
 
             <Button
@@ -463,7 +440,7 @@ const AddEditForm = ({
       picture: "",
       status: "INACTIVE"
     },
-    resolver: zodResolver(organizationSchema)
+    resolver: zodResolver(isEditing ? organizationUpdateSchema : organizationSchema)
   })
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -488,28 +465,57 @@ const AddEditForm = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-3 gap-4 lg:grid-cols-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
+      {/* Right side - Picture Upload (Only in Add Mode) */}
+      {!isEditing && (
+        <div className="sm:col-span-3 lg:col-span-1 md:col-span-1 row-span-1 ml-2">
+          <Label htmlFor="picture">Logo</Label>
+          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+          <div
+            className="w-full min-h-[196px] max-h-[196px] max-w-[280px] overflow-hidden flex items-center justify-center cursor-pointer border-2 border-dashed rounded-sm"
+            onClick={handleImageClick}
+          >
+            {pictureUrl ? (
+              <img src={pictureUrl} alt="Preview" className="w-full h-full bg-cover object-cover max-w-[280px] flex" />
+            ) : (
+              <div className="flex flex-col items-center">
+                <ImagePlus className="w-12 h-12 text-gray-500 mb-2" />
+                <span>Click to add an image</span>
+              </div>
+            )}
+          </div>
+          <Button type="button" variant="secondary" className="mt-2 w-full" onClick={handleImageClick}>
+            <ImageUp className="w-4 h-4" />
+            {pictureUrl ? "Change Image" : "Choose image"}
+          </Button>
+        </div>
+      )}
+
       {/* Left side - Form Fields */}
-      <div className="col-span-3 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
-        <div className="sm:col-span-2 lg:col-span-2">
+      <div className={`${isEditing ? "col-span-4 sm:grid-cols-2 gap-4 p-2" : "col-span-3 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2"} grid gap-4 p-2`}>
+        {/* Name Field (Full Width in Edit Mode) */}
+        <div className={`${isEditing ? "sm:col-span-1" : "sm:col-span-2 lg:col-span-2"}`}>
           <Label htmlFor="name">Name</Label>
           <Input id="name" {...register("name")} placeholder="Organization Name" />
           {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
         </div>
+
         <div className="sm:col-span-1 lg:col-span-1">
           <Label htmlFor="city">City</Label>
           <Input id="city" {...register("city")} placeholder="City" />
           {errors.city && <p className="text-red-600 text-xs">{errors.city.message}</p>}
         </div>
-        <div>
+        <div className="sm:col-span-1">
           <Label htmlFor="neighborhood">Neighborhood</Label>
           <Input id="neighborhood" {...register("neighborhood")} placeholder="Neighborhood" />
           {errors.neighborhood && <p className="text-red-600 text-xs">{errors.neighborhood.message}</p>}
         </div>
-        <div>
+        <div className="sm:col-span-1">
           <Label htmlFor="phone">Phone</Label>
           <Input id="phone" {...register("phone")} placeholder="Phone" />
           {errors.phone && <p className="text-red-600 text-xs">{errors.phone.message}</p>}
         </div>
+
+        {/* Status Field (Only in Add Mode) */}
         {!isEditing && (
           <div>
             <Label htmlFor="status">Status</Label>
@@ -525,38 +531,15 @@ const AddEditForm = ({
             {errors.status && <p className="text-red-600 text-xs">{errors.status.message}</p>}
           </div>
         )}
-        <div className="sm:col-span-2 lg:col-span-3">
+
+        {/* Description Field */}
+        <div className={`${isEditing ? "col-span-2 sm:col-span-2" : "sm:col-span-2 lg:col-span-3"}`}>
           <Label htmlFor="description">Description</Label>
           <Textarea id="description" maxLength={170} {...register("description")} placeholder="Description" className="resize-none" rows={4} />
           <p className="text-xs text-gray-500">{remainingChars} characters remaining</p>
           {errors.description && <p className="text-red-600 text-xs">{errors.description.message}</p>}
         </div>
       </div>
-
-      {/* Right side - Picture Upload */}
-      {!isEditing && (
-        <div className="col-span-3 lg:col-span-1 row-span-1 mr-2">
-          <Label htmlFor="picture">Picture</Label>
-          <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-          <div
-            className="w-full min-h-[196px] max-h-[196px] overflow-hidden flex items-center justify-center cursor-pointer border-2 border-dashed border-blue-950"
-            onClick={handleImageClick}
-          >
-            {pictureUrl ? (
-              <img src={pictureUrl} alt="Preview" className="w-full h-full object-cover" />
-            ) : (
-              <div className="flex flex-col items-center">
-                <ImagePlus className="w-12 h-12 text-gray-500 mb-2" />
-                <span>Click to add an image</span>
-              </div>
-            )}
-          </div>
-          <Button type="button" variant="secondary" className="mt-2 w-full" onClick={handleImageClick}>
-            <ImageUp className="w-4 h-4" />
-            {pictureUrl ? "Change Image" : "Choose image"}
-          </Button>
-        </div>
-      )}
 
       {/* Footer */}
       <DialogFooter className="flex gap-1 justify-end p-1 col-span-3 border-t">

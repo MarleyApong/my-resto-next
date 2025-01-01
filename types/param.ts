@@ -1,10 +1,10 @@
 export type ParamsType = {
+  order?: string
   filter?: string
   search?:string
   status?: string
-  type?: string
-  startDate?: any
-  endDate?: any
+  startDate?: Date
+  endDate?: Date
   page: number
   size: number
 }
