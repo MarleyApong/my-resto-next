@@ -1,10 +1,10 @@
 export interface SubItem {
-  id:string
+  id: string
   title: string
   url: string
   icon?: React.ElementType
   permission?: string
-  subItems?:[]
+  subItems?: SubItem[]
 }
 
 export interface MenuItem {
@@ -12,6 +12,6 @@ export interface MenuItem {
   title: string
   url: string | null
   icon?: React.ElementType
-  subItems: SubItem[]
+  subItems?: SubItem[]
   permission?: string
 }

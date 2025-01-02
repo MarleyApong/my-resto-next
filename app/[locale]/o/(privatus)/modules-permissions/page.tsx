@@ -1,7 +1,7 @@
 "use client"
 
 import { CheckboxTree, SelectableList, SelectableListItemProps } from "@/components/features/DataTransfer"
-import Level2 from "@/components/features/Level2"
+import {Level2} from "@/components/features/Level2"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"

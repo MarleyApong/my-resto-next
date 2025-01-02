@@ -1,17 +1,31 @@
 import React from "react"
+import { Button } from "../ui/button"
+import { useRouter } from "next/navigation"
+import { ArrowBigLeftDash } from "lucide-react"
 
 interface Level2Props {
-  title: string,
+  path?: string
   children?: React.ReactNode
 }
 
-const Level2 = ({title,children}: Level2Props) => {
+export const Level2 = ({ path, children }: Level2Props) => {
+  const router = useRouter()
+
+  const handleBack = () => {
+    if (path) {
+      router.push(path)
+    } else {
+      router.back()
+    }
+  }
+
   return (
     <div className="mb-2 flex justify-between">
-      <h1 className="text-xl font-bold">{title}</h1>
-     {children}
+      <Button variant="outline" onClick={handleBack}>
+        <ArrowBigLeftDash/>
+        Back
+      </Button>
+      {children}
     </div>
   )
 }
-
-export default Level2

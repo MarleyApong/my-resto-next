@@ -31,10 +31,10 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Params } from "@/types/param"
+import { ParamsType } from "@/types/param"
 import { statusOrganization } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
-import Level2 from "@/components/features/Level2"
+import {Level2} from "@/components/features/Level2"
 import { useRouter } from "next/navigation"
 
 // Type and Validation Schema
@@ -92,7 +92,7 @@ const Survey = () => {
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [selectedSurvey, setSelectedSurvey] = useState<Surveys | null>(null)
-  const [filterState, setFilterState] = useState<Params>({
+  const [filterState, setFilterState] = useState<ParamsType>({
     page: 0,
     size: 20,
     type: "sms",
@@ -224,7 +224,7 @@ const Survey = () => {
 
   return (
     <div>
-      <Level2 title="Surveys">
+      <Level2>
         <Button variant="default" size="sm" onClick={() => setIsAddOrEditDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Surveys

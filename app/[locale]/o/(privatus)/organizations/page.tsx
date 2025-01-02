@@ -16,7 +16,7 @@ import { ParamsType } from "@/types/param"
 import { statusOrganization } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
 import { OrganizationType } from "@/types/organization"
-import Level2 from "@/components/features/Level2"
+import { Level2 } from "@/components/features/Level2"
 import { organizationService } from "@/services/organizationService"
 import { toast } from "sonner"
 import { useError } from "@/hooks/useError"
@@ -244,7 +244,7 @@ const Organization = () => {
 
   return (
     <div>
-      <Level2 title="Organizations">
+      <Level2>
         <Button variant="default" size="sm" onClick={() => setIsAddOrEditDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Organization

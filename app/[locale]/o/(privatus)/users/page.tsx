@@ -33,7 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ParamsType } from "@/types/param"
 import { statusRestaurant } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
-import Level2 from "@/components/features/Level2"
+import {Level2} from "@/components/features/Level2"
 import { useI18n } from "@/locales/client"
 
 // Type and Validation Schema

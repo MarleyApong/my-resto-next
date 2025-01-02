@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import Level2 from "@/components/features/Level2"
+import {Level2} from "@/components/features/Level2"
 import { DataTable, FilterState } from "@/components/features/DataTable"
 import { Plus, Edit, Trash2, X, HardDriveDownload, SaveOff, Eye } from "lucide-react"
 

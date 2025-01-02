@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Package, ChartColumnBig, UserRoundCog, Save, Upload } from "lucide-react"
-import Level2 from "@/components/features/Level2"
+import {Level2} from "@/components/features/Level2"
 
 interface POSSettingsProps {
   // Vous pouvez ajouter des props initiales si nécessaire

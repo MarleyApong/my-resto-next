@@ -14,10 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ParamsType } from "@/types/param"
 import { statusRestaurant } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
-import Level2 from "@/components/features/Level2"
+import { Level2 } from "@/components/features/Level2"
 import Qrcode from "qrcode"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import toast from "sonner"
+import { toast } from "sonner"
 
 // Type and Validation Schema
 type TableMode = "manual" | "auto"
@@ -253,7 +253,7 @@ const Table = () => {
 
   return (
     <div>
-      <Level2 title="Tables">
+      <Level2>
         <Button variant="default" size="sm" onClick={() => setIsAddOrEditDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Table
@@ -311,7 +311,7 @@ const Table = () => {
                       <p className="text-gray-600">Create at: {selectedTable.createAt}</p>
                     </div>
                     <Button size="sm" variant="outline">
-                      <HardDriveDownload/>
+                      <HardDriveDownload />
                       <a className="Btn" style={{ textDecoration: "none" }} href={qrCode} download={"Table: " + selectedTable?.tableNumber + ".png"}>
                         Télécharger
                       </a>
