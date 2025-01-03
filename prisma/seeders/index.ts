@@ -9,177 +9,250 @@ import { Action } from "@/enums/action"
 const prisma = new PrismaClient()
 
 async function seedSuperAdminRole() {
-  // Create the "Super Admin" role
-  const superAdminRole = await prisma.role.upsert({
-    where: { name: "Super Admin" },
-    update: {},
-    create: {
-      name: "Super Admin",
-      menuIds: JSON.stringify(menuItems.map((item) => item.id)) // Add all menus
-    }
-  })
+  try {
+    // Check if "Super Admin" role already exists
+    let superAdminRole = await prisma.role.findUnique({
+      where: { name: "Super Admin" }
+    })
 
-  // Include dashboard Id first
-  await prisma.permission.upsert({
-    where: { roleId_menuId: { roleId: superAdminRole.id, menuId: "dashboard" } },
-    update: {},
-    create: {
-      menuId: "dashboard",
-      roleId: superAdminRole.id,
-      view: true,
-      create: true,
-      update: true,
-      delete: true
+    // If not, create it
+    if (!superAdminRole) {
+      superAdminRole = await prisma.role.create({
+        data: {
+          name: "Super Admin",
+          menuIds: JSON.stringify(menuItems.map((item) => item.id)) // Add all menus
+        }
+      })
+      console.log("Super Admin role created.")
+    } else {
+      console.log("Super Admin role already exists.")
     }
-  })
 
-  // Assign all permissions for all menus and submenus to the "Super Admin"
-  for (const item of menuItems) {
-    for (const subItem of item.subItems || []) {
-      await prisma.permission.upsert({
-        where: { roleId_menuId: { roleId: superAdminRole.id, menuId: subItem.id } },
-        update: {},
-        create: {
-          menuId: subItem.id,
+    // Check if dashboard permission exists
+    let dashboardPermission = await prisma.permission.findUnique({
+      where: { roleId_menuId: { roleId: superAdminRole.id, menuId: "dashboard" } }
+    })
+
+    // If not, create it
+    if (!dashboardPermission) {
+      await prisma.permission.create({
+        data: {
+          menuId: "dashboard",
           roleId: superAdminRole.id,
           view: true,
           create: true,
           update: true,
-          delete: true // Full access
+          delete: true
         }
       })
+      console.log("Dashboard permission created.")
+    } else {
+      console.log("Dashboard permission already exists.")
     }
-  }
 
-  console.log("Super Admin role seeded with all permissions.")
+    // Assign all permissions for menus and submenus to "Super Admin"
+    for (const item of menuItems) {
+      for (const subItem of item.subItems || []) {
+        let permission = await prisma.permission.findUnique({
+          where: { roleId_menuId: { roleId: superAdminRole.id, menuId: subItem.id } }
+        })
+
+        if (!permission) {
+          await prisma.permission.create({
+            data: {
+              menuId: subItem.id,
+              roleId: superAdminRole.id,
+              view: true,
+              create: true,
+              update: true,
+              delete: true // Full access
+            }
+          })
+          console.log(`Permission for ${subItem.id} created.`)
+        } else {
+          console.log(`Permission for ${subItem.id} already exists.`)
+        }
+      }
+    }
+
+    console.log("Super Admin role seeded with all permissions.")
+  } catch (error) {
+    console.error("Error seeding Super Admin role:", error)
+    throw error
+  }
 }
 
 async function seedSuperAdminUser() {
-  const superAdminRole = await prisma.role.findUnique({
-    where: { name: "Super Admin" }
-  })
+  try {
+    // Check if "Super Admin" role exists
+    const superAdminRole = await prisma.role.findUnique({
+      where: { name: "Super Admin" }
+    })
 
-  if (!superAdminRole) {
-    throw new Error("The 'Super Admin' role does not exist.")
-  }
-
-  const activeStatus = await prisma.status.findUnique({
-    where: { name: StatusUserEnum.ACTIVE }
-  })
-
-  if (!activeStatus) {
-    throw new Error("The 'ACTIVE' status does not exist.")
-  }
-
-  const hashedPassword = await bcrypt.hash("super123", 10) // Super admin password haché
-  const temporyHashedPassword = await bcrypt.hash("hashedpassword123", 10) // Temporaire haché si nécessaire
-
-  const superAdminUser = await prisma.user.upsert({
-    where: { email: "marlex@test.com" },
-    update: {},
-    create: {
-      firstName: "Super",
-      lastName: "Admin",
-      phone: "0123456789",
-      email: "marlex@test.com",
-      city: "Douala",
-      neighborhood: "Japoma",
-      password: hashedPassword,
-      temporyPassword: temporyHashedPassword,
-      expiryPassword: new Date(),
-      roleId: superAdminRole.id,
-      statusId: activeStatus.id
+    if (!superAdminRole) {
+      throw new Error("The 'Super Admin' role does not exist.")
     }
-  })
 
-  console.log(`Super Admin user created: ${superAdminUser.firstName} ${superAdminUser.lastName}.`)
+    // Trouver le statusType pour User
+    const userStatusType = await prisma.statusType.findUnique({
+      where: { name: "USER" }
+    })
+
+    if (!userStatusType) {
+      throw new Error("The 'USER' status type does not exist.")
+    }
+
+    // Utiliser nameStatusTypeId au lieu de name_statusTypeId
+    const activeStatus = await prisma.status.findUnique({
+      where: {
+        nameStatusTypeId: {  // C'était name_statusTypeId avant
+          name: StatusUserEnum.ACTIVE,
+          statusTypeId: userStatusType.id
+        }
+      }
+    })
+
+    if (!activeStatus) {
+      throw new Error("The 'ACTIVE' status for users does not exist.")
+    }
+
+    // Reste du code...
+  } catch (error) {
+    console.error("Error seeding Super Admin user:", error)
+    throw error
+  }
 }
 
 async function seedStatusType(name: string, statuses: string[]) {
-  const createdStatusType = await prisma.statusType.upsert({
-    where: { name },
-    update: {},
-    create: { name: name.toUpperCase() }
-  })
-
-  for (const status of statuses) {
-    await prisma.status.upsert({
-      where: { name: status },
-      update: {},
-      create: {
-        name: status,
-        statusTypeId: createdStatusType.id
-      }
+  try {
+    // Utiliser upsert pour créer ou mettre à jour le StatusType
+    const statusType = await prisma.statusType.upsert({
+      where: { name }, // Utilisez le champ unique "name"
+      update: {}, // Ne rien mettre à jour si le StatusType existe déjà
+      create: { name: name.toUpperCase() }
     })
+
+    console.log(`StatusType ${name} processed.`)
+
+    // Créer les statuts associés
+    console.log(`Seeding ${name} statuses:`, statuses)
+    for (const status of statuses) {
+      // Vérifier si le statut existe déjà pour ce StatusType
+      const existingStatus = await prisma.status.findFirst({
+        where: {
+          name: status,
+          statusTypeId: statusType.id
+        }
+      })
+
+      if (existingStatus) {
+        // Si le statut existe déjà, ne rien faire
+        console.log(`Status ${status} already exists for ${name}.`)
+      } else {
+        // Si le statut n'existe pas, le créer
+        await prisma.status.create({
+          data: {
+            name: status,
+            statusTypeId: statusType.id
+          }
+        })
+        console.log(`Status ${status} created for ${name}.`)
+      }
+    }
+
+    console.log(`${name} statuses seeded.`)
+  } catch (error) {
+    console.error(`Error seeding ${name} statuses:`, error)
+    throw error
   }
-  console.log(`${name} status seeded.`)
 }
 
 async function seedPaymentStatus() {
-  const paymentStatuses = Object.values(PaymentStatus).map((status) => ({
-    name: status
-  }))
+  try {
+    const paymentStatuses = Object.values(PaymentStatus).map((status) => ({
+      name: status
+    }))
 
-  for (const status of paymentStatuses) {
-    await prisma.paymentStatus.upsert({
-      where: { name: status.name },
-      update: {},
-      create: status
-    })
+    for (const status of paymentStatuses) {
+      await prisma.paymentStatus.upsert({
+        where: { name: status.name },
+        update: {}, // No update if it already exists
+        create: status
+      })
+      console.log(`Payment status ${status.name} processed.`)
+    }
+
+    console.log("Payment status seeded.")
+  } catch (error) {
+    console.error("Error seeding payment status:", error)
+    throw error
   }
-  console.log("Payment status seeded.")
 }
 
 async function seedPaymentMethods() {
-  const paymentMethods = Object.values(PaymentMethod).map((method) => ({
-    name: method
-  }))
+  try {
+    const paymentMethods = Object.values(PaymentMethod).map((method) => ({
+      name: method
+    }))
 
-  for (const method of paymentMethods) {
-    await prisma.paymentMethod.upsert({
-      where: { name: method.name },
-      update: {},
-      create: method
-    })
+    for (const method of paymentMethods) {
+      await prisma.paymentMethod.upsert({
+        where: { name: method.name },
+        update: {}, // No update if it already exists
+        create: method
+      })
+      console.log(`Payment method ${method.name} processed.`)
+    }
+
+    console.log("Payment methods seeded.")
+  } catch (error) {
+    console.error("Error seeding payment methods:", error)
+    throw error
   }
-  console.log("Payment methods seeded.")
 }
 
 async function seedActions() {
-  const actions = Object.values(Action).map((action) => ({
-    name: action
-  }))
+  try {
+    const actions = Object.values(Action).map((action) => ({
+      name: action
+    }))
 
-  for (const action of actions) {
-    await prisma.action.upsert({
-      where: { name: action.name },
-      update: {},
-      create: action
-    })
+    for (const action of actions) {
+      await prisma.action.upsert({
+        where: { name: action.name },
+        update: {}, // No update if it already exists
+        create: action
+      })
+      console.log(`Action ${action.name} processed.`)
+    }
+
+    console.log("Actions for audit log seeded.")
+  } catch (error) {
+    console.error("Error seeding actions:", error)
+    throw error
   }
-  console.log("Action for audit log seeded.")
 }
 
 async function main() {
-  await seedStatusType("User", Object.values(StatusUserEnum))
-  await seedStatusType("Restaurant", Object.values(StatusRestaurantEnum))
-  await seedStatusType("Organization", Object.values(StatusOrganizationEnum))
-  await seedStatusType("Survey", Object.values(StatusSurveyEnum))
-  await seedStatusType("Customer", Object.values(StatusCustomerEnum))
-  await seedStatusType("Product", Object.values(StatusProductEnum))
-  await seedStatusType("Order", Object.values(StatusOrderEnum))
-  await seedActions()
-  await seedPaymentStatus()
-  await seedPaymentMethods()
-  await seedSuperAdminRole()
-  await seedSuperAdminUser()
+  try {
+    await seedStatusType("User", Object.values(StatusUserEnum))
+    await seedStatusType("Restaurant", Object.values(StatusRestaurantEnum))
+    await seedStatusType("Organization", Object.values(StatusOrganizationEnum))
+    await seedStatusType("Survey", Object.values(StatusSurveyEnum))
+    await seedStatusType("Customer", Object.values(StatusCustomerEnum))
+    await seedStatusType("Product", Object.values(StatusProductEnum))
+    await seedStatusType("Order", Object.values(StatusOrderEnum))
+    await seedActions()
+    await seedPaymentStatus()
+    await seedPaymentMethods()
+    await seedSuperAdminRole()
+    await seedSuperAdminUser()
+  } catch (error) {
+    console.error("Error in main seeding function:", error)
+    process.exit(1)
+  } finally {
+    await prisma.$disconnect()
+  }
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })

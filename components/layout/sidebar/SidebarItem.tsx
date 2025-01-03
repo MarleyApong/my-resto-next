@@ -2,8 +2,8 @@ import { MenuItem } from "@/types/sidebar"
 import { SidebarSubItems } from "./SidebarSubItem"
 import { SidebarMenuItem, SidebarMenuButton } from "../../ui/sidebar"
 import { ChevronRight, ChevronDown } from "lucide-react"
-import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Link from "next/link"
 
 interface SidebarItemProps {
   item: MenuItem
@@ -15,7 +15,7 @@ interface SidebarItemProps {
 export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarItemProps) => {
   const pathname = usePathname()
   const normalizedPath = pathname.replace(/^\/(en|fr)/, "")
-  const isActive = normalizedPath === item.url || item.subItems.some((subItem) => normalizedPath.includes(subItem.url))
+  const isActive = normalizedPath === item.url || (item.subItems && item.subItems.some((subItem) => normalizedPath.includes(subItem.url)))
 
   const handleClick = () => {
     onToggle(item.title)
@@ -34,18 +34,18 @@ export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarIte
             <span className={`${isActive ? "text-white" : "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
             <span className="ml-2">{item.title}</span>
           </div>
-          {item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
+          {item.subItems && item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
         </Link>
       )
     }
 
     return (
-      <button type="button" className={`w-full flex items-center justify-between mb-2 p-2 rounded ${activeClass}`} onClick={handleClick}>
+      <button type="button" className={`w-full flex items-center justify-between mb-2 p-3 rounded ${activeClass}`} onClick={handleClick}>
         <div className="flex items-center">
           <span className={`${isActive ? "text-white" : "text-primary"}`}>{item.icon && <item.icon size={20} />}</span>
           <span className="ml-2">{item.title}</span>
         </div>
-        {item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
+        {item.subItems && item.subItems.length > 0 && (isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />)}
       </button>
     )
   }
@@ -53,7 +53,7 @@ export const SidebarItem = ({ item, isOpen, onToggle, closeSidebar }: SidebarIte
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild>{renderNavLink()}</SidebarMenuButton>
-      {item.subItems.length > 0 && isOpen && <SidebarSubItems items={item.subItems} closeSidebar={closeSidebar} />}
+      {item.subItems && item.subItems.length > 0 && isOpen && <SidebarSubItems items={item.subItems} closeSidebar={closeSidebar} />}
     </SidebarMenuItem>
   )
 }

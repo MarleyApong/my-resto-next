@@ -23,7 +23,8 @@ import { Label } from "../ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import { Calendar } from "../ui/calendar"
 import { format } from "date-fns"
-import { useAuthStore } from "@/stores/authStore"
+import { useAuth } from "@/hooks/useAuth"
+import { SpecificalLoader } from "./SpecificalLoader"
 
 interface OptionType {
   value: string
@@ -80,7 +81,7 @@ export const DataTable = <TData extends object>({
   enableFilterBy = true,
   enableStatus = true,
   className = "shadow-md",
-  height = "calc(100vh - 25rem)",
+  height = "calc(100vh - 17rem)",
   onSelectedRowsChange,
   rowIdKey,
   bottomActions,
@@ -95,7 +96,7 @@ export const DataTable = <TData extends object>({
   onFilterChange,
   onExport
 }: DataTableProps<TData>) => {
-  const { isLoading } = useAuthStore()
+  const { isLoading } = useAuth()
 
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -106,7 +107,7 @@ export const DataTable = <TData extends object>({
     filter: "name",
     status: "*",
     search: "",
-    dateRange: { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), to: new Date() },
+    dateRange: { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), to: new Date() }
   })
 
   // Adjust for 0-based index in table but 1-based in UI
@@ -133,7 +134,7 @@ export const DataTable = <TData extends object>({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: enableSorting ? getSortedRowModel() : undefined,
-    manualPagination: true, // Important: Enable manual pagination
+    manualPagination: true,
     pageCount: totalPages,
     getRowId: (row: any, index) => {
       return rowIdKey ? String(row[rowIdKey]) : index.toString() // Conversion explicite en string
@@ -273,13 +274,14 @@ export const DataTable = <TData extends object>({
                   <Label className="w-24 text-sm">Date Range</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-[180px] flex-1">
-                        {filterState.dateRange?.from && filterState.dateRange.to ? `${format(filterState.dateRange.from, "PP")} - ${format(filterState.dateRange.to, "PP")}` : "Select date range"}
+                      <Button variant="outline" className="w-[180px] flex-1" disabled={isLoading}>
+                        {filterState.dateRange?.from && filterState.dateRange.to
+                          ? `${format(filterState.dateRange.from, "PP")} - ${format(filterState.dateRange.to, "PP")}`
+                          : "Select date range"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 border-none bg-background" align="center">
                       <Calendar
-                      
                         mode="range"
                         selected={{
                           from: filterState.dateRange?.from!,
@@ -303,7 +305,7 @@ export const DataTable = <TData extends object>({
                 enableFiltering && (
                   <div className="flex items-center gap-2">
                     <Label className="w-24 text-sm">Search</Label>
-                    <Input placeholder="Search..." value={filterState.search} onChange={handleSearchChange} className="w-[180px] flex-1" />
+                    <Input placeholder="Search..." value={filterState.search} onChange={handleSearchChange} disabled={isLoading} className="w-[180px] flex-1" />
                   </div>
                 )
               )}
@@ -397,7 +399,13 @@ export const DataTable = <TData extends object>({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={columns.length + (enableSelection ? 1 : 0)} className="h-24 text-center relative">
+                  <SpecificalLoader />
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} className="hover:bg-[var(--row-hover)]">
                   {enableSelection && (

@@ -6,9 +6,39 @@ import { api } from "@/lib/axiosConfig"
 import { useError } from "@/hooks/useError"
 import { toast } from "sonner"
 
+type Permission = {
+  menuId: string;
+  view: boolean;
+  create: boolean;
+  update: boolean;
+  delete: boolean;
+}
+
+type Role = {
+  id: string;
+  name: string;
+  permissions: Permission[];
+}
+
+interface Status {
+  id: string;
+  name: string;
+}
+
+type User = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: Role;
+  status: Status;
+  organizations: any[];
+  restaurants: any[];
+}
+
 interface AuthContextType {
   isAuthenticated: boolean
-  user: any | null
+  user: User | null
   isLoading: boolean
   setIsLoading: (value: boolean) => void
   setUser: (user: any) => void

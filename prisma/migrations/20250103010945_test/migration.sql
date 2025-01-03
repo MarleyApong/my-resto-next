@@ -399,13 +399,13 @@ CREATE UNIQUE INDEX "StatusType_name_key" ON "StatusType"("name");
 CREATE INDEX "StatusType_name_idx" ON "StatusType"("name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Status_name_key" ON "Status"("name");
-
--- CreateIndex
 CREATE INDEX "Status_statusTypeId_idx" ON "Status"("statusTypeId");
 
 -- CreateIndex
 CREATE INDEX "Status_name_idx" ON "Status"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Status_name_statusTypeId_key" ON "Status"("name", "statusTypeId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");

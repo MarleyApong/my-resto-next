@@ -22,10 +22,10 @@ export const Level2 = ({ path, children }: Level2Props) => {
   return (
     <div className="mb-2 flex justify-between">
       <Button variant="outline" onClick={handleBack}>
-        <ArrowBigLeftDash/>
+        <ArrowBigLeftDash />
         Back
       </Button>
-      {children}
+      <div className="shadow-md">{children}</div>
     </div>
   )
 }

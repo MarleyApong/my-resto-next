@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
-import { Loader } from "@/components/features/Loader"
+import { Loader } from "@/components/features/MainLoader"
 
 interface AuthGuardProps {
   children: ReactNode

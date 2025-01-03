@@ -5,6 +5,7 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGrou
 import { SidebarItem } from "./SidebarItem"
 import { menuItems } from "@/data/mainMenu"
 import { useAuth } from "@/hooks/useAuth"
+import { SpecificalLoader } from "@/components/features/SpecificalLoader"
 
 export function AppSidebar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -59,11 +60,16 @@ export function AppSidebar() {
     <Sidebar variant="sidebar" className="border-b bg-[var(--sidebar-background)] backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50 p-0 shadow-lg" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Principal</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {filteredMenuItems.map(
-                (item) => item?.id && <SidebarItem key={item.title} item={item} isOpen={openMenu === item.title} onToggle={toggleMenu} closeSidebar={closeSidebar} />
+            <SidebarMenu className="position-relative">
+              {!user ? (
+                <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+                  <SpecificalLoader />
+                </div>
+              ) : (
+                filteredMenuItems.map(
+                  (item) => item?.id && <SidebarItem key={item.title} item={item} isOpen={openMenu === item.title} onToggle={toggleMenu} closeSidebar={closeSidebar} />
+                )
               )}
             </SidebarMenu>
           </SidebarGroupContent>

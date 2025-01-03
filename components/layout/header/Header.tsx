@@ -4,8 +4,10 @@ import { ModeToggle } from "@/components/ui/mode-toggle"
 import { UserNav } from "./UserNav"
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
 import { useEffect, useState } from "react"
+import { useAuth } from "@/hooks/useAuth"
 
 export const Header = () => {
+  const {user} = useAuth()
   const { state } = useSidebar()
   const [isOverlay, setIsOverlay] = useState(false)
 
@@ -23,15 +25,15 @@ export const Header = () => {
 
   return (
     <header className={`fixed top-2 z-50 transition-all border shadow-md rounded-sm ${headerWidth} ${headerLeft}`}>
-      <div className="flex justify-end items-center p-1 px-2 rounded-sm ml-auto gap-4 bg-[var(--header-background)]">
+      <div className="flex justify-end items-center p-1 rounded-sm ml-auto gap-4 bg-[var(--header-background)]">
         <SidebarTrigger className="bg-background border" />
 
         <div className="flex flex-1">
-          <span className="font-semibold">Admin Dashboard</span>
         </div>
 
         <div className="flex items-center gap-4">
           <ModeToggle />
+          <span className="text-xs">{user?.role.name}</span>
           <UserNav />
         </div>
       </div>

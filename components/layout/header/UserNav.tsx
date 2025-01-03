@@ -28,7 +28,7 @@ import { useRouter } from "next/navigation"
 
 export const UserNav = () => {
   const router = useRouter()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
 
   return (
     <DropdownMenu>
@@ -43,8 +43,8 @@ export const UserNav = () => {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">John Doe</p>
-            <p className="text-xs leading-none text-muted-foreground">john.doe@example.com</p>
+            <p className="text-sm font-medium leading-none">{user?.firstName + " " + user?.lastName}</p>
+            <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

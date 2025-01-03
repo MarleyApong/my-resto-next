@@ -46,7 +46,7 @@ model StatusType {
 
 model Status {
   id            String         @id @default(cuid()) @db.VarChar(25)
-  name          String         @unique @db.VarChar(50)
+  name          String         @db.VarChar(50)
   statusTypeId  String
   statusType    StatusType     @relation(fields: [statusTypeId], references: [id])
   createdAt     DateTime       @default(now())
@@ -60,6 +60,7 @@ model Status {
   products      Product[]
   orders        Order[]
 
+  @@unique([name, statusTypeId])
   @@index([statusTypeId])
   @@index([name])
 }

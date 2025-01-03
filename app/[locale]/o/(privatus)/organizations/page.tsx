@@ -5,7 +5,24 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { DataTable, FilterState } from "@/components/features/DataTable"
-import { Trash2, Edit, Eye, Plus, ImagePlus, PhoneIcon, Calendar1, X, HardDriveDownload, ImageUp, SaveOff, TowerControl, Cctv, Utensils, HardDriveUpload } from "lucide-react"
+import {
+  Trash2,
+  Edit,
+  Eye,
+  Plus,
+  ImagePlus,
+  PhoneIcon,
+  Calendar1,
+  X,
+  HardDriveDownload,
+  ImageUp,
+  SaveOff,
+  TowerControl,
+  Cctv,
+  Utensils,
+  HardDriveUpload,
+  SendToBack
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
@@ -22,9 +39,13 @@ import { toast } from "sonner"
 import { useError } from "@/hooks/useError"
 import { format } from "date-fns"
 import { organizationSchema, organizationUpdateSchema } from "@/schemas/organization"
+import { useAuth } from "@/hooks/useAuth"
+import { Loader } from "@/components/features/SpecificalLoader"
 
 const Organization = () => {
   const { showError } = useError()
+  const { setIsLoading, isLoading } = useAuth()
+
   const [isEditing, setIsEditing] = useState<OrganizationType | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState<boolean>(false)
@@ -74,6 +95,7 @@ const Organization = () => {
   }
 
   const loadData = async () => {
+    setIsLoading(true)
     try {
       const res = await organizationService.getAll(filterState)
       setOrganizations({
@@ -83,6 +105,8 @@ const Organization = () => {
       })
     } catch (err) {
       showError(err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -92,6 +116,7 @@ const Organization = () => {
 
   const handleStatusChange = async () => {
     if (selectedOrganization) {
+      setIsLoading(true)
       try {
         const res = await organizationService.updateStatus(selectedOrganization.id, newStatus)
         const updatedOrg = await organizationService.getById(selectedOrganization.id)
@@ -102,11 +127,14 @@ const Organization = () => {
         setIsStatusDialogOpen(false)
       } catch (err) {
         showError(err)
+      } finally {
+        setIsLoading(false)
       }
     }
   }
 
   const handleUpdatePicture = async (id: string, picture: string) => {
+    setIsLoading(true)
     try {
       const res = await organizationService.updatePicture(id, picture)
       const updatedOrg = await organizationService.getById(selectedOrganization!.id)
@@ -116,11 +144,14 @@ const Organization = () => {
       loadData()
     } catch (err) {
       showError(err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleDelete = async () => {
     if (selectedOrganization?.id) {
+      setIsLoading(true)
       try {
         const res = await organizationService.delete(selectedOrganization.id)
         toast.success(res.data?.message)
@@ -128,13 +159,14 @@ const Organization = () => {
         setIsDeleteDialogOpen(false)
       } catch (err) {
         showError(err)
+      } finally {
+        setIsLoading(false)
       }
     }
   }
 
-  console.log("filterState", filterState)
-
   const handleAddOrEdit = async (data: OrganizationType) => {
+    setIsLoading(true)
     try {
       if (isEditing?.id) {
         const res = await organizationService.update(isEditing.id, data)
@@ -148,6 +180,8 @@ const Organization = () => {
       setIsEditing(null)
     } catch (err) {
       showError(err)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -199,7 +233,7 @@ const Organization = () => {
     },
     {
       id: "actions",
-      header: "Actions",
+      header: () => <div className="text-right">Actions</div>,
       cell: ({ row }: any) => {
         const org = row.original
         return (
@@ -207,6 +241,7 @@ const Organization = () => {
             <Button
               variant="default"
               size="icon"
+              disabled={isLoading}
               onClick={() => {
                 setNewStatus(org?.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
                 setSelectedOrganization(org)
@@ -219,6 +254,7 @@ const Organization = () => {
             <Button
               variant="sun"
               size="icon"
+              disabled={isLoading}
               onClick={() => {
                 setIsEditing(org)
                 setIsAddOrEditDialogOpen(true)
@@ -229,6 +265,7 @@ const Organization = () => {
             <Button
               variant="destructive"
               size="icon"
+              disabled={isLoading}
               onClick={() => {
                 setSelectedOrganization(org)
                 setIsDeleteDialogOpen(true)
@@ -245,9 +282,9 @@ const Organization = () => {
   return (
     <div>
       <Level2>
-        <Button variant="default" size="sm" onClick={() => setIsAddOrEditDialogOpen(true)}>
+        <Button variant="default" size="sm" disabled={isLoading} onClick={() => setIsAddOrEditDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          New Organization
+          New Org.
         </Button>
       </Level2>
 
@@ -293,7 +330,6 @@ const Organization = () => {
 
               <div className="space-y-4">
                 <h2 className="text-xl font-bold">Description</h2>
-
                 <p className="text-sm text-gray-500 ml-2">{selectedOrganization.description}</p>
 
                 {/* Additional Information */}
@@ -338,12 +374,13 @@ const Organization = () => {
           )}
 
           <DialogFooter className="flex gap-1 justify-end p-1 border-t">
-            <Button variant="sun" onClick={tempImage ? handleUploadPicture : handleImageClick}>
+            <Button variant="sun" disabled={isLoading} onClick={tempImage ? handleUploadPicture : handleImageClick}>
               {tempImage ? "Upload" : selectedOrganization?.picture ? "Update Picture" : "Choose Picture"}
             </Button>
 
             <Button
               variant={selectedOrganization?.status === "ACTIVE" ? "destructive" : "default"}
+              disabled={isLoading}
               onClick={() => {
                 setIsStatusDialogOpen(true)
               }}
@@ -354,6 +391,7 @@ const Organization = () => {
             <Button
               size="sm"
               variant="secondary"
+              disabled={isLoading}
               onClick={() => {
                 setIsEditing(selectedOrganization)
                 setIsViewDialogOpen(false)
@@ -362,7 +400,7 @@ const Organization = () => {
             >
               <Edit className="w-4 h-4" /> Edit
             </Button>
-            <Button size="sm" variant="close" onClick={() => setIsViewDialogOpen(false)}>
+            <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsViewDialogOpen(false)}>
               <X className="w-4 h-4" /> Close
             </Button>
           </DialogFooter>
@@ -377,11 +415,11 @@ const Organization = () => {
           </DialogHeader>
           <DialogDescription>{`Are you sure you want to change the status to "${newStatus}"?`}</DialogDescription>
           <DialogFooter>
-            <Button size="sm" variant="destructive" onClick={handleStatusChange}>
-              <SaveOff className="w-4 h-4" />
+            <Button size="sm" variant="sun" disabled={isLoading} onClick={handleStatusChange}>
+              {isLoading ? <Loader /> : <SendToBack className="w-4 h-4" />}
               Confirm
             </Button>
-            <Button size="sm" variant="close" onClick={() => setIsStatusDialogOpen(false)}>
+            <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsStatusDialogOpen(false)}>
               <X className="w-4 h-4" />
               Cancel
             </Button>
@@ -397,11 +435,11 @@ const Organization = () => {
           </DialogHeader>
           <DialogDescription>{`Are you sure you want to delete the organization "${selectedOrganization?.name}" ?`}</DialogDescription>
           <DialogFooter>
-            <Button size="sm" variant="destructive" onClick={handleDelete}>
-              <SaveOff className="w-4 h-4" />
+            <Button size="sm" variant="destructive" disabled={isLoading} onClick={handleDelete}>
+              {isLoading ? <Loader /> : <SaveOff className="w-4 h-4" />}
               Delete
             </Button>
-            <Button size="sm" variant="close" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsDeleteDialogOpen(false)}>
               <X className="w-4 h-4" />
               Cancel
             </Button>
@@ -443,10 +481,23 @@ const AddEditForm = ({
     resolver: zodResolver(isEditing ? organizationUpdateSchema : organizationSchema)
   })
 
+  const { isLoading } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pictureUrl = watch("picture")
   const description = watch("description", "")
   const remainingChars = 170 - description.length
+
+  // Watch all form fields
+  const formValues = watch()
+
+  // Function to check if form has been modified
+  const isFormModified = () => {
+    if (!defaultValues) return true // Always enabled for new entries
+    return Object.keys(defaultValues).some((key) => {
+      const field = key as keyof OrganizationType
+      return formValues[field] !== defaultValues[field]
+    })
+  }
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -483,7 +534,7 @@ const AddEditForm = ({
               </div>
             )}
           </div>
-          <Button type="button" variant="secondary" className="mt-2 w-full" onClick={handleImageClick}>
+          <Button type="button" variant="secondary" className="mt-2 w-full" disabled={isLoading} onClick={handleImageClick}>
             <ImageUp className="w-4 h-4" />
             {pictureUrl ? "Change Image" : "Choose image"}
           </Button>
@@ -543,11 +594,11 @@ const AddEditForm = ({
 
       {/* Footer */}
       <DialogFooter className="flex gap-1 justify-end p-1 col-span-3 border-t">
-        <Button type="submit" variant={isEditing ? "sun" : "printemps"} size="sm">
-          {isEditing ? <HardDriveUpload className="w-4 h-4" /> : <HardDriveDownload />}
+        <Button type="submit" variant={isEditing ? "sun" : "printemps"} disabled={isLoading || !isFormModified()} size="sm">
+          {isLoading ? <Loader /> : isEditing ? <HardDriveUpload className="w-4 h-4" /> : <HardDriveDownload />}
           {isEditing ? "Update" : "Add"}
         </Button>
-        <Button variant="close" size="sm" onClick={onCancel}>
+        <Button variant="close" size="sm" disabled={isLoading} onClick={onCancel}>
           <X className="h-4 w-4" />
           Cancel
         </Button>
