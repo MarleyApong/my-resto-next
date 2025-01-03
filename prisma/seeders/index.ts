@@ -93,7 +93,7 @@ async function seedSuperAdminUser() {
       throw new Error("The 'Super Admin' role does not exist.")
     }
 
-    // Trouver le statusType pour User
+    // D'abord, trouvez le statusType pour User
     const userStatusType = await prisma.statusType.findUnique({
       where: { name: "USER" }
     })
@@ -102,13 +102,12 @@ async function seedSuperAdminUser() {
       throw new Error("The 'USER' status type does not exist.")
     }
 
-    // Utiliser nameStatusTypeId au lieu de name_statusTypeId
-    const activeStatus = await prisma.status.findUnique({
+    const activeStatus = await prisma.status.findFirst({
       where: {
-        nameStatusTypeId: {  // C'était name_statusTypeId avant
-          name: StatusUserEnum.ACTIVE,
-          statusTypeId: userStatusType.id
-        }
+        AND: [
+          { name: StatusUserEnum.ACTIVE },
+          { statusTypeId: userStatusType.id }
+        ]
       }
     })
 
@@ -116,7 +115,35 @@ async function seedSuperAdminUser() {
       throw new Error("The 'ACTIVE' status for users does not exist.")
     }
 
-    // Reste du code...
+    // Vérifiez si le Super Admin existe déjà
+    let superAdminUser = await prisma.user.findUnique({
+      where: { email: "marlex@test.com" }
+    })
+
+    // Si non, créez-le
+    if (!superAdminUser) {
+      const hashedPassword = await bcrypt.hash("super123", 10)
+      const temporyHashedPassword = await bcrypt.hash("hashedpassword123", 10)
+
+      superAdminUser = await prisma.user.create({
+        data: {
+          firstName: "Super",
+          lastName: "Admin",
+          phone: "0123456789",
+          email: "marlex@test.com",
+          city: "Douala",
+          neighborhood: "Japoma",
+          password: hashedPassword,
+          temporyPassword: temporyHashedPassword,
+          expiryPassword: new Date(),
+          roleId: superAdminRole.id,
+          statusId: activeStatus.id
+        }
+      })
+      console.log("Super Admin user created.")
+    } else {
+      console.log("Super Admin user already exists.")
+    }
   } catch (error) {
     console.error("Error seeding Super Admin user:", error)
     throw error

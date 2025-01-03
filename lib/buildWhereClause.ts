@@ -62,6 +62,7 @@ export async function buildWhereClause(
     })
 
     console.log("statusRecord", statusRecord);
+    console.log("entityType", entityType);
     
 
     if (statusRecord) {
@@ -96,6 +97,9 @@ export async function buildWhereClause(
       where[filter] = { contains: sanitizedSearch, mode: "insensitive" }
     }
   }
+
+  console.log("where", where);
+  
 
   return {
     where,

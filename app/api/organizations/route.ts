@@ -100,8 +100,14 @@ export const POST = withLogging(
       }
 
       const status = await prisma.status.findFirst({
-        where: { name: body.status.toUpperCase() }
+        where: { 
+          name: body.status.toUpperCase(),
+          statusType: {
+            name: "ORGANIZATION" // ou la valeur appropriée pour le type attendu
+          }
+        }
       })
+      
       if (!status) {
         throw createError(errors.BadRequestError, t("api.errors.invalidStatus"))
       }
