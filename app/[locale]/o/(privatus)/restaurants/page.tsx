@@ -42,7 +42,8 @@ import { useError } from "@/hooks/useError"
 import { format } from "date-fns"
 import { restaurantSchema, restaurantUpdateSchema } from "@/schemas/restaurant"
 import { useAuth } from "@/hooks/useAuth"
-import { Loader } from "@/components/features/SpecificalLoader"
+import { Loader, SpecificalLoader } from "@/components/features/SpecificalLoader"
+import { organizationService } from "@/services/organizationService"
 
 const Restaurant = () => {
   const { showError } = useError()
@@ -168,6 +169,7 @@ const Restaurant = () => {
   }
 
   const handleAddOrEdit = async (data: RestaurantType) => {
+    console.log("Submitting Form Data:", data)
     setIsLoading(true)
     try {
       if (isEditing?.id) {
@@ -220,7 +222,7 @@ const Restaurant = () => {
   }
 
   const columns = [
-    { accessorKey: "organization", header: "Organization" },
+    { accessorKey: "organization", header: "Organization", cell: ({ row }: any) => row.original.organization.name },
     { accessorKey: "name", header: "Restaurant" },
     { accessorKey: "city", header: "City" },
     { accessorKey: "phone", header: "Phone" },
@@ -369,7 +371,7 @@ const Restaurant = () => {
                   <div className="flex flex-col gap-2 ml-2">
                     <div className="flex items-center gap-2">
                       <Building className="w-4 h-4" />
-                      <p className="text-gray-600 text-sm">{selectedRestaurant.organizationId}</p>
+                      <p className="text-gray-600 text-sm">{selectedRestaurant.organization?.name}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -493,34 +495,63 @@ const AddEditForm = ({
   })
 
   const { isLoading } = useAuth()
+  const { showError } = useError()
+
+  const [loading, setLoading] = useState<boolean>(true)
+  const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([])
+
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pictureUrl = watch("picture")
   const description = watch("description", "")
   const remainingChars = 170 - description.length
 
-  // État pour stocker la liste des organisations
-  const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([])
+  const isFormModified = () => {
+    if (!defaultValues) return true
 
-  // Charger les organisations au montage du composant
-  useEffect(() => {
-    const fetchOrganizations = async () => {
-      try {
-        // const res = await organizationService.getAll()
-        // setOrganizations(res.data)
-      } catch (err) {
-        console.error("Failed to fetch organizations:", err)
+    const currentValues = watch()
+
+    return Object.keys(defaultValues).some((key) => {
+      const field = key as keyof RestaurantType
+
+      // Gérer le cas spécifique de l'organisation
+      if (field === "organization") {
+        return currentValues.organizationId !== defaultValues.organizationId || currentValues.organization?.name !== defaultValues.organization?.name
       }
-    }
 
+      // Comparer les autres champs
+      return currentValues[field] !== defaultValues[field]
+    })
+  }
+  const fetchOrganizations = async () => {
+    try {
+      const res = await organizationService.getOrganizationsByPermissions()
+      setOrganizations(res.data)
+    } catch (err) {
+      showError(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchOrganizations()
   }, [])
+
+  useEffect(() => {
+    if (isEditing && defaultValues?.organizationId) {
+      const selectedOrg = organizations.find((org) => org.id === defaultValues.organizationId)
+      if (selectedOrg) {
+        setValue("organizationId", selectedOrg.id)
+      }
+    }
+  }, [organizations, defaultValues, isEditing, setValue])
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setValue("picture", reader.result as string)
+        setValue("picture", reader.result as string, { shouldValidate: true })
       }
       reader.readAsDataURL(file)
     }
@@ -550,6 +581,8 @@ const AddEditForm = ({
               </div>
             )}
           </div>
+          {errors.picture && <p className="text-red-600 text-xs">{errors.picture.message}</p>}
+
           <Button type="button" variant="secondary" className="mt-2 w-full" disabled={isLoading} onClick={handleImageClick}>
             <ImageUp className="w-4 h-4" />
             {pictureUrl ? "Change Image" : "Choose image"}
@@ -559,22 +592,31 @@ const AddEditForm = ({
 
       {/* Left side - Form Fields */}
       <div className={`${isEditing ? "col-span-4 sm:grid-cols-2 gap-4 p-2" : "col-span-3 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2"} grid gap-4 p-2`}>
-         {/* Organization Field */}
-         <div className="sm:col-span-1 lg:col-span-1">
+        {/* Organization Field */}
+        <div className="sm:col-span-1 lg:col-span-1">
           <Label htmlFor="organization">Organization</Label>
           {isEditing ? (
-            <Input id="organization" {...register("organizationId")} placeholder="Organization" disabled />
+            <Input id="organization" value={defaultValues?.organization?.name || ""} placeholder="Organization" disabled />
           ) : (
-            <Combobox
-              options={organizations.map((org) => ({ value: org.id, label: org.name }))}
-              value={watch("organizationId")}
-              onValueChange={(value) => setValue("organizationId", value)}
-              placeholder="Select Organization"
-            />
+            <div className="flex items-center gap-2 relative">
+              <Combobox
+                options={organizations.map((org) => ({ value: org.id, label: org.name }))}
+                value={watch("organizationId")}
+                onValueChange={(value) => {
+                  setValue("organizationId", value, { shouldValidate: true })
+                }}
+                placeholder="Select Organization"
+              />
+              {loading && (
+                <div className="absolute top-[3px] right-8">
+                  <SpecificalLoader />
+                </div>
+              )}
+            </div>
           )}
           {errors.organizationId && <p className="text-red-600 text-xs">{errors.organizationId.message}</p>}
         </div>
-        
+
         {/* Name Field (Full Width in Edit Mode) */}
         <div className={`${isEditing ? "sm:col-span-1" : "sm:col-span-2 lg:col-span-2"}`}>
           <Label htmlFor="name">Name</Label>
@@ -638,7 +680,7 @@ const AddEditForm = ({
 
       {/* Footer */}
       <DialogFooter className="flex gap-1 justify-end p-1 col-span-3 border-t">
-        <Button type="submit" variant={isEditing ? "sun" : "printemps"} disabled={isLoading} size="sm">
+        <Button type="submit" variant={isEditing ? "sun" : "printemps"} disabled={isLoading || !isFormModified()} size="sm">
           {isLoading ? <Loader /> : isEditing ? <HardDriveUpload className="w-4 h-4" /> : <HardDriveDownload />}
           {isEditing ? "Update" : "Add"}
         </Button>

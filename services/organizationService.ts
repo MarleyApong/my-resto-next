@@ -14,6 +14,10 @@ export const organizationService = {
     return await api.get(`/organizations/${id}`)
   },
 
+  getOrganizationsByPermissions: async () => {
+    return await api.get("/organizations/permissions")
+  },
+
   create: async (data: OrganizationType) => {
     if (data.picture) {
       // Compression de l'image avant envoi
