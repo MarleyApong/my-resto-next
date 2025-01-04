@@ -22,7 +22,11 @@ export default {
       "invalidSession": "",
       "sessionRevoked": "",
       "sessionInactive": "",
-      "invalidImage": ""
+      "invalidImage": "",
+      "organizationNotFound": "",
+      "imageProcessingFailed": "",
+      "restaurantNotFound": "",
+      "invalidOrganization": ""
     },
     "success": {
       "loggedOut": "You have been logged out successfully. See you next time!",
@@ -32,7 +36,12 @@ export default {
       "organizationUpdated": "",
       "organizationDeleted": "",
       "organizationStatusUpdated": "",
-      "organizationPictureUpdated": ""
+      "organizationPictureUpdated": "",
+      "restaurantCreated": "",
+      "restaurantUpdated": "",
+      "restaurantDeleted": "",
+      "restaurantStatusUpdated": "",
+      "restaurantPictureUpdated": ""
     }
   },
   "sessionExpired": ""

@@ -9,7 +9,7 @@ import prisma from "@/lib/db"
 
 export const PATCH = withLogging(
   withAuth(
-    withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { id: string } }) => {
+    withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { organizationId: string } }) => {
       const t = await getI18n()
       const body = await request.json()
 
@@ -29,10 +29,10 @@ export const PATCH = withLogging(
 
       // Find the organization to update
       const organization = await prisma.organization.findUnique({
-        where: { id: params.id }
+        where: { id: params.organizationId }
       })
       if (!organization) {
-        throw createError(errors.NotFoundError, "Organization not found")
+        throw createError(errors.NotFoundError, t("api.errors.organizationNotFound"))
       }
 
       // Find the status for the organization
@@ -46,7 +46,7 @@ export const PATCH = withLogging(
       // Update the organization status in a transaction
       const updatedOrganization = await prisma.$transaction(async (tx) => {
         const org = await tx.organization.update({
-          where: { id: params.id },
+          where: { id: params.organizationId },
           data: {
             statusId: status.id
           }
@@ -58,7 +58,7 @@ export const PATCH = withLogging(
             actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
             userId: request.user.id,
             entityId: org.id,
-            entityType: "Organization"
+            entityType: "ORGANIZATION"
           }
         })
 

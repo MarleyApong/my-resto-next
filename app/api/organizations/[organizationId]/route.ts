@@ -1,4 +1,3 @@
-// api/organizations/[id]/route.ts
 import { NextResponse } from "next/server"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
@@ -6,14 +5,15 @@ import { withLogging } from "@/middlewares/withLogging"
 import { organizationUpdateSchema, organizationUpdatePictureSchema, organizationUpdateStatusSchema } from "@/schemas/organization"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
-import { imageProcessing } from "@/lib/imageProcessing"
 import prisma from "@/lib/db"
 
 export const GET = withLogging(
   withAuth(
-    withErrorHandler(async (request: Request, { params }: { params: { id: string } }) => {
+    withErrorHandler(async (request: Request, { params }: { params: { organizationId: string } }) => {
+      const t = await getI18n()
+
       const organization = await prisma.organization.findUnique({
-        where: { id: params.id },
+        where: { id: params.organizationId },
         include: {
           status: {
             select: {
@@ -24,7 +24,7 @@ export const GET = withLogging(
       })
 
       if (!organization) {
-        throw createError(errors.NotFoundError, "Organization not found")
+        throw createError(errors.NotFoundError, t("api.errors.organizationNotFound"))
       }
 
       const organizationsWithFlatStatus = {...organization, status: organization.status.name}
@@ -36,7 +36,7 @@ export const GET = withLogging(
 
 export const PUT = withLogging(
   withAuth(
-    withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { id: string } }) => {
+    withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { organizationId: string } }) => {
       const t = await getI18n()
       const body = await request.json()
 
@@ -56,16 +56,16 @@ export const PUT = withLogging(
 
       // Find the organization to update
       const organization = await prisma.organization.findUnique({
-        where: { id: params.id }
+        where: { id: params.organizationId }
       })
       if (!organization) {
-        throw createError(errors.NotFoundError, "Organization not found")
+        throw createError(errors.NotFoundError, t("api.errors.organizationNotFound"))
       }
 
       // Update the organization in a transaction
       const updatedOrganization = await prisma.$transaction(async (tx) => {
         const org = await tx.organization.update({
-          where: { id: params.id },
+          where: { id: params.organizationId },
           data: {
             name: body.name,
             description: body.description,
@@ -81,7 +81,7 @@ export const PUT = withLogging(
             actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
             userId: request.user.id,
             entityId: org.id,
-            entityType: "Organization"
+            entityType: "ORGANIZATION"
           }
         })
 
@@ -99,12 +99,10 @@ export const PUT = withLogging(
 
 export const DELETE = withLogging(
   withAuth(
-    withErrorHandler(async (request: Request & { user?: any }, context: { params: { id: string } }) => {
+    withErrorHandler(async (request: Request & { user?: any }, context: { params: { organizationId: string } }) => {
       const t = await getI18n()
       const { params } = context
 
-      console.log("Request:", request)
-      console.log("Params:", params)
 
       const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "organizations" && p.delete)
       if (!hasPermission) {
@@ -113,7 +111,7 @@ export const DELETE = withLogging(
 
       await prisma.$transaction(async (tx) => {
         await tx.organization.update({
-          where: { id: params.id },
+          where: { id: params.organizationId },
           data: { deletedAt: new Date() }
         })
 
@@ -121,8 +119,8 @@ export const DELETE = withLogging(
           data: {
             actionId: (await tx.action.findUnique({ where: { name: "DELETE" } }))!.id,
             userId: request.user.id,
-            entityId: params.id,
-            entityType: "Organization"
+            entityId: params.organizationId,
+            entityType: "ORGANIZATION"
           }
         })
       })

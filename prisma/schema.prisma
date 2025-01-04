@@ -179,6 +179,7 @@ model Organization {
   deletedAt    DateTime?
   users        UserOrganization[]
   customers    CustomerOrganization[]
+  restaurants   Restaurant[]
 
   @@index([statusId])
   @@index([email])
@@ -211,6 +212,8 @@ model Restaurant {
   webpage          String
   statusId         String
   status           Status               @relation(fields: [statusId], references: [id])
+  organizationId   String               @db.VarChar(25)
+  organization     Organization         @relation(fields: [organizationId], references: [id])
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
   deletedAt        DateTime?
@@ -222,6 +225,7 @@ model Restaurant {
 
   @@index([city, neighborhood])
   @@index([statusId])
+  @@index([organizationId])
 }
 
 model UserRestaurant {

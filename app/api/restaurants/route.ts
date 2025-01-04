@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
-import { organizationSchema } from "@/schemas/organization"
+import { restaurantSchema } from "@/schemas/restaurant"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { imageProcessing } from "@/lib/imageProcessing"
@@ -38,11 +38,11 @@ export const GET = withLogging(
           startDate,
           endDate
         },
-        "ORGANIZATION"
+        "RESTAURANT"
       )
 
-      const [organizations, total] = await Promise.all([
-        prisma.organization.findMany({
+      const [restaurants, total] = await Promise.all([
+        prisma.restaurant.findMany({
           where,
           orderBy,
           skip,
@@ -61,18 +61,31 @@ export const GET = withLogging(
                 name: true
               }
             },
+            organization: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                phone: true,
+                email: true,
+                city: true,
+                neighborhood: true,
+                picture: true
+              }
+            },
             createdAt: true
           }
         }),
-        prisma.organization.count({ where })
+        prisma.restaurant.count({ where })
       ])
-      const organizationsWithFlatStatus = organizations.map((org) => ({
-        ...org,
-        status: org.status.name
+
+      const restaurantsWithFlatStatusAndOrganization = restaurants.map((resto) => ({
+        ...resto,
+        status: resto.status.name
       }))
 
       return NextResponse.json({
-        data: organizationsWithFlatStatus,
+        data: restaurantsWithFlatStatusAndOrganization,
         recordsFiltered: total,
         recordsTotal: total
       })
@@ -87,23 +100,25 @@ export const POST = withLogging(
       const body = await request.json()
 
       try {
-        organizationSchema.parse(body)
+        // Validate the request body against the schema
+        restaurantSchema.parse(body)
       } catch (error) {
         console.log("error", error)
-
         throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
       }
 
-      const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "organizations" && p.create)
+      // Check if the user has permission to create a restaurant
+      const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "restaurants" && p.create)
       if (!hasPermission) {
         throw createError(errors.ForbiddenError, t("api.errors.forbidden"))
       }
 
+      // Find the status for the restaurant
       const status = await prisma.status.findFirst({
-        where: { 
+        where: {
           name: body.status.toUpperCase(),
           statusType: {
-            name: "ORGANIZATION"
+            name: "RESTAURANT"
           }
         }
       })
@@ -112,6 +127,16 @@ export const POST = withLogging(
         throw createError(errors.BadRequestError, t("api.errors.invalidStatus"))
       }
 
+      // Find the organization associated with the provided organizationId
+      const organization = await prisma.organization.findUnique({
+        where: { id: body.organizationId }
+      })
+
+      if (!organization) {
+        throw createError(errors.BadRequestError, t("api.errors.invalidOrganization"))
+      }
+
+      // Validate and process the restaurant picture
       if (!body.picture) {
         throw createError(errors.BadRequestError, t("api.errors.invalidPicture"))
       }
@@ -121,9 +146,26 @@ export const POST = withLogging(
         throw createError(errors.BadRequestError, t("api.errors.invalidPicture"))
       }
 
-      const organization = await prisma.$transaction(async (tx) => {
-        const org = await tx.organization.create({
+      // Format names for the webpage URL
+      const formatForUrl = (str: string) => {
+        return str
+          .toLowerCase() // Convert to lowercase
+          .replace(/\s+/g, "-") // Replace spaces with hyphens
+          .replace(/[^a-z0-9-]/g, "") // Remove special characters
+      }
+
+      // Format organization and restaurant names
+      const organizationNameFormatted = formatForUrl(organization.name)
+      const restaurantNameFormatted = formatForUrl(body.name)
+
+      // Create the webpage URL by concatenating formatted names
+      const webpage = `/${organizationNameFormatted}/${restaurantNameFormatted}`
+
+      // Create the restaurant in a transaction
+      const restaurant = await prisma.$transaction(async (tx) => {
+        const resto = await tx.restaurant.create({
           data: {
+            organizationId: body.organizationId,
             name: body.name,
             description: body.description,
             city: body.city,
@@ -131,25 +173,28 @@ export const POST = withLogging(
             phone: body.phone,
             email: body.email,
             picture: picturePath,
-            statusId: status.id
+            statusId: status.id,
+            webpage: webpage
           }
         })
 
+        // Create an audit log for the creation action
         await tx.auditLog.create({
           data: {
             actionId: (await tx.action.findUnique({ where: { name: "CREATE" } }))!.id,
             userId: request.user.id,
-            entityId: org.id,
-            entityType: "ORGANIZATION"
+            entityId: resto.id,
+            entityType: "RESTAURANT"
           }
         })
 
-        return org
+        return resto
       })
 
+      // Return success response with the created restaurant data
       return NextResponse.json({
-        message: t("api.success.organizationCreated"),
-        data: organization
+        message: t("api.success.restaurantCreated"),
+        data: restaurant
       })
     })
   )

@@ -10,7 +10,7 @@ import prisma from "@/lib/db"
 
 export const PATCH = withLogging(
   withAuth(
-    withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { id: string } }) => {
+    withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { organizationId: string } }) => {
       const t = await getI18n()
       const body = await request.json()
 
@@ -30,18 +30,22 @@ export const PATCH = withLogging(
 
       // Find the organization to update
       const organization = await prisma.organization.findUnique({
-        where: { id: params.id }
+        where: { id: params.organizationId }
       })
       if (!organization) {
-        throw createError(errors.NotFoundError, "Organization not found")
+        throw createError(errors.NotFoundError, t("api.errors.organizationNotFound"))
       }
 
       // Handle the picture field
-      let picturePath: string = organization.picture!
+      let picturePath: string | null = organization.picture
       if (body.picture && body.picture !== organization.picture) {
         // If the picture is a base64 string, process it
         if (body.picture.startsWith("data:image/")) {
-          picturePath = await imageProcessing(body.picture)
+          const processedImagePath = await imageProcessing(body.picture)
+          if (processedImagePath === null) {
+            throw createError(errors.BadRequestError, t("api.errors.imageProcessingFailed"))
+          }
+          picturePath = processedImagePath
         }
         // If the picture is a path, use it directly
         else if (body.picture.startsWith("/api/imgs/organizations/")) {
@@ -56,9 +60,9 @@ export const PATCH = withLogging(
       // Update the organization picture in a transaction
       const updatedOrganization = await prisma.$transaction(async (tx) => {
         const org = await tx.organization.update({
-          where: { id: params.id },
+          where: { id: params.organizationId },
           data: {
-            picture: picturePath
+            picture: picturePath!
           }
         })
 
@@ -68,7 +72,7 @@ export const PATCH = withLogging(
             actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
             userId: request.user.id,
             entityId: org.id,
-            entityType: "Organization"
+            entityType: "ORGANIZATION"
           }
         })
 

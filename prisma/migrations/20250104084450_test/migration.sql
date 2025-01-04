@@ -167,6 +167,7 @@ CREATE TABLE "Restaurant" (
     "picture" TEXT NOT NULL,
     "webpage" TEXT NOT NULL,
     "statusId" TEXT NOT NULL,
+    "organizationId" VARCHAR(25) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
@@ -489,6 +490,9 @@ CREATE INDEX "Restaurant_city_neighborhood_idx" ON "Restaurant"("city", "neighbo
 CREATE INDEX "Restaurant_statusId_idx" ON "Restaurant"("statusId");
 
 -- CreateIndex
+CREATE INDEX "Restaurant_organizationId_idx" ON "Restaurant"("organizationId");
+
+-- CreateIndex
 CREATE INDEX "Survey_statusId_idx" ON "Survey"("statusId");
 
 -- CreateIndex
@@ -571,6 +575,9 @@ ALTER TABLE "UserOrganization" ADD CONSTRAINT "UserOrganization_organizationId_f
 
 -- AddForeignKey
 ALTER TABLE "Restaurant" ADD CONSTRAINT "Restaurant_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "Status"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Restaurant" ADD CONSTRAINT "Restaurant_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserRestaurant" ADD CONSTRAINT "UserRestaurant_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
