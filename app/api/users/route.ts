@@ -160,7 +160,7 @@ export const POST = withLogging(
         }
 
         // Process the user picture if provided
-        let picturePath: string | undefined
+        let picturePath: string | null
         if (body.picture) {
           picturePath = await imageProcessing(body.picture)
           if (!picturePath) {
