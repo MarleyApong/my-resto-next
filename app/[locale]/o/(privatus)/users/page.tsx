@@ -18,10 +18,8 @@ import {
   ImageUp,
   SaveOff,
   Mail,
-  TowerControl,
   Building,
   Cookie,
-  ConciergeBell,
   Cctv
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -419,7 +417,30 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Us
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-3 gap-4 lg:grid-cols-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
-      {/* Left side - Form Fields */}
+      {/* Left side - Picture Upload */}
+      <div className="col-span-3 lg:col-span-1 row-span-1 ml-2">
+        <Label htmlFor="picture">Picture</Label>
+        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+        <div
+          className="w-full min-h-[196px] max-h-[196px] overflow-hidden flex items-center justify-center cursor-pointer border-2 border-dashed border-blue-950"
+          onClick={handleImageClick}
+        >
+          {pictureUrl ? (
+            <img src={pictureUrl} alt="Preview" className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex flex-col items-center">
+              <ImagePlus className="w-12 h-12 text-gray-500 mb-2" />
+              <span>Click to add an image</span>
+            </div>
+          )}
+        </div>
+        <Button type="button" variant="secondary" className="mt-2 w-full" onClick={handleImageClick}>
+          <ImageUp className="w-4 h-4" />
+          {pictureUrl ? "Change Image" : "Choose image"}
+        </Button>
+      </div>
+
+      {/* Right side - Form Fields */}
       <div className="col-span-3 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
         <div>
           <Label htmlFor="organization">Organization</Label>
@@ -468,29 +489,6 @@ const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Us
           <Input id="email" {...register("email")} placeholder="Email" />
           {errors.email && <p className="text-red-600 text-xs">{errors.email.message}</p>}
         </div>
-      </div>
-
-      {/* Right side - Picture Upload */}
-      <div className="col-span-3 lg:col-span-1 row-span-1 mr-2">
-        <Label htmlFor="picture">Picture</Label>
-        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-        <div
-          className="w-full min-h-[196px] max-h-[196px] overflow-hidden flex items-center justify-center cursor-pointer border-2 border-dashed border-blue-950"
-          onClick={handleImageClick}
-        >
-          {pictureUrl ? (
-            <img src={pictureUrl} alt="Preview" className="w-full h-full object-cover" />
-          ) : (
-            <div className="flex flex-col items-center">
-              <ImagePlus className="w-12 h-12 text-gray-500 mb-2" />
-              <span>Click to add an image</span>
-            </div>
-          )}
-        </div>
-        <Button type="button" variant="secondary" className="mt-2 w-full" onClick={handleImageClick}>
-          <ImageUp className="w-4 h-4" />
-          {pictureUrl ? "Change Image" : "Choose image"}
-        </Button>
       </div>
 
       {/* Footer */}

@@ -2,9 +2,10 @@ import { NextResponse } from "next/server"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
-import { restaurantUpdateStatusSchema } from "@/schemas/restaurant"
+import { restaurantUpdatePictureSchema } from "@/schemas/restaurant"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
+import { imageProcessing } from "@/lib/imageProcessing"
 import prisma from "@/lib/db"
 
 export const PATCH = withLogging(
@@ -15,7 +16,7 @@ export const PATCH = withLogging(
 
       // Validate the input data against the update schema
       try {
-        restaurantUpdateStatusSchema.parse(body)
+        restaurantUpdatePictureSchema.parse(body)
       } catch (error) {
         console.log("Validation error details:", error)
         throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
@@ -35,20 +36,33 @@ export const PATCH = withLogging(
         throw createError(errors.NotFoundError, t("api.errors.restaurantNotFound"))
       }
 
-      // Find the status for the restaurant
-      const status = await prisma.status.findFirst({
-        where: { name: body.status.toUpperCase() }
-      })
-      if (!status) {
-        throw createError(errors.BadRequestError, t("api.errors.invalidStatus"))
+      // Handle the picture field
+      let picturePath: string | null = restaurant.picture
+      if (body.picture && body.picture !== restaurant.picture) {
+        // If the picture is a base64 string, process it
+        if (body.picture.startsWith("data:image/")) {
+          const processedImagePath = await imageProcessing(body.picture)
+          if (processedImagePath === null) {
+            throw createError(errors.BadRequestError, t("api.errors.imageProcessingFailed"))
+          }
+          picturePath = processedImagePath
+        }
+        // If the picture is a path, use it directly
+        else if (body.picture.startsWith("/api/imgs/restaurants/")) {
+          picturePath = body.picture
+        }
+        // If the picture is invalid, throw an error
+        else {
+          throw createError(errors.BadRequestError, t("api.errors.invalidImage"))
+        }
       }
 
-      // Update the restaurant status in a transaction
+      // Update the restaurant picture in a transaction
       const updatedRestaurant = await prisma.$transaction(async (tx) => {
-        const resto = await tx.restaurant.update({
+        const user = await tx.restaurant.update({
           where: { id: params.restaurantId },
           data: {
-            statusId: status.id
+            picture: picturePath!
           }
         })
 
@@ -57,17 +71,17 @@ export const PATCH = withLogging(
           data: {
             actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
             userId: request.user.id,
-            entityId: resto.id,
-            entityType: "RESTAURANT"
+            entityId: user.id,
+            entityType: "USER"
           }
         })
 
-        return resto
+        return user
       })
 
       // Return the updated restaurant
       return NextResponse.json({
-        message: t("api.success.restaurantStatusUpdated"),
+        message: t("api.success.restaurantPictureUpdated"),
         data: updatedRestaurant
       })
     })

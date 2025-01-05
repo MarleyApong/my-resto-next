@@ -59,7 +59,7 @@ export const PATCH = withLogging(
 
       // Update the restaurant picture in a transaction
       const updatedRestaurant = await prisma.$transaction(async (tx) => {
-        const org = await tx.restaurant.update({
+        const resto = await tx.restaurant.update({
           where: { id: params.restaurantId },
           data: {
             picture: picturePath!
@@ -71,12 +71,12 @@ export const PATCH = withLogging(
           data: {
             actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
             userId: request.user.id,
-            entityId: org.id,
+            entityId: resto.id,
             entityType: "RESTAURANT"
           }
         })
 
-        return org
+        return resto
       })
 
       // Return the updated restaurant

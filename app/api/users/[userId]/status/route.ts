@@ -45,7 +45,7 @@ export const PATCH = withLogging(
 
       // Update the restaurant status in a transaction
       const updatedRestaurant = await prisma.$transaction(async (tx) => {
-        const resto = await tx.restaurant.update({
+        const user = await tx.restaurant.update({
           where: { id: params.restaurantId },
           data: {
             statusId: status.id
@@ -57,12 +57,12 @@ export const PATCH = withLogging(
           data: {
             actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
             userId: request.user.id,
-            entityId: resto.id,
-            entityType: "RESTAURANT"
+            entityId: user.id,
+            entityType: "USER"
           }
         })
 
-        return resto
+        return user
       })
 
       // Return the updated restaurant

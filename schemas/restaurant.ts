@@ -39,7 +39,7 @@ export const restaurantUpdateSchema = z.object({
 })
 
 export const restaurantUpdatePictureSchema = z.object({
-  picture: z.string().min(1, "Field is required")
+  picture: z.string().min(1, "Picture is required")
 })
 
 export const restaurantUpdateStatusSchema = z.object({

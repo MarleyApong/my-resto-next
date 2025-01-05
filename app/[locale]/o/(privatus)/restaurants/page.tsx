@@ -1,35 +1,10 @@
 "use client"
 
-import { useState, useRef, ChangeEvent, useEffect } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useState, useEffect } from "react"
 import { DataTable, FilterState } from "@/components/features/DataTable"
-import {
-  Trash2,
-  Edit,
-  Eye,
-  Plus,
-  ImagePlus,
-  PhoneIcon,
-  Calendar1,
-  X,
-  HardDriveDownload,
-  ImageUp,
-  SaveOff,
-  TowerControl,
-  Cctv,
-  HardDriveUpload,
-  SendToBack,
-  Building,
-  Mail
-} from "lucide-react"
+import { Trash2, Edit, Eye, Plus, PhoneIcon, Calendar1, X, SaveOff, TowerControl, Cctv, SendToBack, Building, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Combobox } from "@/components/features/Combobox"
 import { ParamsType } from "@/types/param"
 import { statusOrganization } from "@/data/statusFilter"
 import { filterOptionOrganization } from "@/data/optionFilter"
@@ -39,10 +14,8 @@ import { restaurantService } from "@/services/restaurantService"
 import { toast } from "sonner"
 import { useError } from "@/hooks/useError"
 import { format } from "date-fns"
-import { restaurantSchema, restaurantUpdateSchema } from "@/schemas/restaurant"
 import { useAuth } from "@/hooks/useAuth"
-import { Loader, SpecificalLoader } from "@/components/features/SpecificalLoader"
-import { organizationService } from "@/services/organizationService"
+import { Loader } from "@/components/features/SpecificalLoader"
 import { AddEditForm } from "./AddEditForm"
 
 const Restaurant = () => {

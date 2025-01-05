@@ -64,7 +64,7 @@ export const PUT = withLogging(
 
       // Update the restaurant in a transaction
       const updatedRestaurant = await prisma.$transaction(async (tx) => {
-        const resto = await tx.restaurant.update({
+        const user = await tx.restaurant.update({
           where: { id: params.restaurantId },
           data: {
             name: body.name,
@@ -80,12 +80,12 @@ export const PUT = withLogging(
           data: {
             actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
             userId: request.user.id,
-            entityId: resto.id,
-            entityType: "RESTAURANT"
+            entityId: user.id,
+            entityType: "USER"
           }
         })
 
-        return resto
+        return user
       })
 
       // Return the updated restaurant
@@ -120,7 +120,7 @@ export const DELETE = withLogging(
             actionId: (await tx.action.findUnique({ where: { name: "DELETE" } }))!.id,
             userId: request.user.id,
             entityId: params.restaurantId,
-            entityType: "RESTAURANT"
+            entityType: "USER"
           }
         })
       })

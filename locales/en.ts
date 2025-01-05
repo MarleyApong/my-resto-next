@@ -26,7 +26,8 @@ export default {
       "organizationNotFound": "",
       "imageProcessingFailed": "",
       "restaurantNotFound": "",
-      "invalidOrganization": ""
+      "invalidOrganization": "",
+      "invalidRestaurant": ""
     },
     "success": {
       "loggedOut": "You have been logged out successfully. See you next time!",
@@ -41,7 +42,8 @@ export default {
       "restaurantUpdated": "",
       "restaurantDeleted": "",
       "restaurantStatusUpdated": "",
-      "restaurantPictureUpdated": ""
+      "restaurantPictureUpdated": "",
+      "userCreated": ""
     }
   },
   "sessionExpired": ""

@@ -172,7 +172,7 @@ export const AddEditForm = ({
         </div>
 
         {/* Name Field (Full Width in Edit Mode) */}
-        <div className={`${isEditing ? "sm:col-span-1" : "sm:col-span-2 lg:col-span-2"}`}>
+        <div className={`${isEditing ? "sm:col-span-1" : "sm:col-span-1 lg:col-span-2"}`}>
           <Label htmlFor="name">Name</Label>
           <Input id="name" {...register("name")} placeholder="Restaurant Name" />
           {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
