@@ -104,7 +104,7 @@ export const DataTable = <TData extends object>({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [filterState, setFilterState] = useState<FilterState>({
     order: "desc",
-    filter: "name",
+    filter: "",
     status: "*",
     search: "",
     dateRange: { from: new Date(new Date().getFullYear(), new Date().getMonth(), 1), to: new Date() }
@@ -150,6 +150,16 @@ export const DataTable = <TData extends object>({
       onSelectedRowsChange(selectedIds as (string | number)[])
     }
   }, [rowSelection, rowIdKey, table])
+
+  useEffect(() => {
+    if (enableFilterBy && filterByOptions.length > 0) {
+      // fisrt value is defaiult value
+      setFilterState((prev) => ({
+        ...prev,
+        filter: filterByOptions[0].value,
+      }));
+    }
+  }, [enableFilterBy, filterByOptions])
 
   const handlePageChange = (newPage: number) => {
     // Convert 1-based page number to 0-based index

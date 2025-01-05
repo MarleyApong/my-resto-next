@@ -4,17 +4,19 @@ export type UserType = {
   lastname?: string
   organizationId: string
   restaurantId?: string
-  organization: {
+  organization?: {
     id: string,
     name: string
   }
-  restaurant: {
+  restaurant?: {
     id: string,
     name: string
   }
   role: string
   phone: string
   email: string
+  city?: string
+  neighborhood?: string
   picture: string
   status: "ACTIVE" | "INACTIVE"
   createdAt: string

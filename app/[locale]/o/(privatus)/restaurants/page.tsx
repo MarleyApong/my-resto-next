@@ -6,8 +6,8 @@ import { Trash2, Edit, Eye, Plus, PhoneIcon, Calendar1, X, SaveOff, TowerControl
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ParamsType } from "@/types/param"
-import { statusOrganization } from "@/data/statusFilter"
-import { filterOptionOrganization } from "@/data/optionFilter"
+import { statusRestaurant } from "@/data/statusFilter"
+import { filterOptionRestaurant } from "@/data/optionFilter"
 import { RestaurantType } from "@/types/restaurant"
 import { Level2 } from "@/components/features/Level2"
 import { restaurantService } from "@/services/restaurantService"
@@ -276,8 +276,8 @@ const Restaurant = () => {
         onSizeChange={handleSizeChange}
         columns={columns}
         data={restaurants.data}
-        statusOptions={statusOrganization}
-        filterByOptions={filterOptionOrganization}
+        statusOptions={statusRestaurant}
+        filterByOptions={filterOptionRestaurant}
       />
 
       {/* Add/Edit Dialog */}

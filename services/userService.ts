@@ -10,8 +10,8 @@ export const userService = {
     )
   },
 
-  getById: async (id: string) => {
-    return await api.get(`/users/${id}`)
+  getById: async (userId: string) => {
+    return await api.get(`/users/${userId}`)
   },
 
   create: async (data: UserType) => {
@@ -23,28 +23,28 @@ export const userService = {
     return await api.post("/users", data)
   },
 
-  update: async (id: string, data: UserType) => {
+  update: async (userId: string, data: UserType) => {
     if (data.picture && data.picture.startsWith("data:image")) {
       // Compress only if it's a new image (base64)
       const compressedImage = await compressImage(data.picture)
       data.picture = compressedImage
     }
-    return await api.put(`/users/${id}`, data)
+    return await api.put(`/users/${userId}`, data)
   },
 
-  updatePicture: async (id: string, picture: string) => {
+  updatePicture: async (userId: string, picture: string) => {
     if (picture.startsWith("data:image")) {
       const compressedImage = await compressImage(picture)
-      return await api.patch(`/users/${id}/picture`, { picture: compressedImage })
+      return await api.patch(`/users/${userId}/picture`, { picture: compressedImage })
     }
-    return await api.put(`/users/${id}/picture`, { picture })
+    return await api.put(`/users/${userId}/picture`, { picture })
   },
 
-  updateStatus: async (id: string, status: "ACTIVE" | "INACTIVE") => {
-    return await api.patch(`/users/${id}/status`, { status })
+  updateStatus: async (userId: string, status: "ACTIVE" | "INACTIVE") => {
+    return await api.patch(`/users/${userId}/status`, { status })
   },
 
-  delete: async (id: string) => {
-    return await api.delete(`/users/${id}`)
+  delete: async (userId: string) => {
+    return await api.delete(`/users/${userId}`)
   }
 }
