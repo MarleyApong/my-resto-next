@@ -2,12 +2,12 @@ import { NextResponse } from "next/server"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
-import { restaurantUpdateStatusSchema } from "@/schemas/restaurant"
+import { userUpdateStatusSchema } from "@/schemas/user"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { withPermission } from "@/middlewares/withPermission"
 import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
-import {prisma} from "@/lib/db"
+import { prisma } from "@/lib/db"
 
 export const PATCH = withLogging(
   withAuth(
@@ -15,33 +15,27 @@ export const PATCH = withLogging(
       "employees",
       SpecificPermissionAction.UPDATE_STATUS
     )(
-      withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { restaurantId: string } }) => {
+      withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { userId: string } }) => {
         const t = await getI18n()
         const body = await request.json()
 
         // Validate the input data against the update schema
         try {
-          restaurantUpdateStatusSchema.parse(body)
+          userUpdateStatusSchema.parse(body)
         } catch (error) {
           console.log("Validation error details:", error)
           throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
         }
 
-        // Check if the user has permission to update restaurants
-        const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "restaurants" && p.update)
-        if (!hasPermission) {
-          throw createError(errors.ForbiddenError, t("api.errors.forbidden"))
-        }
-
-        // Find the restaurant to update
-        const restaurant = await prisma.restaurant.findUnique({
-          where: { id: params.restaurantId }
+        // Find the user to update
+        const user = await prisma.user.findUnique({
+          where: { id: params.userId }
         })
-        if (!restaurant) {
-          throw createError(errors.NotFoundError, t("api.errors.restaurantNotFound"))
+        if (!user) {
+          throw createError(errors.NotFoundError, t("api.errors.userNotFound"))
         }
 
-        // Find the status for the restaurant
+        // Find the status for the user
         const status = await prisma.status.findFirst({
           where: { name: body.status.toUpperCase() }
         })
@@ -49,10 +43,10 @@ export const PATCH = withLogging(
           throw createError(errors.BadRequestError, t("api.errors.invalidStatus"))
         }
 
-        // Update the restaurant status in a transaction
+        // Update the user status in a transaction
         const updatedRestaurant = await prisma.$transaction(async (tx) => {
-          const user = await tx.restaurant.update({
-            where: { id: params.restaurantId },
+          const user = await tx.user.update({
+            where: { id: params.userId },
             data: {
               statusId: status.id
             }
@@ -71,9 +65,9 @@ export const PATCH = withLogging(
           return user
         })
 
-        // Return the updated restaurant
+        // Return the updated user
         return NextResponse.json({
-          message: t("api.success.restaurantStatusUpdated"),
+          message: t("api.success.userStatusUpdated"),
           data: updatedRestaurant
         })
       })

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
-import { restaurantUpdatePictureSchema } from "@/schemas/restaurant"
+import { userUpdatePictureSchema } from "@/schemas/user"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { imageProcessing } from "@/lib/imageProcessing"
@@ -16,35 +16,29 @@ export const PATCH = withLogging(
       "employees",
       SpecificPermissionAction.UPDATE_STATUS
     )(
-      withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { restaurantId: string } }) => {
+      withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { userId: string } }) => {
         const t = await getI18n()
         const body = await request.json()
 
         // Validate the input data against the update schema
         try {
-          restaurantUpdatePictureSchema.parse(body)
+          userUpdatePictureSchema.parse(body)
         } catch (error) {
           console.log("Validation error details:", error)
           throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
         }
 
-        // Check if the user has permission to update restaurants
-        const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "restaurants" && p.update)
-        if (!hasPermission) {
-          throw createError(errors.ForbiddenError, t("api.errors.forbidden"))
-        }
-
-        // Find the restaurant to update
-        const restaurant = await prisma.restaurant.findUnique({
-          where: { id: params.restaurantId }
+        // Find the user to update
+        const user = await prisma.user.findUnique({
+          where: { id: params.userId }
         })
-        if (!restaurant) {
-          throw createError(errors.NotFoundError, t("api.errors.restaurantNotFound"))
+        if (!user) {
+          throw createError(errors.NotFoundError, t("api.errors.userNotFound"))
         }
 
         // Handle the picture field
-        let picturePath: string | null = restaurant.picture
-        if (body.picture && body.picture !== restaurant.picture) {
+        let picturePath: string | null = user.picture
+        if (body.picture && body.picture !== user.picture) {
           // If the picture is a base64 string, process it
           if (body.picture.startsWith("data:image/")) {
             const processedImagePath = await imageProcessing(body.picture)
@@ -54,7 +48,7 @@ export const PATCH = withLogging(
             picturePath = processedImagePath
           }
           // If the picture is a path, use it directly
-          else if (body.picture.startsWith("/api/imgs/restaurants/")) {
+          else if (body.picture.startsWith("/api/imgs/users/")) {
             picturePath = body.picture
           }
           // If the picture is invalid, throw an error
@@ -63,10 +57,10 @@ export const PATCH = withLogging(
           }
         }
 
-        // Update the restaurant picture in a transaction
+        // Update the user picture in a transaction
         const updatedRestaurant = await prisma.$transaction(async (tx) => {
-          const user = await tx.restaurant.update({
-            where: { id: params.restaurantId },
+          const user = await tx.user.update({
+            where: { id: params.userId },
             data: {
               picture: picturePath!
             }
@@ -85,9 +79,9 @@ export const PATCH = withLogging(
           return user
         })
 
-        // Return the updated restaurant
+        // Return the updated user
         return NextResponse.json({
-          message: t("api.success.restaurantPictureUpdated"),
+          message: t("api.success.userPictureUpdated"),
           data: updatedRestaurant
         })
       })

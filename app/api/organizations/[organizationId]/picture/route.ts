@@ -7,7 +7,7 @@ import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { imageProcessing } from "@/lib/imageProcessing"
 import { withPermission } from "@/middlewares/withPermission"
-import {prisma} from "@/lib/db"
+import { prisma } from "@/lib/db"
 import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
 
 export const PATCH = withLogging(
@@ -26,12 +26,6 @@ export const PATCH = withLogging(
         } catch (error) {
           console.log("Validation error details:", error)
           throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
-        }
-
-        // Check if the user has permission to update organizations
-        const hasPermission = request.user?.role.permissions.some((p: any) => p.menuId === "organizations" && p.update)
-        if (!hasPermission) {
-          throw createError(errors.ForbiddenError, t("api.errors.forbidden"))
         }
 
         // Find the organization to update

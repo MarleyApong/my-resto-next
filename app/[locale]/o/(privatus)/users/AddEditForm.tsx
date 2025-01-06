@@ -100,7 +100,7 @@ export const AddEditForm = ({
     if (organizationId) {
       fetchRestaurants(organizationId)
     } else {
-      setRestaurants([]) // Réinitialiser la liste des restaurants si aucune organisation n'est sélectionnée
+      setRestaurants([])
     }
   }, [organizationId])
 

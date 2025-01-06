@@ -191,7 +191,7 @@ const Organization = () => {
 
   const handleImageClick = () => {
     if (!canUpdatePicture) return
-    
+
     const fileInput = document.createElement("input")
     fileInput.type = "file"
     fileInput.accept = "image/*"
@@ -207,8 +207,9 @@ const Organization = () => {
   }
 
   const columns = [
-    { accessorKey: "name", header: "Restaurant" },
+    { accessorKey: "name", header: "Organization" },
     { accessorKey: "city", header: "City" },
+    { accessorKey: "neighborhood", header: "Neighborhood" },
     { accessorKey: "phone", header: "Phone" },
     {
       accessorKey: "status",
@@ -413,10 +414,10 @@ const Organization = () => {
           </DialogHeader>
           <DialogDescription>{`Are you sure you want to change the status to "${newStatus}"?`}</DialogDescription>
           <DialogFooter>
-            {canDelete && (
-              <Button size="sm" variant="destructive" disabled={isLoading} onClick={handleDelete}>
-                {isLoading ? <Loader /> : <SaveOff className="w-4 h-4" />}
-                Delete
+            {canUpdateStatus && (
+              <Button size="sm" variant="sun" disabled={isLoading} onClick={handleStatusChange}>
+                {isLoading ? <Loader /> : <SendToBack className="w-4 h-4" />}
+                Confirm
               </Button>
             )}
             <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsStatusDialogOpen(false)}>
