@@ -43,8 +43,8 @@ export function withAuth(handler: RouteHandler) {
             select: {
               id: true,
               email: true,
-              firstName: true,
-              lastName: true,
+              firstname: true,
+              lastname: true,
               role: {
                 select: {
                   id: true,

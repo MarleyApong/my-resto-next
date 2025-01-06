@@ -12,13 +12,48 @@ export const userSchema = z.object({
     .max(25, "Organization must not exceed 25 characters")
     .regex(SANITIZE_REGEX, "Special characters are not allowed")
     .trim(),
-  restaurantId: z.string().max(25, "Restaurant must not exceed 25 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim().optional(),
-  roleId: z.string().max(25, "Role must not exceed 25 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim().optional(),
+  restaurantId: z
+    .string()
+    .max(25, "Restaurant must not exceed 25 characters")
+    .trim()
+    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
+  roleId: z
+    .string()
+    .max(25, "Role must not exceed 25 characters")
+    .trim()
+    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
   firstname: z.string().min(1, "Firstname is required").max(100, "Firstname must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim(),
-  lastname: z.string().max(100, "Lastname must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim().optional(),
+  lastname: z
+    .string()
+    .max(100, "Lastname must not exceed 100 characters")
+    .trim()
+    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
   phone: z.string().min(1, "Phone is required").regex(PHONE_REGEX, "Invalid phone number format").trim(),
-  city: z.string().max(100, "City must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim().optional(),
-  neighborhood: z.string().max(100, "Neighborhood must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim().optional(),
+  city: z
+    .string()
+    .max(100, "City must not exceed 100 characters")
+    .trim()
+    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
+  neighborhood: z
+    .string()
+    .max(100, "Neighborhood must not exceed 100 characters")
+    .trim()
+    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
   email: z.string().email("Invalid email format").min(1, "Email is required"),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   picture: z
@@ -31,7 +66,14 @@ export const userSchema = z.object({
 
 export const userUpdateSchema = z.object({
   firstname: z.string().min(1, "Firstname is required").max(100, "Firstname must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim(),
-  lastname: z.string().max(100, "Lastname must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim().optional(),
+  lastname: z
+    .string()
+    .max(100, "Lastname must not exceed 100 characters")
+    .trim()
+    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
   description: z.string().min(70, "Description must be at least 70 characters").max(170, "Description must not exceed 170 characters"),
   phone: z.string().min(1, "Field is required").regex(/^\d+$/, "Phone must contain only numbers"),
   email: z.string().email("Invalid email format").min(1, "Email is required")

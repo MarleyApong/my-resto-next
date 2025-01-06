@@ -143,6 +143,8 @@ const Organization = () => {
 
   const handleAddOrEdit = async (data: OrganizationType) => {
     setIsLoading(true)
+    console.log("data", data);
+    
     try {
       if (isEditing?.id) {
         const res = await organizationService.update(isEditing.id, data)

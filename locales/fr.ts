@@ -43,7 +43,9 @@ export default {
       "restaurantDeleted": "",
       "restaurantStatusUpdated": "",
       "restaurantPictureUpdated": "",
-      "userCreated": ""
+      "userCreated": "",
+      "userUpdated": "",
+      "userDeleted": ""
     }
   },
   "sessionExpired": ""

@@ -55,8 +55,10 @@ export const GET = withLogging(
             take,
             select: {
               id: true,
-              firstName: true,
-              lastName: true,
+              firstname: true,
+              lastname: true,
+              city: true,
+              neighborhood: true,
               phone: true,
               email: true,
               picture: true,
@@ -175,8 +177,10 @@ export const POST = withLogging(
         const user = await prisma.$transaction(async (tx) => {
           const newUser = await tx.user.create({
             data: {
-              firstName: body.firstname,
-              lastName: body.lastname,
+              firstname: body.firstname,
+              lastname: body.lastname,
+              city: body.city,
+              neighborhood: body.neighborhood,
               phone: body.phone,
               email: body.email,
               picture: picturePath,

@@ -92,18 +92,18 @@ CREATE TABLE "LogsUser" (
 -- CreateTable
 CREATE TABLE "User" (
     "id" VARCHAR(25) NOT NULL,
-    "firstName" VARCHAR(50) NOT NULL,
-    "lastName" VARCHAR(50),
+    "firstname" VARCHAR(50) NOT NULL,
+    "lastname" VARCHAR(50),
     "phone" VARCHAR(15) NOT NULL,
     "email" VARCHAR(100) NOT NULL,
-    "city" VARCHAR(100) NOT NULL,
-    "neighborhood" VARCHAR(100) NOT NULL,
+    "city" VARCHAR(100),
+    "neighborhood" VARCHAR(100),
     "picture" TEXT,
-    "roleId" TEXT NOT NULL,
+    "roleId" TEXT,
     "statusId" TEXT NOT NULL,
     "password" VARCHAR(64) NOT NULL,
-    "temporyPassword" VARCHAR(64) NOT NULL,
-    "expiryPassword" TIMESTAMP(3) NOT NULL,
+    "temporyPassword" VARCHAR(64),
+    "expiryPassword" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
@@ -445,7 +445,7 @@ CREATE INDEX "User_roleId_idx" ON "User"("roleId");
 CREATE INDEX "User_statusId_idx" ON "User"("statusId");
 
 -- CreateIndex
-CREATE INDEX "User_firstName_lastName_idx" ON "User"("firstName", "lastName");
+CREATE INDEX "User_firstname_lastname_idx" ON "User"("firstname", "lastname");
 
 -- CreateIndex
 CREATE INDEX "User_phone_idx" ON "User"("phone");
@@ -556,7 +556,7 @@ ALTER TABLE "Permission" ADD CONSTRAINT "Permission_roleId_fkey" FOREIGN KEY ("r
 ALTER TABLE "LogsUser" ADD CONSTRAINT "LogsUser_logTypeId_fkey" FOREIGN KEY ("logTypeId") REFERENCES "LogType"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_statusId_fkey" FOREIGN KEY ("statusId") REFERENCES "Status"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
