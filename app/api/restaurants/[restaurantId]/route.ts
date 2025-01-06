@@ -6,7 +6,7 @@ import { restaurantUpdateSchema } from "@/schemas/restaurant"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { withPermission } from "@/middlewares/withPermission"
-import prisma from "@/lib/db"
+import {prisma} from "@/lib/db"
 
 export const GET = withLogging(
   withAuth(

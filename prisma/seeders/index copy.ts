@@ -1,68 +1,12 @@
+import { PrismaClient } from "@prisma/client"
 import { StatusUserEnum, StatusRestaurantEnum, StatusOrganizationEnum, StatusSurveyEnum, StatusCustomerEnum, StatusProductEnum, StatusOrderEnum } from "@/enums/statusEnum"
 import { PaymentMethod } from "@/enums/paymentMethodEnum"
 import { PaymentStatus } from "@/enums/paymentStatusEnum"
 import { menuItems } from "@/data/mainMenu"
-import { Action } from "@/enums/action"
-import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
 import bcrypt from "bcryptjs"
-import {prisma} from "@/lib/db"
+import { Action } from "@/enums/action"
 
-async function seedPermissionActions() {
-  try {
-    const actions = Object.values(SpecificPermissionAction).map((action) => ({
-      name: action,
-      description: `Permission to ${action.toLowerCase().replace(/_/g, " ")}`
-    }))
-
-    for (const action of actions) {
-      await prisma.permissionAction.upsert({
-        where: { name: action.name },
-        update: { description: action.description },
-        create: action
-      })
-      console.log(`Permission action ${action.name} seeded.`)
-    }
-  } catch (error) {
-    console.error("Error seeding permission actions:", error)
-    throw error
-  }
-}
-
-async function assignSpecificPermissions(roleId: string, menuId: string, actions: SpecificPermissionAction[]) {
-  try {
-    const permission = await prisma.permission.findUnique({
-      where: {
-        roleId_menuId: {
-          roleId,
-          menuId
-        }
-      }
-    })
-
-    if (permission) {
-      const permissionActions = await prisma.permissionAction.findMany({
-        where: {
-          name: {
-            in: actions
-          }
-        }
-      })
-
-      await prisma.permission.update({
-        where: { id: permission.id },
-        data: {
-          permissionActions: {
-            connect: permissionActions.map((action) => ({ id: action.id }))
-          }
-        }
-      })
-      console.log(`Specific permissions assigned for menu ${menuId}`)
-    }
-  } catch (error) {
-    console.error(`Error assigning specific permissions for menu ${menuId}:`, error)
-    throw error
-  }
-}
+const prisma = new PrismaClient()
 
 async function seedSuperAdminRole() {
   try {
@@ -76,12 +20,34 @@ async function seedSuperAdminRole() {
       superAdminRole = await prisma.role.create({
         data: {
           name: "Super Admin",
-          menuIds: JSON.stringify(menuItems.map((item) => item.id))
+          menuIds: JSON.stringify(menuItems.map((item) => item.id)) // Add all menus
         }
       })
       console.log("Super Admin role created.")
     } else {
       console.log("Super Admin role already exists.")
+    }
+
+    // Check if dashboard permission exists
+    let dashboardPermission = await prisma.permission.findUnique({
+      where: { roleId_menuId: { roleId: superAdminRole.id, menuId: "dashboard" } }
+    })
+
+    // If not, create it
+    if (!dashboardPermission) {
+      await prisma.permission.create({
+        data: {
+          menuId: "dashboard",
+          roleId: superAdminRole.id,
+          view: true,
+          create: true,
+          update: true,
+          delete: true
+        }
+      })
+      console.log("Dashboard permission created.")
+    } else {
+      console.log("Dashboard permission already exists.")
     }
 
     // Assign all permissions for menus and submenus to "Super Admin"
@@ -92,61 +58,17 @@ async function seedSuperAdminRole() {
         })
 
         if (!permission) {
-          permission = await prisma.permission.create({
+          await prisma.permission.create({
             data: {
               menuId: subItem.id,
               roleId: superAdminRole.id,
               view: true,
               create: true,
               update: true,
-              delete: true
+              delete: true // Full access
             }
           })
           console.log(`Permission for ${subItem.id} created.`)
-
-          // Assign specific permissions based on menu
-          switch (subItem.id) {
-            case "organizations":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-            case "restaurants":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-            case "employees":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.CHANGE_PASSWORD,
-                SpecificPermissionAction.RESET_PASSWORD
-              ])
-              break
-            case "customers":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-            case "products":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-          }
         } else {
           console.log(`Permission for ${subItem.id} already exists.`)
         }
@@ -160,7 +82,6 @@ async function seedSuperAdminRole() {
   }
 }
 
-// Le reste des fonctions reste inchangé
 async function seedSuperAdminUser() {
   try {
     // Check if "Super Admin" role exists
@@ -183,7 +104,10 @@ async function seedSuperAdminUser() {
 
     const activeStatus = await prisma.status.findFirst({
       where: {
-        AND: [{ name: StatusUserEnum.ACTIVE }, { statusTypeId: userStatusType.id }]
+        AND: [
+          { name: StatusUserEnum.ACTIVE },
+          { statusTypeId: userStatusType.id }
+        ]
       }
     })
 
@@ -348,7 +272,6 @@ async function main() {
     await seedActions()
     await seedPaymentStatus()
     await seedPaymentMethods()
-    await seedPermissionActions() // Nouvelle fonction ajoutée
     await seedSuperAdminRole()
     await seedSuperAdminUser()
   } catch (error) {

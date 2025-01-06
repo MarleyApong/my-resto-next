@@ -8,6 +8,8 @@ export function withErrorHandler(handler: RouteHandler) {
     try {
       return await handler(request, context)
     } catch (err: any) {
+      console.log("log", err);
+      
       return await errorHandler(err)
     }
   }

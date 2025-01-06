@@ -56,6 +56,17 @@ CREATE TABLE "Role" (
 );
 
 -- CreateTable
+CREATE TABLE "PermissionAction" (
+    "id" VARCHAR(25) NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PermissionAction_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Permission" (
     "id" VARCHAR(25) NOT NULL,
     "menuId" VARCHAR(50) NOT NULL,
@@ -378,6 +389,14 @@ CREATE TABLE "Table" (
     CONSTRAINT "Table_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "_PermissionToPermissionAction" (
+    "A" VARCHAR(25) NOT NULL,
+    "B" VARCHAR(25) NOT NULL,
+
+    CONSTRAINT "_PermissionToPermissionAction_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Action_name_key" ON "Action"("name");
 
@@ -413,6 +432,12 @@ CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
 CREATE INDEX "Role_name_idx" ON "Role"("name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PermissionAction_name_key" ON "PermissionAction"("name");
+
+-- CreateIndex
+CREATE INDEX "PermissionAction_name_idx" ON "PermissionAction"("name");
 
 -- CreateIndex
 CREATE INDEX "Permission_roleId_idx" ON "Permission"("roleId");
@@ -540,6 +565,9 @@ CREATE INDEX "Table_restaurantId_idx" ON "Table"("restaurantId");
 -- CreateIndex
 CREATE INDEX "Table_webpage_idx" ON "Table"("webpage");
 
+-- CreateIndex
+CREATE INDEX "_PermissionToPermissionAction_B_index" ON "_PermissionToPermissionAction"("B");
+
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_actionId_fkey" FOREIGN KEY ("actionId") REFERENCES "Action"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -653,3 +681,9 @@ ALTER TABLE "Stock" ADD CONSTRAINT "Stock_productId_fkey" FOREIGN KEY ("productI
 
 -- AddForeignKey
 ALTER TABLE "Table" ADD CONSTRAINT "Table_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_PermissionToPermissionAction" ADD CONSTRAINT "_PermissionToPermissionAction_A_fkey" FOREIGN KEY ("A") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "_PermissionToPermissionAction" ADD CONSTRAINT "_PermissionToPermissionAction_B_fkey" FOREIGN KEY ("B") REFERENCES "PermissionAction"("id") ON DELETE CASCADE ON UPDATE CASCADE;

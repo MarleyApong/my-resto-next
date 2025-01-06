@@ -6,15 +6,15 @@ import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { imageProcessing } from "@/lib/imageProcessing"
 import { buildWhereClause } from "@/lib/buildWhereClause"
-import prisma from "@/lib/db"
 import { userSchema } from "@/schemas/user"
 import { withPermission } from "@/middlewares/withPermission"
 import { hashPassword } from "@/lib/hashComparePassword"
+import {prisma} from "@/lib/db"
 
 export const GET = withLogging(
   withAuth(
     withPermission(
-      "restaurants",
+      "employees",
       "view"
     )(
       withErrorHandler(async (request: Request) => {

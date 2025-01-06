@@ -5,14 +5,15 @@ import { withLogging } from "@/middlewares/withLogging"
 import { restaurantUpdateStatusSchema } from "@/schemas/restaurant"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
-import prisma from "@/lib/db"
 import { withPermission } from "@/middlewares/withPermission"
+import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
+import { prisma } from "@/lib/db"
 
 export const PATCH = withLogging(
   withAuth(
     withPermission(
       "restaurants",
-      "update"
+      SpecificPermissionAction.UPDATE_STATUS
     )(
       withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { restaurantId: string } }) => {
         const t = await getI18n()

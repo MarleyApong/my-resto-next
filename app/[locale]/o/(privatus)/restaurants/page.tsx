@@ -17,10 +17,12 @@ import { format } from "date-fns"
 import { useAuth } from "@/hooks/useAuth"
 import { Loader } from "@/components/features/SpecificalLoader"
 import { AddEditForm } from "./AddEditForm"
+import { hasPermission } from "@/lib/hasPermission"
+import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
 
 const Restaurant = () => {
   const { showError } = useError()
-  const { setIsLoading, isLoading } = useAuth()
+  const { setIsLoading, isLoading, user } = useAuth()
 
   const [isEditing, setIsEditing] = useState<RestaurantType | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
@@ -49,6 +51,13 @@ const Restaurant = () => {
     recordsTotal: 0
   })
   const [tempImage, setTempImage] = useState<string | null>(null)
+
+  // Check permissions
+  const canUpdateStatus = hasPermission(user, "restaurants", SpecificPermissionAction.UPDATE_STATUS)
+  const canUpdatePicture = hasPermission(user, "restaurants", SpecificPermissionAction.UPDATE_PICTURE)
+  const canDelete = hasPermission(user, "restaurants", "delete")
+  const canEdit = hasPermission(user, "restaurants", "update")
+  const canCreate = hasPermission(user, "restaurants", "create")
 
   const handlePageChange = (page: number) => {
     setFilterState((prev) => ({ ...prev, page }))
@@ -180,6 +189,8 @@ const Restaurant = () => {
   }
 
   const handleImageClick = () => {
+    if (!canUpdatePicture) return
+    
     const fileInput = document.createElement("input")
     fileInput.type = "file"
     fileInput.accept = "image/*"
@@ -214,44 +225,52 @@ const Restaurant = () => {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
       cell: ({ row }: any) => {
-        const org = row.original
+        const resto = row.original
         return (
           <div className="flex justify-end gap-1">
+            {/* View Button */}
             <Button
               variant="default"
               size="icon"
               disabled={isLoading}
               onClick={() => {
-                setNewStatus(org?.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
-                setSelectedRestaurant(org)
+                setNewStatus(resto?.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
+                setSelectedRestaurant(resto)
                 setIsViewDialogOpen(true)
               }}
             >
               <Eye className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="sun"
-              size="icon"
-              disabled={isLoading}
-              onClick={() => {
-                setIsEditing(org)
-                setIsAddOrEditDialogOpen(true)
-              }}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="destructive"
-              size="icon"
-              disabled={isLoading}
-              onClick={() => {
-                setSelectedRestaurant(org)
-                setIsDeleteDialogOpen(true)
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {/* Edit Button */}
+            {canEdit && (
+              <Button
+                variant="sun"
+                size="icon"
+                disabled={isLoading}
+                onClick={() => {
+                  setIsEditing(resto)
+                  setIsAddOrEditDialogOpen(true)
+                }}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+
+            {/* Delete Button */}
+            {canDelete && (
+              <Button
+                variant="destructive"
+                size="icon"
+                disabled={isLoading}
+                onClick={() => {
+                  setSelectedRestaurant(resto)
+                  setIsDeleteDialogOpen(true)
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         )
       }
@@ -261,10 +280,12 @@ const Restaurant = () => {
   return (
     <div>
       <Level2>
-        <Button variant="default" size="sm" disabled={isLoading} onClick={() => setIsAddOrEditDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Resto
-        </Button>
+        {canCreate && (
+          <Button variant="default" size="sm" disabled={isLoading} onClick={() => setIsAddOrEditDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Resto
+          </Button>
+        )}
       </Level2>
 
       <DataTable
@@ -358,32 +379,32 @@ const Restaurant = () => {
           )}
 
           <DialogFooter className="flex gap-1 justify-end p-1 border-t">
-            <Button variant="sun" disabled={isLoading} onClick={tempImage ? handleUploadPicture : handleImageClick}>
-              {tempImage ? "Upload" : selectedRestaurant?.picture ? "Update Picture" : "Choose Picture"}
-            </Button>
+            {canUpdatePicture && (
+              <Button variant="sun" disabled={isLoading} onClick={tempImage ? handleUploadPicture : handleImageClick}>
+                {tempImage ? "Upload" : selectedRestaurant?.picture ? "Update Picture" : "Choose Picture"}
+              </Button>
+            )}
 
-            <Button
-              variant={selectedRestaurant?.status === "ACTIVE" ? "destructive" : "default"}
-              disabled={isLoading}
-              onClick={() => {
-                setIsStatusDialogOpen(true)
-              }}
-            >
-              {selectedRestaurant?.status === "ACTIVE" ? "Desactivate" : "Activate"}
-            </Button>
+            {canUpdateStatus && (
+              <Button variant={selectedRestaurant?.status === "ACTIVE" ? "destructive" : "default"} disabled={isLoading} onClick={() => setIsStatusDialogOpen(true)}>
+                {selectedRestaurant?.status === "ACTIVE" ? "Desactivate" : "Activate"}
+              </Button>
+            )}
 
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={isLoading}
-              onClick={() => {
-                setIsEditing(selectedRestaurant)
-                setIsViewDialogOpen(false)
-                setIsAddOrEditDialogOpen(true)
-              }}
-            >
-              <Edit className="w-4 h-4" /> Edit
-            </Button>
+            {canEdit && (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={isLoading}
+                onClick={() => {
+                  setIsEditing(selectedRestaurant)
+                  setIsViewDialogOpen(false)
+                  setIsAddOrEditDialogOpen(true)
+                }}
+              >
+                <Edit className="w-4 h-4" /> Edit
+              </Button>
+            )}
             <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsViewDialogOpen(false)}>
               <X className="w-4 h-4" /> Close
             </Button>
@@ -399,10 +420,12 @@ const Restaurant = () => {
           </DialogHeader>
           <DialogDescription>{`Are you sure you want to change the status to "${newStatus}"?`}</DialogDescription>
           <DialogFooter>
-            <Button size="sm" variant="sun" disabled={isLoading} onClick={handleStatusChange}>
-              {isLoading ? <Loader /> : <SendToBack className="w-4 h-4" />}
-              Confirm
-            </Button>
+            {canUpdateStatus && (
+              <Button size="sm" variant="sun" disabled={isLoading} onClick={handleStatusChange}>
+                {isLoading ? <Loader /> : <SendToBack className="w-4 h-4" />}
+                Confirm
+              </Button>
+            )}
             <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsStatusDialogOpen(false)}>
               <X className="w-4 h-4" />
               Cancel
@@ -419,10 +442,12 @@ const Restaurant = () => {
           </DialogHeader>
           <DialogDescription>{`Are you sure you want to delete the restaurant "${selectedRestaurant?.name}" ?`}</DialogDescription>
           <DialogFooter>
-            <Button size="sm" variant="destructive" disabled={isLoading} onClick={handleDelete}>
-              {isLoading ? <Loader /> : <SaveOff className="w-4 h-4" />}
-              Delete
-            </Button>
+            {canDelete && (
+              <Button size="sm" variant="destructive" disabled={isLoading} onClick={handleDelete}>
+                {isLoading ? <Loader /> : <SaveOff className="w-4 h-4" />}
+                Delete
+              </Button>
+            )}
             <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsDeleteDialogOpen(false)}>
               <X className="w-4 h-4" />
               Cancel

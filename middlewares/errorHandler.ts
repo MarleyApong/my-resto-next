@@ -12,6 +12,9 @@ export async function errorHandler(err: Error): Promise<NextResponse> {
 
   const errorName = err.name as keyof typeof errors
 
+  console.log("Finale point", err);
+  
+
   if (errorName in errors) {
     status = errors[errorName].status
     message = err.message || message

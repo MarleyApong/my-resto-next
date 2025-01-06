@@ -7,33 +7,34 @@ import { useError } from "@/hooks/useError"
 import { toast } from "sonner"
 
 type Permission = {
-  menuId: string;
-  view: boolean;
-  create: boolean;
-  update: boolean;
-  delete: boolean;
+  menuId: string
+  view: boolean
+  create: boolean
+  update: boolean
+  delete: boolean
+  permissionActions: string[] // Array of specific permission actions
 }
 
 type Role = {
-  id: string;
-  name: string;
-  permissions: Permission[];
+  id: string
+  name: string
+  permissions: Permission[] // Permissions including specific actions
 }
 
 interface Status {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
-type User = {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: Role;
-  status: Status;
-  organizations: any[];
-  restaurants: any[];
+export type User = {
+  id: string
+  email: string
+  firstname: string
+  lastname: string
+  role: Role
+  status: Status
+  organizations: any[] // Replace with a specific type if needed
+  restaurants: any[] // Replace with a specific type if needed
 }
 
 interface AuthContextType {
@@ -41,7 +42,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   setIsLoading: (value: boolean) => void
-  setUser: (user: any) => void
+  setUser: (user: User | null) => void
   setIsAuthenticated: (value: boolean) => void
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -55,14 +56,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
 
   const checkAuth = async () => {
     if (!isClient) return
 
-    // Évitez de vérifier l'authentification sur les routes d'auth
+    // Skip auth check for auth routes
     const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
     if (cleanPathname.startsWith("/o/auth")) {
       setIsLoading(false)

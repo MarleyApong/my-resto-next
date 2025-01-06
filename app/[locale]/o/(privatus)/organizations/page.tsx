@@ -17,10 +17,12 @@ import { format } from "date-fns"
 import { useAuth } from "@/hooks/useAuth"
 import { Loader } from "@/components/features/SpecificalLoader"
 import { AddEditForm } from "./AddEditForm"
+import { hasPermission } from "@/lib/hasPermission"
+import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
 
 const Organization = () => {
   const { showError } = useError()
-  const { setIsLoading, isLoading } = useAuth()
+  const { setIsLoading, isLoading, user } = useAuth()
 
   const [isEditing, setIsEditing] = useState<OrganizationType | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
@@ -49,6 +51,13 @@ const Organization = () => {
     recordsTotal: 0
   })
   const [tempImage, setTempImage] = useState<string | null>(null)
+
+  // Check permissions
+  const canUpdateStatus = hasPermission(user, "organizations", SpecificPermissionAction.UPDATE_STATUS)
+  const canUpdatePicture = hasPermission(user, "organizations", SpecificPermissionAction.UPDATE_PICTURE)
+  const canDelete = hasPermission(user, "organizations", "delete")
+  const canEdit = hasPermission(user, "organizations", "update")
+  const canCreate = hasPermission(user, "organizations", "create")
 
   const handlePageChange = (page: number) => {
     setFilterState((prev) => ({ ...prev, page }))
@@ -143,8 +152,8 @@ const Organization = () => {
 
   const handleAddOrEdit = async (data: OrganizationType) => {
     setIsLoading(true)
-    console.log("data", data);
-    
+    console.log("data", data)
+
     try {
       if (isEditing?.id) {
         const res = await organizationService.update(isEditing.id, data)
@@ -181,6 +190,8 @@ const Organization = () => {
   }
 
   const handleImageClick = () => {
+    if (!canUpdatePicture) return
+    
     const fileInput = document.createElement("input")
     fileInput.type = "file"
     fileInput.accept = "image/*"
@@ -216,6 +227,7 @@ const Organization = () => {
         const org = row.original
         return (
           <div className="flex justify-end gap-1">
+            {/* View Button */}
             <Button
               variant="default"
               size="icon"
@@ -229,28 +241,35 @@ const Organization = () => {
               <Eye className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="sun"
-              size="icon"
-              disabled={isLoading}
-              onClick={() => {
-                setIsEditing(org)
-                setIsAddOrEditDialogOpen(true)
-              }}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="destructive"
-              size="icon"
-              disabled={isLoading}
-              onClick={() => {
-                setSelectedOrganization(org)
-                setIsDeleteDialogOpen(true)
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {/* Edit Button */}
+            {canEdit && (
+              <Button
+                variant="sun"
+                size="icon"
+                disabled={isLoading}
+                onClick={() => {
+                  setIsEditing(org)
+                  setIsAddOrEditDialogOpen(true)
+                }}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+
+            {/* Delete Button */}
+            {canDelete && (
+              <Button
+                variant="destructive"
+                size="icon"
+                disabled={isLoading}
+                onClick={() => {
+                  setSelectedOrganization(org)
+                  setIsDeleteDialogOpen(true)
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         )
       }
@@ -260,10 +279,12 @@ const Organization = () => {
   return (
     <div>
       <Level2>
-        <Button variant="default" size="sm" disabled={isLoading} onClick={() => setIsAddOrEditDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Org.
-        </Button>
+        {canCreate && (
+          <Button variant="default" size="sm" disabled={isLoading} onClick={() => setIsAddOrEditDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Org.
+          </Button>
+        )}
       </Level2>
 
       <DataTable
@@ -352,32 +373,31 @@ const Organization = () => {
           )}
 
           <DialogFooter className="flex gap-1 justify-end p-1 border-t">
-            <Button variant="sun" disabled={isLoading} onClick={tempImage ? handleUploadPicture : handleImageClick}>
-              {tempImage ? "Upload" : selectedOrganization?.picture ? "Update Picture" : "Choose Picture"}
-            </Button>
+            {canUpdatePicture && (
+              <Button variant="sun" disabled={isLoading} onClick={tempImage ? handleUploadPicture : handleImageClick}>
+                {tempImage ? "Upload" : selectedOrganization?.picture ? "Update Picture" : "Choose Picture"}
+              </Button>
+            )}
 
-            <Button
-              variant={selectedOrganization?.status === "ACTIVE" ? "destructive" : "default"}
-              disabled={isLoading}
-              onClick={() => {
-                setIsStatusDialogOpen(true)
-              }}
-            >
-              {selectedOrganization?.status === "ACTIVE" ? "Desactivate" : "Activate"}
-            </Button>
-
-            <Button
-              size="sm"
-              variant="secondary"
-              disabled={isLoading}
-              onClick={() => {
-                setIsEditing(selectedOrganization)
-                setIsViewDialogOpen(false)
-                setIsAddOrEditDialogOpen(true)
-              }}
-            >
-              <Edit className="w-4 h-4" /> Edit
-            </Button>
+            {canUpdateStatus && (
+              <Button variant={selectedOrganization?.status === "ACTIVE" ? "destructive" : "default"} disabled={isLoading} onClick={() => setIsStatusDialogOpen(true)}>
+                {selectedOrganization?.status === "ACTIVE" ? "Desactivate" : "Activate"}
+              </Button>
+            )}
+            {canEdit && (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={isLoading}
+                onClick={() => {
+                  setIsEditing(selectedOrganization)
+                  setIsViewDialogOpen(false)
+                  setIsAddOrEditDialogOpen(true)
+                }}
+              >
+                <Edit className="w-4 h-4" /> Edit
+              </Button>
+            )}
             <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsViewDialogOpen(false)}>
               <X className="w-4 h-4" /> Close
             </Button>
@@ -393,10 +413,12 @@ const Organization = () => {
           </DialogHeader>
           <DialogDescription>{`Are you sure you want to change the status to "${newStatus}"?`}</DialogDescription>
           <DialogFooter>
-            <Button size="sm" variant="sun" disabled={isLoading} onClick={handleStatusChange}>
-              {isLoading ? <Loader /> : <SendToBack className="w-4 h-4" />}
-              Confirm
-            </Button>
+            {canDelete && (
+              <Button size="sm" variant="destructive" disabled={isLoading} onClick={handleDelete}>
+                {isLoading ? <Loader /> : <SaveOff className="w-4 h-4" />}
+                Delete
+              </Button>
+            )}
             <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsStatusDialogOpen(false)}>
               <X className="w-4 h-4" />
               Cancel

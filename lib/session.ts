@@ -1,4 +1,4 @@
-import prisma from "@/lib/db"
+import {prisma} from "@/lib/db"
 
 export const SESSION_CONFIGS = {
   SHORT_TIMEOUT: 30 * 60 * 1000, // 30 minutes inactivity timeout

@@ -1,4 +1,4 @@
-import prisma from "@/lib/db"
+import {prisma} from "@/lib/db"
 import { getI18n } from "@/locales/server"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"

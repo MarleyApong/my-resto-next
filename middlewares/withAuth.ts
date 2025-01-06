@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { getI18n } from "@/locales/server"
 import { createError, errors } from "@/lib/errors"
-import prisma from "@/lib/db"
+import {prisma} from "@/lib/db"
 
 interface ExtendedRequest extends Request {
   user: any
@@ -55,7 +55,12 @@ export function withAuth(handler: RouteHandler) {
                       view: true,
                       create: true,
                       update: true,
-                      delete: true
+                      delete: true,
+                      permissionActions: {
+                        select: {
+                          name: true
+                        }
+                      }
                     }
                   }
                 }
@@ -158,6 +163,24 @@ export function withAuth(handler: RouteHandler) {
         throw createError(errors.InactiveAccountError, t("api.errors.inactiveAccount"))
       }
 
+      if (session?.user?.role) {
+        const transformedPermissions = session.user.role.permissions.map((permission) => {
+          return {
+            ...permission,
+            permissionActions: permission.permissionActions.map((action) => action.name)
+          } as {
+            menuId: string
+            view: boolean
+            create: boolean
+            update: boolean
+            delete: boolean
+            permissionActions: string[]
+          }
+        })
+
+        // Forcer le type avec 'as any' pour éviter l'erreur de TypeScript
+        session.user.role.permissions = transformedPermissions as any
+      }
       // Ajout de l'utilisateur à la requête
       const requestWithUser = new Request(request, {
         headers: request.headers

@@ -77,17 +77,31 @@ model Role {
   @@index([name])
 }
 
+model PermissionAction {
+  id          String       @id @default(cuid()) @db.VarChar(25)
+  name        String       @unique // e.g., "UPDATE_STATUS", "UPDATE_PICTURE"
+  description String?
+  permissions Permission[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([name])
+}
+
 model Permission {
-  id        String   @id @default(cuid()) @db.VarChar(25)
-  menuId    String   @db.VarChar(50)
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  roleId    String
-  view      Boolean  @default(false)
-  create    Boolean  @default(false)
-  update    Boolean  @default(false)
-  delete    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String           @id @default(cuid()) @db.VarChar(25)
+  menuId            String           @db.VarChar(50)
+  role             Role             @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId           String
+  // Basic CRUD permissions
+  view             Boolean          @default(false)
+  create           Boolean          @default(false)
+  update           Boolean          @default(false)
+  delete           Boolean          @default(false)
+  // Specific actions permissions through junction table
+  permissionActions PermissionAction[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@unique([roleId, menuId])
   @@index([roleId])

@@ -7,13 +7,14 @@ import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { imageProcessing } from "@/lib/imageProcessing"
 import { withPermission } from "@/middlewares/withPermission"
-import prisma from "@/lib/db"
+import {prisma} from "@/lib/db"
+import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
 
 export const PATCH = withLogging(
   withAuth(
     withPermission(
       "organizations",
-      "update"
+      SpecificPermissionAction.UPDATE_PICTURE
     )(
       withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { organizationId: string } }) => {
         const t = await getI18n()

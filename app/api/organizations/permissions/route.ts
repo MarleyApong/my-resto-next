@@ -3,7 +3,7 @@ import { withLogging } from "@/middlewares/withLogging"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withPermission } from "@/middlewares/withPermission"
-import prisma from "@/lib/db"
+import {prisma} from "@/lib/db"
 
 export const GET = withLogging(
   withAuth(

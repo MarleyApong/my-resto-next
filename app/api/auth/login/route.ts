@@ -7,7 +7,7 @@ import { withLogging } from "@/middlewares/withLogging"
 import { z } from "zod"
 import { headers } from "next/headers"
 import bcrypt from "bcryptjs"
-import prisma from "@/lib/db"
+import {prisma} from "@/lib/db"
 import { cleanupExpiredSessions } from "@/lib/session"
 
 const loginSchema = z.object({
