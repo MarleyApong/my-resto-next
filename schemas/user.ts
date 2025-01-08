@@ -56,12 +56,9 @@ export const userSchema = z.object({
     .optional(),
   email: z.string().email("Invalid email format").min(1, "Email is required"),
   status: z.enum(["ACTIVE", "INACTIVE"]),
-  picture: z
-    .string()
-    .refine((str) => str.startsWith("data:image/"), {
-      message: "Picture must be a valid base64 image"
-    })
-    .optional()
+  picture: z.string().refine((str) => str.startsWith("data:image/") || str === "", {
+    message: "Picture must be a valid base64 image"
+  })
 })
 
 export const userUpdateSchema = z.object({

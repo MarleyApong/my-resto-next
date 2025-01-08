@@ -68,6 +68,7 @@ model Status {
 model Role {
   id          String       @id @default(cuid()) @db.VarChar(25)
   name        String       @unique @db.VarChar(100)
+  description String?       @db.VarChar(180)
   menuIds     Json?
   permissions Permission[]
   users       User[]
@@ -89,19 +90,19 @@ model PermissionAction {
 }
 
 model Permission {
-  id                String           @id @default(cuid()) @db.VarChar(25)
-  menuId            String           @db.VarChar(50)
-  role             Role             @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  roleId           String
+  id                String             @id @default(cuid()) @db.VarChar(25)
+  menuId            String             @db.VarChar(50)
+  role              Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId            String
   // Basic CRUD permissions
-  view             Boolean          @default(false)
-  create           Boolean          @default(false)
-  update           Boolean          @default(false)
-  delete           Boolean          @default(false)
+  view              Boolean            @default(false)
+  create            Boolean            @default(false)
+  update            Boolean            @default(false)
+  delete            Boolean            @default(false)
   // Specific actions permissions through junction table
   permissionActions PermissionAction[]
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@unique([roleId, menuId])
   @@index([roleId])
@@ -141,7 +142,7 @@ model User {
   statusId        String
   status          Status             @relation(fields: [statusId], references: [id])
   password        String             @db.VarChar(64)
-  temporyPassword String?             @db.VarChar(64)
+  temporyPassword String?            @db.VarChar(64)
   expiryPassword  DateTime?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt

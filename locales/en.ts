@@ -47,7 +47,8 @@ export default {
       "userUpdated": "",
       "userDeleted": "",
       "userStatusUpdated": "",
-      "userPictureUpdated": ""
+      "userPictureUpdated": "",
+      "roleCreated": ""
     }
   },
   "sessionExpired": ""

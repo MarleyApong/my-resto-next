@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    if (isClient && !isAuthenticated && !isLoading) {
+    if (isClient) {
       checkAuth()
     }
   }, [pathname, isClient])

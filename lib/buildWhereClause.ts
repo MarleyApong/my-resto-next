@@ -2,12 +2,13 @@ import { z } from "zod"
 import { ParamsType } from "@/types/param"
 import { prisma } from "./db"
 
-export type EntityType = "ORGANIZATION" | "RESTAURANT" | "USER" | "SURVEY" | "CUSTOMER" | "PRODUCT" | "ORDER"
+export type EntityType = "ORGANIZATION" | "RESTAURANT" | "USER" | "ROLE" | "SURVEY" | "CUSTOMER" | "PRODUCT" | "ORDER"
 
 const entityFilterFields: Record<EntityType, string[]> = {
   ORGANIZATION: ["name", "email", "phone", "createdAt", "updatedAt"],
   RESTAURANT: ["name", "email", "phone", "city", "neighborhood", "createdAt", "updatedAt"],
   USER: ["firstName", "lastName", "email", "phone", "city", "createdAt", "updatedAt"],
+  ROLE: ["name", "description", "createdAt", "updatedAt"],
   SURVEY: ["name", "createdAt", "updatedAt"],
   CUSTOMER: ["firstName", "lastName", "email", "phone", "city", "createdAt", "updatedAt"],
   PRODUCT: ["name", "description", "price", "createdAt", "updatedAt"],

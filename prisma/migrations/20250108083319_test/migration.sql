@@ -48,6 +48,7 @@ CREATE TABLE "Status" (
 CREATE TABLE "Role" (
     "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
+    "description" VARCHAR(180),
     "menuIds" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,

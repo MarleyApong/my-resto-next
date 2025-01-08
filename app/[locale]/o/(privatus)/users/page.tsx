@@ -308,9 +308,9 @@ const User = () => {
                 ) : (
                   <img src="/assets/img/avatar/user-placeholder.jpg" alt="Default User" className="w-full h-96 object-cover" />
                 )}
-                <Button variant="secondary" className="mt-2 w-full" onClick={tempImage ? handleUploadPicture : handleImageClick}>
+                {/* <Button variant="secondary" className="mt-2 w-full" onClick={tempImage ? handleUploadPicture : handleImageClick}>
                   {tempImage ? "Upload" : selectedUser?.picture ? "Update Picture" : "Choose Picture"}
-                </Button>
+                </Button> */}
               </div>
 
               <div className="space-y-4">

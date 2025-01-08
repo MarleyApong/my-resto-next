@@ -3,23 +3,25 @@ import { compressImage } from "@/lib/imageCompression"
 import { OrganizationType } from "@/types/organization"
 import { ParamsType } from "@/types/param"
 
+const route = "/organizations"
+
 export const organizationService = {
   getAll: async (params: ParamsType) => {
     return await api.get(
-      `/organizations?order=${params.order}&filter=${params.filter}&search=${params.search}&status=${params.status}&startDate=${params.startDate}&endDate=${params.endDate}&page=${params.page}&size=${params.size}`
+      `${route}?order=${params.order}&filter=${params.filter}&search=${params.search}&status=${params.status}&startDate=${params.startDate}&endDate=${params.endDate}&page=${params.page}&size=${params.size}`
     )
   },
 
   getById: async (id: string) => {
-    return await api.get(`/organizations/${id}`)
+    return await api.get(`${route}/${id}`)
   },
 
   getOrganizationsByPermissions: async () => {
-    return await api.get("/organizations/permissions")
+    return await api.get(`${route}/permissions`)
   },
 
   getRestaurantsByOrg: async (organizationId: string) => {
-    return await api.get(`/organizations/${organizationId}/restaurants`)
+    return await api.get(`${route}/${organizationId}/restaurants`)
   },
 
   create: async (data: OrganizationType) => {
@@ -28,7 +30,7 @@ export const organizationService = {
       const compressedImage = await compressImage(data.picture)
       data.picture = compressedImage
     }
-    return await api.post("/organizations", data)
+    return await api.post("${route}", data)
   },
 
   update: async (id: string, data: OrganizationType) => {
@@ -37,22 +39,22 @@ export const organizationService = {
       const compressedImage = await compressImage(data.picture)
       data.picture = compressedImage
     }
-    return await api.put(`/organizations/${id}`, data)
+    return await api.put(`${route}/${id}`, data)
   },
 
   updatePicture: async (id: string, picture: string) => {
     if (picture.startsWith("data:image")) {
       const compressedImage = await compressImage(picture)
-      return await api.patch(`/organizations/${id}/picture`, { picture: compressedImage })
+      return await api.patch(`${route}/${id}/picture`, { picture: compressedImage })
     }
-    return await api.put(`/organizations/${id}/picture`, { picture })
+    return await api.put(`${route}/${id}/picture`, { picture })
   },
 
   updateStatus: async (id: string, status: "ACTIVE" | "INACTIVE") => {
-    return await api.patch(`/organizations/${id}/status`, { status })
+    return await api.patch(`${route}/${id}/status`, { status })
   },
 
   delete: async (id: string) => {
-    return await api.delete(`/organizations/${id}`)
+    return await api.delete(`${route}/${id}`)
   }
 }
