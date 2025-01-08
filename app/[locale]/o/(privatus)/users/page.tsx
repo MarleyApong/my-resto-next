@@ -303,17 +303,19 @@ const User = () => {
           {selectedUser && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mx-3">
               <div className="w-full min-h-72 border-none shadow-md rounded-sm overflow-hidden" onClick={handleImageClick}>
-                {(tempImage || selectedUser.picture) && <img src={tempImage || selectedUser.picture} alt="User" className="w-full h-full object-cover" />}
+                {tempImage || selectedUser?.picture ? (
+                  <img src={tempImage || selectedUser.picture} alt="User" className="w-full h-96 object-cover" />
+                ) : (
+                  <img src="/assets/img/avatar/user-placeholder.jpg" alt="Default User" className="w-full h-96 object-cover" />
+                )}
                 <Button variant="secondary" className="mt-2 w-full" onClick={tempImage ? handleUploadPicture : handleImageClick}>
-                  {tempImage ? "Upload" : selectedUser.picture ? "Update Picture" : "Choose Picture"}
+                  {tempImage ? "Upload" : selectedUser?.picture ? "Update Picture" : "Choose Picture"}
                 </Button>
               </div>
 
               <div className="space-y-4">
                 {/* Additional Information */}
-                <div className="flex flex-col gap-2 mt-4">
-                  <h2 className="text-xl font-bold">More</h2>
-
+                <div className="flex flex-col gap-2">
                   <div className="flex flex-col gap-2 ml-2">
                     <div className="flex items-center gap-2">
                       <PhoneIcon className="w-4 h-4" />

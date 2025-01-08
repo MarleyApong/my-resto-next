@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { ParamsType } from "@/types/param"
-import prisma from "./db"
+import { prisma } from "./db"
 
 export type EntityType = "ORGANIZATION" | "RESTAURANT" | "USER" | "SURVEY" | "CUSTOMER" | "PRODUCT" | "ORDER"
 
@@ -48,8 +48,7 @@ export async function buildWhereClause(
     deletedAt: null
   }
 
-  console.log("status", status);
-  
+  console.log("status", status)
 
   if (status && status !== "*") {
     const statusRecord = await prisma.status.findFirst({
@@ -61,9 +60,8 @@ export async function buildWhereClause(
       }
     })
 
-    console.log("statusRecord", statusRecord);
-    console.log("entityType", entityType);
-    
+    console.log("statusRecord", statusRecord)
+    console.log("entityType", entityType)
 
     if (statusRecord) {
       where.statusId = statusRecord.id
@@ -98,8 +96,7 @@ export async function buildWhereClause(
     }
   }
 
-  console.log("where", where);
-  
+  console.log("where", where)
 
   return {
     where,

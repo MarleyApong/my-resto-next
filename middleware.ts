@@ -35,6 +35,9 @@ const generateRouteToMenuMap = (items: MenuItemWithSubItems[]): Record<string, s
 
 const routeToMenuMap = generateRouteToMenuMap(menuItems as MenuItemWithSubItems[])
 
+// Liste des routes publiques
+const publicRoutes = ["/o/errors/403"]
+
 export async function middleware(request: NextRequest) {
   const response = await I18nMiddleware(request)
   const pathname = request.nextUrl.pathname
@@ -42,8 +45,8 @@ export async function middleware(request: NextRequest) {
   // Strip locale prefix for route checking
   const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
 
-  // Skip middleware for /api/auth/me to prevent recursion
-  if (cleanPathname.startsWith("/api/auth/me")) {
+  // Skip middleware for specific routes
+  if (cleanPathname.startsWith("/api/auth/me") || publicRoutes.includes(cleanPathname)) {
     return response
   }
 
@@ -74,6 +77,10 @@ export async function middleware(request: NextRequest) {
     return newResponse
   }
 
+  const redirectTo403 = () => {
+    return NextResponse.redirect(new URL(`/${locale}/o/errors/403`, request.url))
+  }
+
   // Redirect unauthenticated users to login
   if (isProtectedRoute && !sessionId) {
     return redirectToLogin()
@@ -85,13 +92,13 @@ export async function middleware(request: NextRequest) {
     if (callbackUrl && callbackUrl.startsWith("/")) {
       return NextResponse.redirect(new URL(callbackUrl, request.url))
     }
-    return NextResponse.redirect(new URL(`/${locale}/o`, request.url))
+    // Redirect to first allowed menu instead of /o
+    return NextResponse.redirect(new URL(`/${locale}/o/errors/403`, request.url))
   }
 
   // Check menu permissions for protected routes
   if (isProtectedRoute && sessionId) {
     try {
-      // Add a cache-control header to prevent caching of the /api/auth/me response
       const userResponse = await fetch(`${request.nextUrl.origin}/api/auth/me`, {
         headers: {
           Cookie: `sessionId=${sessionId}; Next-Locale=${locale}`,
@@ -131,12 +138,11 @@ export async function middleware(request: NextRequest) {
         const hasPermission = user.role.permissions.some((permission: { menuId: string; view: boolean }) => permission.menuId === menuId && permission.view)
 
         if (!hasPermission) {
-          const referer = request.headers.get("referer")
-          if (referer) {
-            return NextResponse.redirect(referer)
-          }
-          return NextResponse.redirect(new URL(`/${locale}/o`, request.url))
+          return redirectTo403()
         }
+      } else {
+        // Si la route n'a pas de menuId (comme /o), rediriger vers 403
+        return redirectTo403()
       }
     } catch (error) {
       return redirectToLogin("server_error")

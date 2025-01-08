@@ -7,7 +7,7 @@ import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { imageProcessing } from "@/lib/imageProcessing"
 import { buildWhereClause } from "@/lib/buildWhereClause"
-import {prisma} from "@/lib/db"
+import { prisma } from "@/lib/db"
 import { withPermission } from "@/middlewares/withPermission"
 
 export const GET = withLogging(
