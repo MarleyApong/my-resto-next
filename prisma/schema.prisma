@@ -68,12 +68,13 @@ model Status {
 model Role {
   id          String       @id @default(cuid()) @db.VarChar(25)
   name        String       @unique @db.VarChar(100)
-  description String?       @db.VarChar(180)
+  description String?      @db.VarChar(180)
   menuIds     Json?
   permissions Permission[]
   users       User[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
 
   @@index([name])
 }
@@ -103,6 +104,7 @@ model Permission {
   permissionActions PermissionAction[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
 
   @@unique([roleId, menuId])
   @@index([roleId])
@@ -171,6 +173,7 @@ model Session {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  deletedAt     DateTime?
 
   @@index([userId])
   @@index([valid])

@@ -43,7 +43,7 @@ export const GET = withLogging(
 export const PUT = withLogging(
   withAuth(
     withPermission(
-      "users",
+      "employees",
       "update"
     )(
       withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { userId: string } }) => {
@@ -66,6 +66,16 @@ export const PUT = withLogging(
           throw createError(errors.NotFoundError, t("api.errors.userNotFound"))
         }
 
+        // Check if the role exists (if roleId is provided)
+        if (body.roleId) {
+          const role = await prisma.role.findUnique({
+            where: { id: body.roleId }
+          })
+          if (!role) {
+            throw createError(errors.BadRequestError, t("api.errors.invalidRole"))
+          }
+        }
+
         // Update the user in a transaction
         const updatedUser = await prisma.$transaction(async (tx) => {
           const user = await tx.user.update({
@@ -76,7 +86,8 @@ export const PUT = withLogging(
               city: body.city,
               neighborhood: body.neighborhood,
               phone: body.phone,
-              email: body.email
+              email: body.email,
+              roleId: body.roleId || undefined
             }
           })
 
@@ -106,7 +117,7 @@ export const PUT = withLogging(
 export const DELETE = withLogging(
   withAuth(
     withPermission(
-      "users",
+      "employees",
       "delete"
     )(
       withErrorHandler(async (request: Request & { user?: any }, context: { params: { userId: string } }) => {

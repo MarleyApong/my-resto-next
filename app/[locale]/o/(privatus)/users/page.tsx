@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { DataTable, FilterState } from "@/components/features/DataTable"
-import { Trash2, Edit, Eye, Plus, PhoneIcon, Calendar1, X, SaveOff, TowerControl, Cctv, SendToBack, Building, Mail, Utensils } from "lucide-react"
+import { Trash2, Edit, Eye, Plus, PhoneIcon, Calendar1, X, SaveOff, TowerControl, SendToBack, Building, Mail, Utensils } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ParamsType } from "@/types/param"
 import { statusUser } from "@/data/statusFilter"
 import { filterOptionUser } from "@/data/optionFilter"
-import { UserType } from "@/types/user"
+import { UserCreateType, UserType, UserUpdateType } from "@/types/user"
 import { Level2 } from "@/components/features/Level2"
 import { userService } from "@/services/userService"
 import { toast } from "sonner"
@@ -141,12 +141,11 @@ const User = () => {
     }
   }
 
-  const handleAddOrEdit = async (data: UserType) => {
-    console.log("Submitting Form Data:", data)
+  const handleAddOrEdit = async (data: UserCreateType | UserUpdateType) => {
     setIsLoading(true)
     try {
-      if (isEditing?.id) {
-        const res = await userService.update(isEditing.id, data)
+      if (isEditing?.id && data!.roleId) {
+        const res = await userService.update(isEditing.id, data as UserUpdateType)
         toast.success(res.data?.message)
       } else {
         const res = await userService.create(data)
@@ -202,6 +201,7 @@ const User = () => {
     { accessorKey: "neighborhood", header: "Neighborhood" },
     { accessorKey: "phone", header: "Phone" },
     { accessorKey: "email", header: "Email" },
+    { accessorKey: "role.name", header: "Role" },
     {
       accessorKey: "status",
       header: "Status",
@@ -284,7 +284,7 @@ const User = () => {
 
       {/* Add/Edit Dialog */}
       <Dialog open={isAddOrEditDialogOpen} onOpenChange={setIsAddOrEditDialogOpen}>
-        <DialogContent className={`${!isEditing ? "max-w-4xl" : "max-w-xl"} p-0`}>
+        <DialogContent className={`max-w-4xl p-0`}>
           <DialogHeader className="shadow-md p-2">
             <DialogTitle className="font-bold">{isEditing ? "Edit User" : "Add New User"}</DialogTitle>
             <DialogDescription>{isEditing ? "Update the details of the selected user." : "Fill in the details to create a new user."}</DialogDescription>

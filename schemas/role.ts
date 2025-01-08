@@ -2,7 +2,6 @@ import { z } from "zod"
 
 // Regex for validation
 const SANITIZE_REGEX = /^[^<>*%&]+$/
-const PHONE_REGEX = /^\+?[1-9]\d{1,14}$/ // E.164 format
 
 // Schema for creating an role
 export const roleSchema = z.object({

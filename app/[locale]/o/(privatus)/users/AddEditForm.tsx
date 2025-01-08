@@ -9,7 +9,8 @@ import { useAuth } from "@/hooks/useAuth"
 import { useError } from "@/hooks/useError"
 import { userSchema, userUpdateSchema } from "@/schemas/user"
 import { organizationService } from "@/services/organizationService"
-import { UserType } from "@/types/user"
+import { roleService } from "@/services/roleService"
+import { UserCreateType, UserUpdateType } from "@/types/user"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { HardDriveDownload, HardDriveUpload, ImagePlus, ImageUp, X } from "lucide-react"
 import { ChangeEvent, useEffect, useRef, useState } from "react"
@@ -21,8 +22,8 @@ export const AddEditForm = ({
   onCancel,
   isEditing
 }: {
-  defaultValues?: UserType | null
-  onSubmit: (data: UserType) => void
+  defaultValues?: UserCreateType | UserUpdateType | null
+  onSubmit: (data: UserCreateType | UserUpdateType) => void // Use the appropriate type
   onCancel: () => void
   isEditing: boolean
 }) => {
@@ -32,13 +33,14 @@ export const AddEditForm = ({
     setValue,
     watch,
     formState: { errors }
-  } = useForm<UserType>({
+  } = useForm<UserCreateType | UserUpdateType>({
+    // Use the appropriate type
     defaultValues: defaultValues || {
       firstname: "",
       lastname: "",
       organizationId: "",
       restaurantId: "",
-      role: "",
+      roleId: "",
       phone: "",
       email: "",
       city: "",
@@ -55,10 +57,11 @@ export const AddEditForm = ({
   const [loading, setLoading] = useState<boolean>(true)
   const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([])
   const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([])
+  const [roles, setRoles] = useState<{ id: string; name: string }[]>([])
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pictureUrl = watch("picture")
-  const organizationId = watch("organizationId") // Surveiller organizationId
+  const organizationId = watch("organizationId")
 
   const isFormModified = () => {
     if (!defaultValues) return true
@@ -66,7 +69,7 @@ export const AddEditForm = ({
     const currentValues = watch()
 
     return Object.keys(defaultValues).some((key) => {
-      const field = key as keyof UserType
+      const field = key as keyof (UserCreateType | UserUpdateType)
       return currentValues[field] !== defaultValues[field]
     })
   }
@@ -91,11 +94,20 @@ export const AddEditForm = ({
     }
   }
 
+  const fetchRoles = async () => {
+    try {
+      const res = await roleService.getRolesByPermissions()
+      setRoles(res.data)
+    } catch (err) {
+      showError(err)
+    }
+  }
+
   useEffect(() => {
     fetchOrganizations()
+    fetchRoles()
   }, [])
 
-  // Appeler fetchRestaurants lorsque organizationId change
   useEffect(() => {
     if (organizationId) {
       fetchRestaurants(organizationId)
@@ -117,7 +129,13 @@ export const AddEditForm = ({
         setValue("restaurantId", selectedResto.id)
       }
     }
-  }, [organizations, restaurants, defaultValues, isEditing, setValue])
+    if (isEditing && defaultValues?.roleId) {
+      const selectedRole = roles.find((role) => role.id === defaultValues.roleId)
+      if (selectedRole) {
+        setValue("roleId", selectedRole.id)
+      }
+    }
+  }, [organizations, restaurants, roles, defaultValues, isEditing, setValue])
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -196,6 +214,20 @@ export const AddEditForm = ({
             placeholder="Select Restaurant"
           />
           {errors.restaurantId && <p className="text-red-600 text-xs">{errors.restaurantId.message}</p>}
+        </div>
+
+        {/* Role Field */}
+        <div className="sm:col-span-1 lg:col-span-1">
+          <Label htmlFor="role">Role</Label>
+          <Combobox
+            options={roles.map((role) => ({ value: role.id, label: role.name }))}
+            value={watch("roleId") || ""}
+            onValueChange={(value) => {
+              setValue("roleId", value, { shouldValidate: true })
+            }}
+            placeholder="Select Role"
+          />
+          {errors.roleId && <p className="text-red-600 text-xs">{errors.roleId.message}</p>}
         </div>
 
         {/* Firstname Field */}

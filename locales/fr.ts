@@ -27,7 +27,9 @@ export default {
       "imageProcessingFailed": "",
       "restaurantNotFound": "",
       "invalidOrganization": "",
-      "invalidRestaurant": ""
+      "invalidRestaurant": "",
+      "invalidRole": "",
+      "forbiddenRoleName": ""
     },
     "success": {
       "loggedOut": "Vous vous êtes déconnecté avec succès. À bientôt !",
@@ -48,7 +50,9 @@ export default {
       "userDeleted": "",
       "userStatusUpdated": "",
       "userPictureUpdated": "",
-      "roleCreated": ""
+      "roleCreated": "",
+      "roleUpdated": "",
+      "roleDeleted": ""
     }
   },
   "sessionExpired": ""

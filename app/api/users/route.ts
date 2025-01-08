@@ -9,7 +9,7 @@ import { buildWhereClause } from "@/lib/buildWhereClause"
 import { userSchema } from "@/schemas/user"
 import { withPermission } from "@/middlewares/withPermission"
 import { hashPassword } from "@/lib/hashComparePassword"
-import {prisma} from "@/lib/db"
+import { prisma } from "@/lib/db"
 
 export const GET = withLogging(
   withAuth(
@@ -62,6 +62,13 @@ export const GET = withLogging(
               phone: true,
               email: true,
               picture: true,
+              roleId: true,
+              role:{
+                select: {
+                  id: true,
+                  name: true
+                }
+              },
               status: {
                 select: {
                   name: true
@@ -113,7 +120,7 @@ export const GET = withLogging(
 export const POST = withLogging(
   withAuth(
     withPermission(
-      "restaurants",
+      "employees",
       "create"
     )(
       withErrorHandler(async (request: Request & { user?: any }) => {
@@ -158,6 +165,16 @@ export const POST = withLogging(
           })
           if (!restaurant) {
             throw createError(errors.BadRequestError, t("api.errors.invalidRestaurant"))
+          }
+        }
+
+        // Check if the role exists (if roleId is provided)
+        if (body.roleId) {
+          const role = await prisma.role.findUnique({
+            where: { id: body.roleId }
+          })
+          if (!role) {
+            throw createError(errors.BadRequestError, t("api.errors.invalidRole"))
           }
         }
 

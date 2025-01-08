@@ -1,6 +1,6 @@
 import { api } from "@/lib/axiosConfig"
 import { compressImage } from "@/lib/imageCompression"
-import { UserType } from "@/types/user"
+import { UserCreateType, UserType, UserUpdateType } from "@/types/user"
 import { ParamsType } from "@/types/param"
 
 const route = "/users"
@@ -16,7 +16,7 @@ export const userService = {
     return await api.get(`${route}/${userId}`)
   },
 
-  create: async (data: UserType) => {
+  create: async (data: UserCreateType) => {
     if (data.picture) {
       // Compress the image before sending
       const compressedImage = await compressImage(data.picture)
@@ -25,7 +25,7 @@ export const userService = {
     return await api.post(`${route}`, data)
   },
 
-  update: async (userId: string, data: UserType) => {
+  update: async (userId: string, data: UserUpdateType) => {
     if (data.picture && data.picture.startsWith("data:image")) {
       // Compress only if it's a new image (base64)
       const compressedImage = await compressImage(data.picture)

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { withAuth } from "@/middlewares/withAuth"
 import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
-import { roleSchema } from "@/schemas/role"
+import { roleSchema, roleUpdateSchema } from "@/schemas/role"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { buildWhereClause } from "@/lib/buildWhereClause"
@@ -22,7 +22,6 @@ export const GET = withLogging(
         const order = searchParams.get("order") === "asc" ? "asc" : "desc"
         const filter = searchParams.get("filter") || "createdAt"
         const search = searchParams.get("search") || ""
-        const status = searchParams.get("status") || "*"
         const startDate = searchParams.get("startDate") ? new Date(searchParams.get("startDate")!) : undefined
         const endDate = searchParams.get("endDate") ? new Date(searchParams.get("endDate")!) : undefined
 
@@ -38,7 +37,6 @@ export const GET = withLogging(
             order,
             filter,
             search,
-            status,
             startDate,
             endDate
           },
@@ -55,12 +53,28 @@ export const GET = withLogging(
               id: true,
               name: true,
               description: true,
-              createdAt: true
+              createdAt: true,
+              permissions: {
+                select: {
+                  id: true,
+                  menuId: true,
+                  view: true,
+                  create: true,
+                  update: true,
+                  delete: true,
+                  permissionActions: {
+                    select: {
+                      id: true,
+                      name: true,
+                      description: true
+                    }
+                  }
+                }
+              }
             }
           }),
           prisma.role.count({ where })
         ])
-
 
         return NextResponse.json({
           data: roles,
@@ -82,43 +96,49 @@ export const POST = withLogging(
         const t = await getI18n()
         const body = await request.json()
 
+        // Validate the request body against the schema
         try {
           roleSchema.parse(body)
         } catch (error) {
           console.log("error", error)
-
           throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
         }
 
-        const status = await prisma.status.findFirst({
-          where: {
-            name: body.status.toUpperCase(),
-            statusType: {
-              name: "ROLE"
-            }
-          }
-        })
+        // Normalize the role name by converting to lowercase and removing non-alphabetic characters
+        const normalizedRoleName = body.name.toLowerCase().replace(/[^a-z]/g, "")
 
+        // List of forbidden role names (normalized)
+        const forbiddenRoleNames = ["superadmin", "admin"]
+
+        // Check if the normalized role name is in the forbidden list
+        if (forbiddenRoleNames.includes(normalizedRoleName)) {
+          throw createError(errors.BadRequestError, t("api.errors.forbiddenRoleName"))
+        }
+
+        // Create the role within a transaction
         const role = await prisma.$transaction(async (tx) => {
-          const org = await tx.role.create({
+          // Create the role
+          const newRole = await tx.role.create({
             data: {
               name: body.name,
-              description: body.description,
+              description: body.description
             }
           })
 
+          // Log the creation action in the audit log
           await tx.auditLog.create({
             data: {
               actionId: (await tx.action.findUnique({ where: { name: "CREATE" } }))!.id,
               userId: request.user.id,
-              entityId: org.id,
+              entityId: newRole.id,
               entityType: "ROLE"
             }
           })
 
-          return org
+          return newRole
         })
 
+        // Return the created role (without permissions)
         return NextResponse.json({
           message: t("api.success.roleCreated"),
           data: role

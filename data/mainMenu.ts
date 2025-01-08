@@ -139,7 +139,7 @@ export const menuItems: MenuItem[] = [
         subItems: []
       },
       {
-        id: "role",
+        id: "roles",
         title: "Roles",
         url: "/o/roles",
         icon: Milestone,

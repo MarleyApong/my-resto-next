@@ -73,7 +73,8 @@ export const userUpdateSchema = z.object({
     .optional(),
   description: z.string().min(70, "Description must be at least 70 characters").max(170, "Description must not exceed 170 characters"),
   phone: z.string().min(1, "Field is required").regex(/^\d+$/, "Phone must contain only numbers"),
-  email: z.string().email("Invalid email format").min(1, "Email is required")
+  email: z.string().email("Invalid email format").min(1, "Email is required"),
+  roleId: z.string().min(1, "Role is required").max(25, "Role must not exceed 25 characters").trim()
 })
 
 export const userUpdatePictureSchema = z.object({

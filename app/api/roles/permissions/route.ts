@@ -1,0 +1,29 @@
+import { NextResponse } from "next/server"
+import { withLogging } from "@/middlewares/withLogging"
+import { withAuth } from "@/middlewares/withAuth"
+import { withErrorHandler } from "@/middlewares/withErrorHandler"
+import { withPermission } from "@/middlewares/withPermission"
+import { prisma } from "@/lib/db"
+
+export const GET = withLogging(
+  withAuth(
+    withPermission(
+      "employees",
+      "create"
+    )(
+      withErrorHandler(async (request: Request & { user?: any }) => {
+        const roles = await prisma.role.findMany({
+          where: {
+            deletedAt: null
+          },
+          select: {
+            id: true,
+            name: true,
+          }
+        })
+
+        return NextResponse.json(roles)
+      })
+    )
+  )
+)

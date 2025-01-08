@@ -4,7 +4,7 @@ import { RoleType } from "@/types/role"
 
 const route = "/roles"
 
-export const userService = {
+export const roleService = {
   getAll: async (params: ParamsType) => {
     return await api.get(
       `${route}?order=${params.order}&filter=${params.filter}&search=${params.search}&status=${params.status}&startDate=${params.startDate}&endDate=${params.endDate}&page=${params.page}&size=${params.size}`
@@ -13,6 +13,10 @@ export const userService = {
 
   getById: async (roleId: string) => {
     return await api.get(`${route}/${roleId}`)
+  },
+
+  getRolesByPermissions: async () => {
+    return await api.get(`${route}/permissions`)
   },
 
   create: async (data: RoleType) => {

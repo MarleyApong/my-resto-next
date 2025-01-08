@@ -5,21 +5,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { api } from "@/lib/axiosConfig"
 import { useError } from "@/hooks/useError"
 import { toast } from "sonner"
-
-type Permission = {
-  menuId: string
-  view: boolean
-  create: boolean
-  update: boolean
-  delete: boolean
-  permissionActions: string[] // Array of specific permission actions
-}
-
-type Role = {
-  id: string
-  name: string
-  permissions: Permission[] // Permissions including specific actions
-}
+import { RoleType } from "@/types/role"
 
 interface Status {
   id: string
@@ -31,7 +17,7 @@ export type User = {
   email: string
   firstname: string
   lastname: string
-  role: Role
+  role: RoleType
   status: Status
   organizations: any[] // Replace with a specific type if needed
   restaurants: any[] // Replace with a specific type if needed
