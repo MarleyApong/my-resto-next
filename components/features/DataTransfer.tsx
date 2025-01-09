@@ -16,7 +16,7 @@ type SelectableListProps = {
 
 type CheckboxTreeProps = {
   data: MenuItem[]
-  selectedIds?: string[] // Add selectedIds to the props
+  selectedIds?: string[]
   onSelectionChange: (selectedIds: string[]) => void
 }
 
@@ -26,7 +26,9 @@ export const CheckboxTree = ({ data, selectedIds = [], onSelectionChange }: Chec
 
   // Sync internalSelectedIds with the selectedIds prop
   useEffect(() => {
-    setInternalSelectedIds(selectedIds)
+    if (JSON.stringify(internalSelectedIds) !== JSON.stringify(selectedIds)) {
+      setInternalSelectedIds(selectedIds)
+    }
   }, [selectedIds])
 
   const handleToggleAll = () => {
@@ -51,9 +53,7 @@ export const CheckboxTree = ({ data, selectedIds = [], onSelectionChange }: Chec
     const allIds = [parentId, ...parent.subItems.map((subItem) => subItem.id)].filter((id): id is string => id !== null && id !== undefined)
 
     const isParentSelected = internalSelectedIds.includes(parentId)
-    const newSelectedIds = isParentSelected
-      ? internalSelectedIds.filter((id) => !allIds.includes(id)) // Remove parent and its children
-      : [...internalSelectedIds, ...allIds] // Add parent and its children
+    const newSelectedIds = isParentSelected ? internalSelectedIds.filter((id) => !allIds.includes(id)) : [...internalSelectedIds, ...allIds]
 
     setInternalSelectedIds(newSelectedIds)
     onSelectionChange(newSelectedIds)
@@ -65,14 +65,11 @@ export const CheckboxTree = ({ data, selectedIds = [], onSelectionChange }: Chec
     let newSelectedIds = [...internalSelectedIds]
 
     if (newSelectedIds.includes(subItemId)) {
-      // Remove child from selection
       newSelectedIds = newSelectedIds.filter((id) => id !== subItemId)
     } else {
-      // Add child to selection
       newSelectedIds.push(subItemId)
     }
 
-    // Update parent's state based on children's selection
     if (parentId) {
       const parent = data.find((item) => item.id === parentId)
       const childrenIds = parent?.subItems.map((subItem) => subItem.id).filter((id): id is string => id !== null && id !== undefined) || []
@@ -80,10 +77,8 @@ export const CheckboxTree = ({ data, selectedIds = [], onSelectionChange }: Chec
       const hasAnyChildSelected = childrenIds.some((childId) => newSelectedIds.includes(childId))
 
       if (hasAnyChildSelected && !newSelectedIds.includes(parentId)) {
-        // Add parent if any child is selected
         newSelectedIds.push(parentId)
       } else if (!hasAnyChildSelected) {
-        // Remove parent if no children are selected
         newSelectedIds = newSelectedIds.filter((id) => id !== parentId)
       }
     }
@@ -118,12 +113,11 @@ export const CheckboxTree = ({ data, selectedIds = [], onSelectionChange }: Chec
 }
 
 export const SelectableList = ({ data, onSelectionChange }: SelectableListProps) => {
-  // Transform data into a format compatible with `CheckboxTree`
   const transformedData = data.map((item) => ({
     id: String(item.id),
-    title: item.name || "Untitled", // Ensure a default title
+    title: item.name || "Untitled",
     url: null,
-    subItems: [] // No sub-items in this case
+    subItems: []
   }))
 
   return <CheckboxTree data={transformedData} onSelectionChange={onSelectionChange} />

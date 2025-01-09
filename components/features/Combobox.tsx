@@ -1,11 +1,11 @@
 "use client"
 
-import * as React from "react"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useState } from "react"
 
 export interface ComboboxOption {
   value: string
@@ -21,7 +21,11 @@ interface ComboboxProps {
 }
 
 export const Combobox = ({ options, value, onValueChange, placeholder = "Select an option...", className }: ComboboxProps) => {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState("") // State to store the search input value
+
+  // Filter options based on the search value
+  const filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchValue.toLowerCase()))
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -32,18 +36,24 @@ export const Combobox = ({ options, value, onValueChange, placeholder = "Select 
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0">
-        <Command>
-          <CommandInput placeholder="Search..." className="h-9" />
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Search..."
+            className="h-9"
+            value={searchValue}
+            onValueChange={(value) => setSearchValue(value)}
+          />
           <CommandList>
             <CommandEmpty>No results found.</CommandEmpty>
             <CommandGroup>
-              {options.map((option) => (
+              {filteredOptions.map((option) => (
                 <CommandItem
                   key={option.value}
                   value={option.value}
                   onSelect={(currentValue) => {
-                    onValueChange(currentValue === value ? "" : currentValue)
-                    setOpen(false)
+                    onValueChange(currentValue === value ? "" : currentValue) // Update the selected value
+                    setOpen(false) // Close the dropdown
+                    setSearchValue("") // Reset search input after selection
                   }}
                 >
                   {option.label}
