@@ -52,7 +52,8 @@ export default {
       "userPictureUpdated": "",
       "roleCreated": "",
       "roleUpdated": "",
-      "roleDeleted": ""
+      "roleDeleted": "",
+      "menusAssigned": ""
     }
   },
   "sessionExpired": ""

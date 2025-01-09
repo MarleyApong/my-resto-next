@@ -20,6 +20,10 @@ export const organizationService = {
     return await api.get(`${route}/permissions`)
   },
 
+  getOrganizationsAndMenus: async () => {
+    return await api.get(`${route}/menus`)
+  },
+
   getRestaurantsByOrg: async (organizationId: string) => {
     return await api.get(`${route}/${organizationId}/restaurants`)
   },
@@ -52,6 +56,10 @@ export const organizationService = {
 
   updateStatus: async (id: string, status: "ACTIVE" | "INACTIVE") => {
     return await api.patch(`${route}/${id}/status`, { status })
+  },
+
+  assignMenusToOrganization: async (organizationId: string, menuIds: string[]) => {
+    return await api.post(`${route}/${organizationId}/menus`, { menuIds })
   },
 
   delete: async (id: string) => {

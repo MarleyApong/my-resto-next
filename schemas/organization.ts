@@ -33,6 +33,10 @@ export const organizationUpdateStatusSchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE"])
 })
 
+export const assignMenusSchema = z.object({
+  menuIds: z.array(z.string()).min(1, "At least one menu ID is required")
+})
+
 // Type inference for the schemas
 export type OrganizationInput = z.infer<typeof organizationSchema>
 export type OrganizationUpdateInput = z.infer<typeof organizationUpdateSchema>

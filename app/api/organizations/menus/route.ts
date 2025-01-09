@@ -8,7 +8,7 @@ import { prisma } from "@/lib/db"
 export const GET = withLogging(
   withAuth(
     withPermission(
-      "organizations",
+      "modules-permissions",
       "view"
     )(
       withErrorHandler(async (request: Request & { user?: any }) => {
@@ -19,12 +19,7 @@ export const GET = withLogging(
           select: {
             id: true,
             name: true,
-            description: true,
-            phone: true,
-            email: true,
-            city: true,
-            neighborhood: true,
-            picture: true
+            menuIds: true
           }
         })
 
