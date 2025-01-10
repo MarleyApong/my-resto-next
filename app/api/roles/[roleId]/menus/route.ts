@@ -5,7 +5,7 @@ import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withPermission } from "@/middlewares/withPermission"
 import { prisma } from "@/lib/db"
 import { getI18n } from "@/locales/server"
-import { assignMenusSchema } from "@/schemas/organization"
+import { assignMenusSchema } from "@/schemas/role"
 import { createError, errors } from "@/lib/errors"
 
 export const POST = withLogging(
@@ -14,7 +14,7 @@ export const POST = withLogging(
       "modules-permissions",
       "update"
     )(
-      withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { organizationId: string } }) => {
+      withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { roleId: string } }) => {
         const t = await getI18n()
         const body = await request.json()
 
@@ -26,21 +26,21 @@ export const POST = withLogging(
           throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
         }
 
-        const { organizationId } = params
+        const { roleId } = params
         const { menuIds } = body
 
-        // Check if the organization exists
-        const organization = await prisma.organization.findUnique({
-          where: { id: organizationId }
+        // Check if the role exists
+        const role = await prisma.role.findUnique({
+          where: { id: roleId }
         })
-        if (!organization) {
-          throw createError(errors.NotFoundError, t("api.errors.organizationNotFound"))
+        if (!role) {
+          throw createError(errors.NotFoundError, t("api.errors.roleNotFound"))
         }
 
-        // Update the organization's menus in a transaction
+        // Update the role's menus in a transaction
         const updatedOrganization = await prisma.$transaction(async (tx) => {
-          const org = await tx.organization.update({
-            where: { id: organizationId },
+          const org = await tx.role.update({
+            where: { id: roleId },
             data: {
               menuIds: menuIds // Update the menu IDs
             }
@@ -52,14 +52,14 @@ export const POST = withLogging(
               actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
               userId: request.user.id,
               entityId: org.id,
-              entityType: "ORGANIZATION",
+              entityType: "ROLE"
             }
           })
 
           return org
         })
 
-        // Return the response with the updated organization
+        // Return the response with the updated role
         return NextResponse.json({
           message: t("api.success.menusAssigned"),
           data: updatedOrganization

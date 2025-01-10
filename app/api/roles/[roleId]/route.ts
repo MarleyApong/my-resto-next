@@ -34,7 +34,8 @@ export const PUT = withLogging(
             where: { id: roleId },
             data: {
               name: body.name,
-              description: body.description
+              description: body.description,
+              restaurantId: body.restaurantId
             }
           })
 

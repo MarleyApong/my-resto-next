@@ -66,17 +66,23 @@ model Status {
 }
 
 model Role {
-  id          String       @id @default(cuid()) @db.VarChar(25)
-  name        String       @unique @db.VarChar(100)
-  description String?      @db.VarChar(180)
-  menuIds     Json?
-  permissions Permission[]
-  users       User[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  deletedAt   DateTime?
+  id             String        @id @default(cuid()) @db.VarChar(25)
+  name           String        @unique @db.VarChar(100)
+  description    String?       @db.VarChar(180)
+  menuIds        Json?
+  permissions    Permission[]
+  users          User[]
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?       @db.VarChar(25)
+  restaurant     Restaurant?   @relation(fields: [restaurantId], references: [id])
+  restaurantId   String?       @db.VarChar(25)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
 
   @@index([name])
+  @@index([organizationId])
+  @@index([restaurantId])
 }
 
 model PermissionAction {
@@ -163,17 +169,17 @@ model User {
 }
 
 model Session {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  valid        Boolean  @default(true)
-  userAgent    String?  @db.Text
-  ipAddress    String?  @db.VarChar(45)
-  lastActivity DateTime @default(now())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  valid        Boolean   @default(true)
+  userAgent    String?   @db.Text
+  ipAddress    String?   @db.VarChar(45)
+  lastActivity DateTime  @default(now())
   expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  deletedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
   @@index([userId])
   @@index([valid])
@@ -198,6 +204,7 @@ model Organization {
   users        UserOrganization[]
   customers    CustomerOrganization[]
   restaurants  Restaurant[]
+  roles        Role[]
 
   @@index([statusId])
   @@index([email])
@@ -240,6 +247,7 @@ model Restaurant {
   customers        CustomerRestaurant[]
   orders           Order[]
   tables           Table[]
+  roles            Role[]
 
   @@index([city, neighborhood])
   @@index([statusId])

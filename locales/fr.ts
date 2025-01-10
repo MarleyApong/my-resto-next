@@ -29,7 +29,8 @@ export default {
       "invalidOrganization": "",
       "invalidRestaurant": "",
       "invalidRole": "",
-      "forbiddenRoleName": ""
+      "forbiddenRoleName": "",
+      "roleNotFound": ""
     },
     "success": {
       "loggedOut": "Vous vous êtes déconnecté avec succès. À bientôt !",

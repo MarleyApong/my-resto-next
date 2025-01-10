@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
 import { roleSchema, roleUpdateSchema } from "@/schemas/role"
-import { RoleType } from "@/types/role"
+import { CreateRoleType, UpdateRoleType, RoleType } from "@/types/role"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { HardDriveDownload, HardDriveUpload, X } from "lucide-react"
 import { useForm } from "react-hook-form"
@@ -17,18 +18,22 @@ export const AddEditForm = ({
   isEditing
 }: {
   defaultValues?: RoleType | null
-  onSubmit: (data: RoleType) => void
+  onSubmit: (data: CreateRoleType | UpdateRoleType) => void
   onCancel: () => void
   isEditing: boolean
 }) => {
   const {
     register,
     handleSubmit,
-    formState: { errors }
-  } = useForm<RoleType>({
+    formState: { errors },
+    setValue,
+    watch
+  } = useForm<CreateRoleType | UpdateRoleType>({
     defaultValues: defaultValues || {
       name: "",
-      description: ""
+      description: "",
+      organizationId: "",
+      restaurantId: ""
     },
     resolver: zodResolver(isEditing ? roleUpdateSchema : roleSchema)
   })
@@ -47,6 +52,38 @@ export const AddEditForm = ({
         <Label htmlFor="description">Description</Label>
         <Input id="description" {...register("description")} placeholder="Description" />
         {errors.description && <p className="text-red-600 text-xs">{errors.description.message}</p>}
+      </div>
+
+      {/* Organization Select */}
+      {!isEditing && (
+        <div>
+          <Label htmlFor="organizationId">Organization (optional)</Label>
+          <Select onValueChange={(value) => setValue("organizationId", value)} value={watch("organizationId") || ""}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select an organization" />
+            </SelectTrigger>
+            <SelectContent>
+              {/* Fetch organizations from API and map here */}
+              <SelectItem value="org_123">Organization 1</SelectItem>
+              <SelectItem value="org_456">Organization 2</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Restaurant Select */}
+      <div>
+        <Label htmlFor="restaurantId">Restaurant (optional)</Label>
+        <Select onValueChange={(value) => setValue("restaurantId", value)} value={watch("restaurantId") || ""}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a restaurant" />
+          </SelectTrigger>
+          <SelectContent>
+            {/* Fetch restaurants from API and map here */}
+            <SelectItem value="resto_123">Restaurant 1</SelectItem>
+            <SelectItem value="resto_456">Restaurant 2</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <DialogFooter className="flex gap-1 justify-end p-1 border-t">

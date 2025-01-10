@@ -54,6 +54,18 @@ export const GET = withLogging(
               name: true,
               description: true,
               createdAt: true,
+              organization: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              },
+              restaurant: {
+                select: {
+                  id: true,
+                  name: true
+                }
+              },
               permissions: {
                 select: {
                   id: true,
@@ -121,7 +133,9 @@ export const POST = withLogging(
           const newRole = await tx.role.create({
             data: {
               name: body.name,
-              description: body.description
+              description: body.description,
+              organizationId: body.organizationId,
+              restaurantId: body.restaurantId
             }
           })
 

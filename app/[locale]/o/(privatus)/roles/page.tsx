@@ -15,7 +15,7 @@ import { Loader } from "@/components/features/SpecificalLoader"
 import { AddEditForm } from "./AddEditForm"
 import { hasPermission } from "@/lib/hasPermission"
 import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
-import { RoleType } from "@/types/role"
+import { CreateRoleType, RoleType, UpdateRoleType } from "@/types/role"
 
 const Role = () => {
   const { showError } = useError()
@@ -107,14 +107,14 @@ const Role = () => {
     }
   }
 
-  const handleAddOrEdit = async (data: RoleType) => {
+  const handleAddOrEdit = async (data: CreateRoleType | UpdateRoleType) => {
     setIsLoading(true)
     try {
       if (isEditing?.id) {
-        const res = await roleService.update(isEditing.id, data)
+        const res = await roleService.update(isEditing.id, data as UpdateRoleType)
         toast.success(res.data?.message)
       } else {
-        const res = await roleService.create(data)
+        const res = await roleService.create(data as CreateRoleType)
         toast.success(res.data?.message)
       }
       loadData()
@@ -135,6 +135,8 @@ const Role = () => {
   const columns = [
     { accessorKey: "name", header: "Role Name" },
     { accessorKey: "description", header: "Description" },
+    { accessorKey: "organization.name", header: "Organization" },
+    { accessorKey: "restaurant.name", header: "Restaurant" },
     {
       accessorKey: "permissions",
       header: "Permissions",

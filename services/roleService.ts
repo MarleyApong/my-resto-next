@@ -1,6 +1,6 @@
 import { api } from "@/lib/axiosConfig"
 import { ParamsType } from "@/types/param"
-import { RoleType } from "@/types/role"
+import { CreateRoleType, UpdateRoleType } from "@/types/role"
 
 const route = "/roles"
 
@@ -19,11 +19,15 @@ export const roleService = {
     return await api.get(`${route}/permissions`)
   },
 
-  create: async (data: RoleType) => {
+  getRolesAndMenus: async () => {
+    return await api.get(`${route}/menus`)
+  },
+
+  create: async (data: CreateRoleType) => {
     return await api.post(`${route}`, data)
   },
 
-  update: async (roleId: string, data: RoleType) => {
+  update: async (roleId: string, data: UpdateRoleType) => {
     return await api.put(`${route}/${roleId}`, data)
   },
 
