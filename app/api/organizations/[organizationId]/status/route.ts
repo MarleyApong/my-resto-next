@@ -7,7 +7,7 @@ import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
 import { withPermission } from "@/middlewares/withPermission"
 import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
-import {prisma} from "@/lib/db"
+import { prisma } from "@/lib/db"
 
 export const PATCH = withLogging(
   withAuth(

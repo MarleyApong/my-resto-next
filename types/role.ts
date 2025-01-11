@@ -20,11 +20,9 @@ export type CreateRoleType = {
   name: string
   description?: string
   organizationId?: string
-  restaurantId?: string
 }
 
 export type UpdateRoleType = {
   name: string
   description?: string
-  restaurantId?: string
 }

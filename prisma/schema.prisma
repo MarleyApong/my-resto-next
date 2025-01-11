@@ -74,7 +74,6 @@ model Role {
   users          User[]
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?       @db.VarChar(25)
-  restaurant     Restaurant?   @relation(fields: [restaurantId], references: [id])
   restaurantId   String?       @db.VarChar(25)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -247,7 +246,6 @@ model Restaurant {
   customers        CustomerRestaurant[]
   orders           Order[]
   tables           Table[]
-  roles            Role[]
 
   @@index([city, neighborhood])
   @@index([statusId])

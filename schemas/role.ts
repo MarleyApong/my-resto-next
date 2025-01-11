@@ -22,28 +22,12 @@ export const roleSchema = z.object({
       message: "Special characters are not allowed"
     })
     .optional(),
-  restaurantId: z
-    .string()
-    .max(25, "Restaurant must not exceed 25 characters")
-    .trim()
-    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
-      message: "Special characters are not allowed"
-    })
-    .optional()
 })
 
 // Schema for updating a role
 export const roleUpdateSchema = z.object({
   name: z.string().min(1, "Field is required"),
   description: z.string().max(180, "Description must not exceed 180 characters").optional(),
-  restaurantId: z
-    .string()
-    .max(25, "Restaurant must not exceed 25 characters")
-    .trim()
-    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
-      message: "Special characters are not allowed"
-    })
-    .optional()
 })
 
 export const assignMenusSchema = z.object({

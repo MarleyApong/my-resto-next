@@ -150,12 +150,7 @@ const ModuleAndPermission = () => {
               />
             </div>
             <div className="">
-              <CheckboxTree
-                key={selectedTab} // Réinitialise le composant lorsque l'onglet change
-                data={menuItems}
-                selectedIds={selectedMenuIds}
-                onSelectionChange={handleMenuSelection}
-              />
+              <CheckboxTree key={selectedTab} data={menuItems} selectedIds={selectedMenuIds} onSelectionChange={handleMenuSelection} />
             </div>
             <div className="flex gap-2 items-center mt-2">
               <Button onClick={handleAssignOrUpdateMenus} disabled={!selectedOrganization || !hasChanges()} variant={buttonVariant}>
@@ -171,9 +166,25 @@ const ModuleAndPermission = () => {
         label: "Attribute Module to Role",
         content: (
           <div className="bg-background p-2 shadow-md rounded-sm">
-            <div className="flex items-center gap-2 mb-2">
-              <Label>Role</Label>
-              <Combobox options={organizationOptions} value={selectedOrganization} onValueChange={setSelectedOrganization} placeholder="Select role" />
+            <div className="flex gap-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Label>Organization</Label>
+                <Combobox
+                  options={organizationOptions}
+                  className="w-auto"
+                  value={selectedOrganization}
+                  onValueChange={(value) => {
+                    if (value !== selectedOrganization) {
+                      setSelectedOrganization(value)
+                    }
+                  }}
+                  placeholder="Select organization"
+                />
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <Label>Role</Label>
+                <Combobox className="w-auto" options={organizationOptions} value={selectedOrganization} onValueChange={setSelectedOrganization} placeholder="Select role" />
+              </div>
             </div>
             <div className="">
               <CheckboxTree data={menuItems} onSelectionChange={handleMenuSelection} />
@@ -190,6 +201,20 @@ const ModuleAndPermission = () => {
         content: (
           <div className="bg-background p-2 shadow-md rounded-sm">
             <div className="flex gap-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Label>Organization</Label>
+                <Combobox
+                  options={organizationOptions}
+                  className="w-auto"
+                  value={selectedOrganization}
+                  onValueChange={(value) => {
+                    if (value !== selectedOrganization) {
+                      setSelectedOrganization(value)
+                    }
+                  }}
+                  placeholder="Select organization"
+                />
+              </div>
               <div className="flex items-center gap-2 mb-2">
                 <Label>Role</Label>
                 <Combobox options={organizationOptions} value={selectedOrganization} onValueChange={setSelectedOrganization} placeholder="Select role" />

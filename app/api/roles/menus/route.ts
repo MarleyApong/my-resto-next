@@ -26,12 +26,6 @@ export const GET = withLogging(
                 name: true
               }
             },
-            restaurant: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
           }
         })
 

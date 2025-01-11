@@ -33,7 +33,6 @@ export const AddEditForm = ({
       name: "",
       description: "",
       organizationId: "",
-      restaurantId: ""
     },
     resolver: zodResolver(isEditing ? roleUpdateSchema : roleSchema)
   })
@@ -71,20 +70,6 @@ export const AddEditForm = ({
         </div>
       )}
 
-      {/* Restaurant Select */}
-      <div>
-        <Label htmlFor="restaurantId">Restaurant (optional)</Label>
-        <Select onValueChange={(value) => setValue("restaurantId", value)} value={watch("restaurantId") || ""}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a restaurant" />
-          </SelectTrigger>
-          <SelectContent>
-            {/* Fetch restaurants from API and map here */}
-            <SelectItem value="resto_123">Restaurant 1</SelectItem>
-            <SelectItem value="resto_456">Restaurant 2</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
 
       <DialogFooter className="flex gap-1 justify-end p-1 border-t">
         <Button type="submit" variant={isEditing ? "sun" : "default"} disabled={isLoading} size="sm">
