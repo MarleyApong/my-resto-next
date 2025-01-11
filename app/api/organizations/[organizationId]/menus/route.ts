@@ -8,7 +8,7 @@ import { getI18n } from "@/locales/server"
 import { assignMenusSchema } from "@/schemas/organization"
 import { createError, errors } from "@/lib/errors"
 
-export const POST = withLogging(
+export const PUT = withLogging(
   withAuth(
     withPermission(
       "modules-permissions",

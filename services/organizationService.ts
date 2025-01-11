@@ -59,7 +59,7 @@ export const organizationService = {
   },
 
   assignMenusToOrganization: async (organizationId: string, menuIds: string[]) => {
-    return await api.post(`${route}/${organizationId}/menus`, { menuIds })
+    return await api.put(`${route}/${organizationId}/menus`, { menuIds })
   },
 
   delete: async (id: string) => {

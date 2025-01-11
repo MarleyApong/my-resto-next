@@ -23,12 +23,20 @@ export const roleService = {
     return await api.get(`${route}/menus`)
   },
 
+  getRolesByOrg: async (organizationId: string) => {
+    return await api.get(`${route}/organizations/${organizationId}`)
+  },
+
   create: async (data: CreateRoleType) => {
     return await api.post(`${route}`, data)
   },
 
   update: async (roleId: string, data: UpdateRoleType) => {
     return await api.put(`${route}/${roleId}`, data)
+  },
+
+  assignMenusToRole: async (roleId: string, menuIds: string[]) => {
+    return await api.put(`${route}/${roleId}/menus`, { menuIds })
   },
 
   delete: async (roleId: string) => {

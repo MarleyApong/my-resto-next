@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useMemo, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useMemo } from "react"
 import { CheckboxTree, SelectableList, SelectableListItemProps } from "@/components/features/DataTransfer"
 import { Level2 } from "@/components/features/Level2"
 import { Button } from "@/components/ui/button"
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { menuItems } from "@/data/mainMenu"
 import { OrganizationType } from "@/types/organization"
 import { organizationService } from "@/services/organizationService"
+import { roleService } from "@/services/roleService"
 import { useError } from "@/hooks/useError"
 import { useAuth } from "@/hooks/useAuth"
 import { toast } from "sonner"
@@ -28,20 +29,47 @@ const permissions: SelectableListItemProps[] = [
   { id: 3, roleId: 103, name: "Viewer Access" }
 ]
 
+// Filter menuItems based on menuIds
+const filterMenuItemsByIds = (menuItems: any[], menuIds: string[]): any[] => {
+  return menuItems
+    .filter((item) => menuIds.includes(item.id))
+    .map((item) => ({
+      ...item,
+      subItems: item.subItems.filter((subItem: any) => menuIds.includes(subItem.id))
+    }))
+    .filter((item) => item.subItems.length > 0 || menuIds.includes(item.id))
+}
+
 const ModuleAndPermission = () => {
   const { showError } = useError()
   const { setIsLoading, isLoading } = useAuth()
 
+  // Global state for organizations
   const [organizations, setOrganizations] = useState<OrganizationType[]>([])
-  const [selectedOrganization, setSelectedOrganization] = useState<string>("")
-  const [selectedMenuIds, setSelectedMenuIds] = useState<string[]>([])
-  const [backendMenuIds, setBackendMenuIds] = useState<string[]>([])
-  const [selectedTab, setSelectedTab] = useState<string | null>(null)
+
+  // State for each tab
+  const [orgTab1, setOrgTab1] = useState<string>("") // Tab 1: Organization Module
+  const [orgTab2, setOrgTab2] = useState<string>("") // Tab 2: Attribute Module to Role
+  const [orgTab3, setOrgTab3] = useState<string>("") // Tab 3: Attribute Permission to Role
+
+  const [selectedTab, setSelectedTab] = useState<string>("organization") // Active tab
+
+  // State for Tab 1
+  const [selectedMenuIdsTab1, setSelectedMenuIdsTab1] = useState<string[]>([])
+  const [backendMenuIdsTab1, setBackendMenuIdsTab1] = useState<string[]>([])
+
+  // State for Tab 2
+  const [selectedMenuIdsTab2, setSelectedMenuIdsTab2] = useState<string[]>([])
+  const [backendMenuIdsTab2, setBackendMenuIdsTab2] = useState<string[]>([])
+  const [rolesTab2, setRolesTab2] = useState<{ id: string; name: string; menuIds: string[] }[]>([])
+  const [selectedRoleTab2, setSelectedRoleTab2] = useState<string>("")
+
+  // State for Tab 3
+  const [selectedMenuIdsTab3, setSelectedMenuIdsTab3] = useState<string[]>([])
 
   // Fetch organizations and their assigned menus
   const fetchOrganizationsAndMenus = useCallback(async () => {
     setIsLoading(true)
-
     try {
       const res = await organizationService.getOrganizationsAndMenus()
       setOrganizations(res.data)
@@ -57,67 +85,141 @@ const ModuleAndPermission = () => {
     fetchOrganizationsAndMenus()
   }, [fetchOrganizationsAndMenus])
 
-  // Fetch menu IDs for the selected organization
+  // Fetch menu IDs for the selected organization in Tab 1
   useEffect(() => {
-    if (selectedOrganization) {
-      const org = organizations.find((org) => org.id === selectedOrganization)
+    if (orgTab1) {
+      const org = organizations.find((org) => org.id === orgTab1)
       if (org) {
         const menuIds = org.menuIds || []
-        setBackendMenuIds(menuIds)
-        setSelectedMenuIds(menuIds)
+        setBackendMenuIdsTab1(menuIds)
+        setSelectedMenuIdsTab1(menuIds)
       }
     } else {
-      setBackendMenuIds([])
-      setSelectedMenuIds([])
+      setBackendMenuIdsTab1([])
+      setSelectedMenuIdsTab1([])
     }
-  }, [selectedOrganization, organizations])
+  }, [orgTab1, organizations])
 
-  // Handle menu selection in the CheckboxTree
-  const handleMenuSelection = useCallback(
-    (selectedIds: string[]) => {
-      if (JSON.stringify(selectedMenuIds) !== JSON.stringify(selectedIds)) {
-        setSelectedMenuIds(selectedIds)
+  // Fetch roles for the selected organization in Tab 2
+  const fetchRolesByOrg = useCallback(
+    async (orgId: string) => {
+      setIsLoading(true)
+      try {
+        const res = await roleService.getRolesByOrg(orgId)
+        setRolesTab2(res.data)
+      } catch (e) {
+        showError(e)
+      } finally {
+        setIsLoading(false)
       }
     },
-    [selectedMenuIds]
+    [setIsLoading, showError]
   )
 
-  // Check if there are changes between selected and backend menu IDs
-  const hasChanges = useCallback(() => {
-    return (
-      selectedMenuIds.length !== backendMenuIds.length || selectedMenuIds.some((id) => !backendMenuIds.includes(id)) || backendMenuIds.some((id) => !selectedMenuIds.includes(id))
-    )
-  }, [selectedMenuIds, backendMenuIds])
+  // Handle organization change in Tab 2
+  useEffect(() => {
+    if (orgTab2) {
+      fetchRolesByOrg(orgTab2)
+      const org = organizations.find((org) => org.id === orgTab2)
+      if (org) {
+        const menuIds = org.menuIds || []
+        setBackendMenuIdsTab2(menuIds)
+        setSelectedMenuIdsTab2([]) // Reset selections
+      }
+    } else {
+      setRolesTab2([])
+      setSelectedRoleTab2("")
+      setBackendMenuIdsTab2([])
+      setSelectedMenuIdsTab2([])
+    }
+  }, [orgTab2, organizations, fetchRolesByOrg])
 
-  // Handle assigning or updating menus for the selected organization
-  const handleAssignOrUpdateMenus = useCallback(async () => {
-    if (!selectedOrganization) {
+  // Handle role change in Tab 2
+  useEffect(() => {
+    if (selectedRoleTab2) {
+      const role = rolesTab2.find((role) => role.id === selectedRoleTab2)
+      if (role) {
+        setSelectedMenuIdsTab2(role.menuIds || []) // Pre-select role's menuIds
+      }
+    } else {
+      setSelectedMenuIdsTab2([])
+    }
+  }, [selectedRoleTab2, rolesTab2])
+
+  // Handle menu selection in Tab 1
+  const handleMenuSelectionTab1 = useCallback((selectedIds: string[]) => {
+    setSelectedMenuIdsTab1(selectedIds)
+  }, [])
+
+  // Handle menu selection in Tab 2
+  const handleMenuSelectionTab2 = useCallback((selectedIds: string[]) => {
+    setSelectedMenuIdsTab2(selectedIds)
+  }, [])
+
+  // Handle menu selection in Tab 3
+  const handleMenuSelectionTab3 = useCallback((selectedIds: string[]) => {
+    setSelectedMenuIdsTab3(selectedIds)
+  }, [])
+
+  // Check if there are changes between selected and backend menu IDs in Tab 1
+  const hasChangesTab1 = useCallback(() => {
+    return (
+      selectedMenuIdsTab1.length !== backendMenuIdsTab1.length ||
+      selectedMenuIdsTab1.some((id) => !backendMenuIdsTab1.includes(id)) ||
+      backendMenuIdsTab1.some((id) => !selectedMenuIdsTab1.includes(id))
+    )
+  }, [selectedMenuIdsTab1, backendMenuIdsTab1])
+
+  // Check if there are changes between selected and role's menu IDs in Tab 2
+  const hasChangesTab2 = useCallback(() => {
+    const role = rolesTab2.find((role) => role.id === selectedRoleTab2)
+    if (!role) return false
+    return (
+      selectedMenuIdsTab2.length !== (role.menuIds?.length || 0) ||
+      selectedMenuIdsTab2.some((id) => !role.menuIds?.includes(id)) ||
+      role.menuIds?.some((id) => !selectedMenuIdsTab2.includes(id))
+    )
+  }, [selectedMenuIdsTab2, selectedRoleTab2, rolesTab2])
+
+  // Handle assigning or updating menus for the selected organization in Tab 1
+  const handleAssignOrUpdateMenusTab1 = useCallback(async () => {
+    if (!orgTab1) {
       toast.warning("Please select an organization first.")
       return
     }
 
     setIsLoading(true)
-
     try {
-      await organizationService.assignMenusToOrganization(selectedOrganization, selectedMenuIds)
-      toast.success(backendMenuIds.length === 0 ? "Menus assigned successfully!" : "Menus updated successfully!")
-      fetchOrganizationsAndMenus() // Refresh the data
+      await organizationService.assignMenusToOrganization(orgTab1, selectedMenuIdsTab1)
+      toast.success(backendMenuIdsTab1.length === 0 ? "Menus assigned successfully!" : "Menus updated successfully!")
+      fetchOrganizationsAndMenus()
     } catch (e) {
       console.error("Failed to assign/update menus:", e)
       showError(e)
     } finally {
       setIsLoading(false)
     }
-  }, [selectedOrganization, selectedMenuIds, backendMenuIds, setIsLoading, fetchOrganizationsAndMenus, showError])
+  }, [orgTab1, selectedMenuIdsTab1, backendMenuIdsTab1, setIsLoading, fetchOrganizationsAndMenus, showError])
 
-  // Handle tab change
-  const handleTabChange = useCallback((tabValue: string) => {
-    setSelectedTab(tabValue)
-  }, [])
+  // Handle assigning menus to role in Tab 2
+  const handleAssignMenusToRoleTab2 = useCallback(async () => {
+    if (!orgTab2 || !selectedRoleTab2) {
+      toast.warning("Please select an organization and a role first.")
+      return
+    }
 
-  // Determine button label and variant
-  const buttonLabel = backendMenuIds.length === 0 ? "Assign" : "Update"
-  const buttonVariant = backendMenuIds.length === 0 ? "default" : "sun"
+    setIsLoading(true)
+    try {
+      await roleService.assignMenusToRole(selectedRoleTab2, selectedMenuIdsTab2)
+      toast.success(selectedMenuIdsTab2.length === 0 ? "Menus assigned successfully!" : "Menus updated successfully!")
+      fetchRolesByOrg(orgTab2)
+    } catch (e) {
+      console.error("Failed to assign menus to role:", e)
+      showError(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [orgTab2, selectedRoleTab2, selectedMenuIdsTab2, setIsLoading, fetchRolesByOrg, showError])
 
   // Transform organizations into Combobox options
   const organizationOptions = useMemo(() => {
@@ -137,25 +239,15 @@ const ModuleAndPermission = () => {
           <div className="bg-background p-2 shadow-md rounded-sm">
             <div className="flex items-center gap-2 mb-2">
               <Label>Organization</Label>
-              <Combobox
-                options={organizationOptions}
-                className="w-auto"
-                value={selectedOrganization}
-                onValueChange={(value) => {
-                  if (value !== selectedOrganization) {
-                    setSelectedOrganization(value)
-                  }
-                }}
-                placeholder="Select organization"
-              />
+              <Combobox options={organizationOptions} className="w-auto" value={orgTab1} onValueChange={setOrgTab1} placeholder="Select organization" />
             </div>
             <div className="">
-              <CheckboxTree key={selectedTab} data={menuItems} selectedIds={selectedMenuIds} onSelectionChange={handleMenuSelection} />
+              <CheckboxTree data={menuItems} selectedIds={selectedMenuIdsTab1} onSelectionChange={handleMenuSelectionTab1} />
             </div>
             <div className="flex gap-2 items-center mt-2">
-              <Button onClick={handleAssignOrUpdateMenus} disabled={!selectedOrganization || !hasChanges()} variant={buttonVariant}>
+              <Button onClick={handleAssignOrUpdateMenusTab1} disabled={!orgTab1 || !hasChangesTab1()} variant={backendMenuIdsTab1.length === 0 ? "default" : "sun"}>
                 {isLoading ? <Loader /> : <PlugZap />}
-                {buttonLabel}
+                {backendMenuIdsTab1.length === 0 ? "Assign" : "Update"}
               </Button>
             </div>
           </div>
@@ -172,25 +264,37 @@ const ModuleAndPermission = () => {
                 <Combobox
                   options={organizationOptions}
                   className="w-auto"
-                  value={selectedOrganization}
+                  value={orgTab2}
                   onValueChange={(value) => {
-                    if (value !== selectedOrganization) {
-                      setSelectedOrganization(value)
-                    }
+                    setOrgTab2(value)
+                    setSelectedMenuIdsTab2([])
                   }}
                   placeholder="Select organization"
                 />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <Label>Role</Label>
-                <Combobox className="w-auto" options={organizationOptions} value={selectedOrganization} onValueChange={setSelectedOrganization} placeholder="Select role" />
+                <Combobox
+                  className="w-auto"
+                  options={rolesTab2.map((role) => ({ value: role.id, label: role.name }))}
+                  value={selectedRoleTab2}
+                  onValueChange={setSelectedRoleTab2}
+                  placeholder="Select role"
+                />
               </div>
             </div>
             <div className="">
-              <CheckboxTree data={menuItems} onSelectionChange={handleMenuSelection} />
+              <CheckboxTree data={filterMenuItemsByIds(menuItems, backendMenuIdsTab2)} selectedIds={selectedMenuIdsTab2} onSelectionChange={handleMenuSelectionTab2} />
             </div>
             <div className="flex gap-2 items-center mt-2">
-              <Button className="">Assign</Button>
+              <Button
+                onClick={handleAssignMenusToRoleTab2}
+                disabled={!orgTab2 || !selectedRoleTab2 || !hasChangesTab2() || isLoading}
+                variant={selectedMenuIdsTab2.length === 0 ? "default" : "sun"}
+              >
+                {isLoading ? <Loader /> : <PlugZap />}
+                {selectedMenuIdsTab2.length === 0 ? "Assign" : "Update"}
+              </Button>
             </div>
           </div>
         )
@@ -203,29 +307,19 @@ const ModuleAndPermission = () => {
             <div className="flex gap-4">
               <div className="flex items-center gap-2 mb-2">
                 <Label>Organization</Label>
-                <Combobox
-                  options={organizationOptions}
-                  className="w-auto"
-                  value={selectedOrganization}
-                  onValueChange={(value) => {
-                    if (value !== selectedOrganization) {
-                      setSelectedOrganization(value)
-                    }
-                  }}
-                  placeholder="Select organization"
-                />
+                <Combobox options={organizationOptions} className="w-auto" value={orgTab3} onValueChange={setOrgTab3} placeholder="Select organization" />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <Label>Role</Label>
-                <Combobox options={organizationOptions} value={selectedOrganization} onValueChange={setSelectedOrganization} placeholder="Select role" />
+                <Combobox options={organizationOptions} value={orgTab3} onValueChange={setOrgTab3} placeholder="Select role" />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <Label>Module/Menu</Label>
-                <Combobox options={organizationOptions} value={selectedOrganization} onValueChange={setSelectedOrganization} placeholder="Select menu" />
+                <Combobox options={organizationOptions} value={orgTab3} onValueChange={setOrgTab3} placeholder="Select menu" />
               </div>
             </div>
             <div className="">
-              <SelectableList data={permissions} onSelectionChange={handleMenuSelection} />
+              <SelectableList data={permissions} onSelectionChange={handleMenuSelectionTab3} />
             </div>
             <div className="flex gap-2 items-center mt-2">
               <Button className="">Assign</Button>
@@ -234,19 +328,39 @@ const ModuleAndPermission = () => {
         )
       }
     ],
-    [selectedOrganization, selectedMenuIds, handleMenuSelection, handleAssignOrUpdateMenus, hasChanges, isLoading, buttonLabel, buttonVariant, organizationOptions, selectedTab]
+    [
+      orgTab1,
+      orgTab2,
+      orgTab3,
+      selectedMenuIdsTab1,
+      selectedMenuIdsTab2,
+      selectedMenuIdsTab3,
+      handleMenuSelectionTab1,
+      handleMenuSelectionTab2,
+      handleMenuSelectionTab3,
+      handleAssignOrUpdateMenusTab1,
+      handleAssignMenusToRoleTab2,
+      hasChangesTab1,
+      hasChangesTab2,
+      isLoading,
+      organizationOptions,
+      rolesTab2,
+      selectedRoleTab2,
+      backendMenuIdsTab1,
+      backendMenuIdsTab2
+    ]
   )
 
   return (
     <div>
       <Level2 />
-      <Tabs value={selectedTab || tabs[0].value} onValueChange={(value) => setSelectedTab(value)} className="w-full">
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="flex justify-start gap-4 border-b border-gray-300 bg-white">
           {tabs.map((tab) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              onClick={() => handleTabChange(tab.value)}
+              onClick={() => setSelectedTab(tab.value)}
               className="px-4 py-1 text-sm font-medium text-gray-900 data-[state=active]:bg-primary data-[state=active]:text-white"
             >
               {tab.label}

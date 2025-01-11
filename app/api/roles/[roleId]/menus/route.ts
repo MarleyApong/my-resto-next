@@ -8,7 +8,7 @@ import { getI18n } from "@/locales/server"
 import { assignMenusSchema } from "@/schemas/role"
 import { createError, errors } from "@/lib/errors"
 
-export const POST = withLogging(
+export const PUT = withLogging(
   withAuth(
     withPermission(
       "modules-permissions",
@@ -17,6 +17,8 @@ export const POST = withLogging(
       withErrorHandler(async (request: Request & { user?: any }, { params }: { params: { roleId: string } }) => {
         const t = await getI18n()
         const body = await request.json()
+        console.log("body", body);
+        
 
         // Validate the request body
         try {
@@ -38,8 +40,8 @@ export const POST = withLogging(
         }
 
         // Update the role's menus in a transaction
-        const updatedOrganization = await prisma.$transaction(async (tx) => {
-          const org = await tx.role.update({
+        const updatedRole = await prisma.$transaction(async (tx) => {
+          const role = await tx.role.update({
             where: { id: roleId },
             data: {
               menuIds: menuIds // Update the menu IDs
@@ -51,18 +53,18 @@ export const POST = withLogging(
             data: {
               actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
               userId: request.user.id,
-              entityId: org.id,
+              entityId: role.id,
               entityType: "ROLE"
             }
           })
 
-          return org
+          return role
         })
 
         // Return the response with the updated role
         return NextResponse.json({
           message: t("api.success.menusAssigned"),
-          data: updatedOrganization
+          data: updatedRole
         })
       })
     )
