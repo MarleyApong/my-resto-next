@@ -34,7 +34,7 @@ export const organizationService = {
       const compressedImage = await compressImage(data.picture)
       data.picture = compressedImage
     }
-    return await api.post("${route}", data)
+    return await api.post(`${route}`, data)
   },
 
   update: async (id: string, data: OrganizationType) => {

@@ -89,10 +89,12 @@ export const CheckboxTree = ({ data, selectedIds = [], onSelectionChange }: Chec
 
   return (
     <div className="flex flex-col gap-2 p-2 border rounded-sm shadow-sm overflow-x-auto overflow-y-scroll max-w-96">
-      <div className="flex items-center gap-2 mb-3">
-        <Checkbox checked={selectAll} onCheckedChange={handleToggleAll} />
-        <Label htmlFor="all">All</Label>
-      </div>
+      {data.length > 0 && (
+        <div className="flex items-center gap-2 mb-3">
+          <Checkbox checked={selectAll} onCheckedChange={handleToggleAll} />
+          <Label htmlFor="all">All</Label>
+        </div>
+      )}
       {data.map((item) => (
         <div key={item.id ?? ""}>
           <div className="flex items-center gap-2 mb-2">

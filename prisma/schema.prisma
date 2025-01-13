@@ -69,20 +69,40 @@ model Role {
   id             String        @id @default(cuid()) @db.VarChar(25)
   name           String        @unique @db.VarChar(100)
   description    String?       @db.VarChar(180)
-  menuIds        Json?
   permissions    Permission[]
   users          User[]
   organization   Organization? @relation(fields: [organizationId], references: [id])
   organizationId String?       @db.VarChar(25)
-  restaurant     Restaurant?   @relation(fields: [restaurantId], references: [id])
   restaurantId   String?       @db.VarChar(25)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   deletedAt      DateTime?
+  menus          RoleMenu[]
 
   @@index([name])
   @@index([organizationId])
-  @@index([restaurantId])
+}
+
+model RoleMenu {
+  roleId    String
+  menuId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  menu      Menu     @relation(fields: [menuId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([roleId, menuId])
+}
+
+model OrganizationMenu {
+  organizationId String
+  menuId         String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  menu           Menu         @relation(fields: [menuId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@id([organizationId, menuId])
 }
 
 model PermissionAction {
@@ -115,6 +135,13 @@ model Permission {
   @@unique([roleId, menuId])
   @@index([roleId])
   @@index([menuId])
+}
+
+model Menu {
+  id            String             @id @default(cuid()) @db.VarChar(25)
+  name          String             @db.VarChar(100)
+  roles         RoleMenu[]
+  organizations OrganizationMenu[]
 }
 
 model LogType {
@@ -195,7 +222,6 @@ model Organization {
   city         String?                @db.VarChar(100)
   neighborhood String?                @db.VarChar(100)
   picture      String
-  menuIds      Json?
   statusId     String
   status       Status                 @relation(fields: [statusId], references: [id])
   createdAt    DateTime               @default(now())
@@ -204,7 +230,8 @@ model Organization {
   users        UserOrganization[]
   customers    CustomerOrganization[]
   restaurants  Restaurant[]
-  Role         Role[]
+  roles        Role[]
+  menus        OrganizationMenu[]
 
   @@index([statusId])
   @@index([email])
@@ -247,7 +274,6 @@ model Restaurant {
   customers        CustomerRestaurant[]
   orders           Order[]
   tables           Table[]
-  Role             Role[]
 
   @@index([city, neighborhood])
   @@index([statusId])

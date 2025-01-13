@@ -17,7 +17,7 @@ export const GET = withLogging(
         const { organizationId } = params
         const t = await getI18n()
 
-        // Check if organization exist
+        // Check if organization exists
         const organization = await prisma.organization.findUnique({
           where: {
             id: organizationId,
@@ -29,7 +29,7 @@ export const GET = withLogging(
           throw createError(errors.NotFoundError, t("api.errors.organizationNotFound"))
         }
 
-        // Get role by organizationId
+        // Get roles by organizationId with their associated menus
         const roles = await prisma.role.findMany({
           where: {
             organizationId: organizationId,
@@ -38,11 +38,27 @@ export const GET = withLogging(
           select: {
             id: true,
             name: true,
-            menuIds:true
+            menus: {
+              select: {
+                menu: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
+              }
+            }
           }
         })
 
-        return NextResponse.json(roles)
+        // Format the response to include menuIds
+        const transformedMenusInArray = roles.map((role) => ({
+          id: role.id,
+          name: role.name,
+          menus: role.menus.map((roleMenu) => roleMenu.menu.id)
+        }))
+
+        return NextResponse.json(transformedMenusInArray)
       })
     )
   )

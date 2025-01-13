@@ -49,11 +49,33 @@ CREATE TABLE "Role" (
     "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
     "description" VARCHAR(180),
-    "menuIds" JSONB,
+    "organizationId" VARCHAR(25),
+    "restaurantId" VARCHAR(25),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RoleMenu" (
+    "roleId" TEXT NOT NULL,
+    "menuId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "RoleMenu_pkey" PRIMARY KEY ("roleId","menuId")
+);
+
+-- CreateTable
+CREATE TABLE "OrganizationMenu" (
+    "organizationId" TEXT NOT NULL,
+    "menuId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "OrganizationMenu_pkey" PRIMARY KEY ("organizationId","menuId")
 );
 
 -- CreateTable
@@ -78,8 +100,17 @@ CREATE TABLE "Permission" (
     "delete" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Permission_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Menu" (
+    "id" VARCHAR(25) NOT NULL,
+    "name" VARCHAR(100) NOT NULL,
+
+    CONSTRAINT "Menu_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -134,6 +165,7 @@ CREATE TABLE "Session" (
     "expiresAt" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
@@ -148,7 +180,6 @@ CREATE TABLE "Organization" (
     "city" VARCHAR(100),
     "neighborhood" VARCHAR(100),
     "picture" TEXT NOT NULL,
-    "menuIds" JSONB,
     "statusId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -435,6 +466,9 @@ CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 CREATE INDEX "Role_name_idx" ON "Role"("name");
 
 -- CreateIndex
+CREATE INDEX "Role_organizationId_idx" ON "Role"("organizationId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "PermissionAction_name_key" ON "PermissionAction"("name");
 
 -- CreateIndex
@@ -577,6 +611,21 @@ ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "Status" ADD CONSTRAINT "Status_statusTypeId_fkey" FOREIGN KEY ("statusTypeId") REFERENCES "StatusType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Role" ADD CONSTRAINT "Role_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RoleMenu" ADD CONSTRAINT "RoleMenu_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RoleMenu" ADD CONSTRAINT "RoleMenu_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "Menu"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationMenu" ADD CONSTRAINT "OrganizationMenu_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationMenu" ADD CONSTRAINT "OrganizationMenu_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "Menu"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Permission" ADD CONSTRAINT "Permission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -19,7 +19,11 @@ export const GET = withLogging(
           select: {
             id: true,
             name: true,
-            menuIds: true,
+            menus: {
+              select: {
+                menuId: true
+              }
+            },
             organization: {
               select: {
                 id: true,
@@ -29,7 +33,14 @@ export const GET = withLogging(
           }
         })
 
-        return NextResponse.json(roles)
+        const transformedMenusInArray = roles.map(org => ({
+          id: org.id,
+          name: org.name,
+          menus: org.menus.map(menu => menu.menuId)
+        }))
+
+
+        return NextResponse.json(transformedMenusInArray)
       })
     )
   )

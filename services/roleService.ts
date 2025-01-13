@@ -27,6 +27,10 @@ export const roleService = {
     return await api.get(`${route}/organizations/${organizationId}`)
   },
 
+  getMenusByRole: async (roleId: string) => {
+    return await api.get(`${route}/${roleId}/menus`)
+  },
+
   create: async (data: CreateRoleType) => {
     return await api.post(`${route}`, data)
   },

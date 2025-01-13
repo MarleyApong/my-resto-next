@@ -22,7 +22,6 @@ export const PUT = withLogging(
         try {
           assignMenusSchema.parse(body)
         } catch (error) {
-          console.log("Validation error details:", error)
           throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
         }
 
@@ -39,11 +38,17 @@ export const PUT = withLogging(
 
         // Update the organization's menus in a transaction
         const updatedOrganization = await prisma.$transaction(async (tx) => {
-          const org = await tx.organization.update({
-            where: { id: organizationId },
-            data: {
-              menuIds: menuIds // Update the menu IDs
-            }
+          // Delete existing menu associations for the organization
+          await tx.organizationMenu.deleteMany({
+            where: { organizationId }
+          })
+
+          // Create new menu associations
+          await tx.organizationMenu.createMany({
+            data: menuIds.map((menuId: string) => ({
+              organizationId,
+              menuId
+            }))
           })
 
           // Log the menu assignment action
@@ -51,12 +56,12 @@ export const PUT = withLogging(
             data: {
               actionId: (await tx.action.findUnique({ where: { name: "UPDATE" } }))!.id,
               userId: request.user.id,
-              entityId: org.id,
-              entityType: "ORGANIZATION",
+              entityId: organization.id,
+              entityType: "ORGANIZATION"
             }
           })
 
-          return org
+          return organization
         })
 
         // Return the response with the updated organization

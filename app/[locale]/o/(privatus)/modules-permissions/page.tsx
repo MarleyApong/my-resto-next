@@ -29,15 +29,15 @@ const permissions: SelectableListItemProps[] = [
   { id: 3, roleId: 103, name: "Viewer Access" }
 ]
 
-// Filter menuItems based on menuIds
-const filterMenuItemsByIds = (menuItems: any[], menuIds: string[]): any[] => {
+// Filter menuItems based on menus
+const filterMenuItemsByIds = (menuItems: any[], menus: string[]): any[] => {
   return menuItems
-    .filter((item) => menuIds.includes(item.id))
+    .filter((item) => menus.includes(item.id))
     .map((item) => ({
       ...item,
-      subItems: item.subItems.filter((subItem: any) => menuIds.includes(subItem.id))
+      subItems: item.subItems.filter((subItem: any) => menus.includes(subItem.id))
     }))
-    .filter((item) => item.subItems.length > 0 || menuIds.includes(item.id))
+    .filter((item) => item.subItems.length > 0 || menus.includes(item.id))
 }
 
 const ModuleAndPermission = () => {
@@ -61,11 +61,14 @@ const ModuleAndPermission = () => {
   // State for Tab 2
   const [selectedMenuIdsTab2, setSelectedMenuIdsTab2] = useState<string[]>([])
   const [backendMenuIdsTab2, setBackendMenuIdsTab2] = useState<string[]>([])
-  const [rolesTab2, setRolesTab2] = useState<{ id: string; name: string; menuIds: string[] }[]>([])
+  const [rolesTab2, setRolesTab2] = useState<{ id: string; name: string; menus: string[] }[]>([])
   const [selectedRoleTab2, setSelectedRoleTab2] = useState<string>("")
 
   // State for Tab 3
   const [selectedMenuIdsTab3, setSelectedMenuIdsTab3] = useState<string[]>([])
+  const [rolesTab3, setRolesTab3] = useState<{ id: string; name: string; menus: string[] }[]>([])
+  const [selectedRoleTab3, setSelectedRoleTab3] = useState<string>("")
+  const [menusTab3, setMenusTab3] = useState<{ id: string; name: string }[]>([]);
 
   // Fetch organizations and their assigned menus
   const fetchOrganizationsAndMenus = useCallback(async () => {
@@ -90,9 +93,9 @@ const ModuleAndPermission = () => {
     if (orgTab1) {
       const org = organizations.find((org) => org.id === orgTab1)
       if (org) {
-        const menuIds = org.menuIds || []
-        setBackendMenuIdsTab1(menuIds)
-        setSelectedMenuIdsTab1(menuIds)
+        const menus = org.menus || []
+        setBackendMenuIdsTab1(menus)
+        setSelectedMenuIdsTab1(menus)
       }
     } else {
       setBackendMenuIdsTab1([])
@@ -122,8 +125,8 @@ const ModuleAndPermission = () => {
       fetchRolesByOrg(orgTab2)
       const org = organizations.find((org) => org.id === orgTab2)
       if (org) {
-        const menuIds = org.menuIds || []
-        setBackendMenuIdsTab2(menuIds)
+        const menus = org.menus || []
+        setBackendMenuIdsTab2(menus)
         setSelectedMenuIdsTab2([]) // Reset selections
       }
     } else {
@@ -139,12 +142,65 @@ const ModuleAndPermission = () => {
     if (selectedRoleTab2) {
       const role = rolesTab2.find((role) => role.id === selectedRoleTab2)
       if (role) {
-        setSelectedMenuIdsTab2(role.menuIds || []) // Pre-select role's menuIds
+        setSelectedMenuIdsTab2(role.menus || []) // Pre-select role's menus
       }
     } else {
       setSelectedMenuIdsTab2([])
     }
   }, [selectedRoleTab2, rolesTab2])
+
+  // Fetch roles for the selected organization in Tab 3
+  const fetchRolesByOrgTab3 = useCallback(
+    async (orgId: string) => {
+      setIsLoading(true)
+      try {
+        const res = await roleService.getRolesByOrg(orgId)
+        setRolesTab3(res.data)
+      } catch (e) {
+        showError(e)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [setIsLoading, showError]
+  )
+
+  // Fetch menus for the selected role in Tab 3
+  const fetchMenusByRole = useCallback(
+    async (roleId: string) => {
+      setIsLoading(true)
+      try {
+        const res = await roleService.getMenusByRole(roleId)
+        // Extract the menus from the API response
+        setMenusTab3(res.data.menus.map((menu: any) => ({ id: menu.id, name: menu.name })))
+      } catch (e) {
+        showError(e)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [setIsLoading, showError]
+  )
+
+  // Handle organization change in Tab 3
+  useEffect(() => {
+    if (orgTab3) {
+      fetchRolesByOrgTab3(orgTab3)
+    } else {
+      setRolesTab3([])
+      setSelectedRoleTab3("")
+      setMenusTab3([])
+    }
+  }, [orgTab3, fetchRolesByOrgTab3])
+
+  // Handle role change in Tab 3
+  useEffect(() => {
+    if (selectedRoleTab3) {
+      fetchMenusByRole(selectedRoleTab3)
+    } else {
+      setMenusTab3([])
+    }
+  }, [selectedRoleTab3, fetchMenusByRole])
 
   // Handle menu selection in Tab 1
   const handleMenuSelectionTab1 = useCallback((selectedIds: string[]) => {
@@ -175,9 +231,9 @@ const ModuleAndPermission = () => {
     const role = rolesTab2.find((role) => role.id === selectedRoleTab2)
     if (!role) return false
     return (
-      selectedMenuIdsTab2.length !== (role.menuIds?.length || 0) ||
-      selectedMenuIdsTab2.some((id) => !role.menuIds?.includes(id)) ||
-      role.menuIds?.some((id) => !selectedMenuIdsTab2.includes(id))
+      selectedMenuIdsTab2.length !== (role.menus?.length || 0) ||
+      selectedMenuIdsTab2.some((id) => !role.menus?.includes(id)) ||
+      role.menus?.some((id) => !selectedMenuIdsTab2.includes(id))
     )
   }, [selectedMenuIdsTab2, selectedRoleTab2, rolesTab2])
 
@@ -311,11 +367,23 @@ const ModuleAndPermission = () => {
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <Label>Role</Label>
-                <Combobox options={organizationOptions} value={orgTab3} onValueChange={setOrgTab3} placeholder="Select role" />
+                <Combobox
+                  className="w-auto"
+                  options={rolesTab3.map((role) => ({ value: role.id, label: role.name }))}
+                  value={selectedRoleTab3}
+                  onValueChange={setSelectedRoleTab3}
+                  placeholder="Select role"
+                />
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <Label>Module/Menu</Label>
-                <Combobox options={organizationOptions} value={orgTab3} onValueChange={setOrgTab3} placeholder="Select menu" />
+                <Combobox
+                  className="w-auto"
+                  options={menusTab3.map((menu) => ({ value: menu.id, label: menu.name }))}
+                  value={selectedMenuIdsTab3[0] || ""}
+                  onValueChange={(value) => setSelectedMenuIdsTab3([value])}
+                  placeholder="Select menu"
+                />
               </div>
             </div>
             <div className="">
@@ -345,9 +413,12 @@ const ModuleAndPermission = () => {
       isLoading,
       organizationOptions,
       rolesTab2,
+      rolesTab3,
       selectedRoleTab2,
+      selectedRoleTab3,
       backendMenuIdsTab1,
-      backendMenuIdsTab2
+      backendMenuIdsTab2,
+      menusTab3
     ]
   )
 

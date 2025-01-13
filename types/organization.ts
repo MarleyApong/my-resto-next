@@ -8,5 +8,5 @@ export type OrganizationType = {
   picture: string
   status: "ACTIVE" | "INACTIVE"
   createdAt: string
-  menuIds: string[]
+  menus: string[]
 }

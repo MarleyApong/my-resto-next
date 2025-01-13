@@ -137,18 +137,6 @@ const Role = () => {
     { accessorKey: "description", header: "Description" },
     { accessorKey: "organization.name", header: "Organization" },
     { accessorKey: "restaurant.name", header: "Restaurant" },
-    {
-      accessorKey: "permissions",
-      header: "Permissions",
-      cell: ({ row }: any) => {
-        const role = row.original as RoleType
-        const permissionsText = role.permissions
-          .map((perm) => `${perm.menuId}: ${perm.view ? "View" : ""} ${perm.create ? "Create" : ""} ${perm.update ? "Update" : ""} ${perm.delete ? "Delete" : ""}`)
-          .join("; ")
-
-        return <div className="max-w-[300px] truncate">{permissionsText}</div>
-      }
-    },
     { accessorKey: "createdAt", header: "Created At" },
     {
       id: "actions",
@@ -239,7 +227,6 @@ const Role = () => {
             <DialogDescription className="ml-2">{selectedRole?.description}</DialogDescription>
           </DialogHeader>
 
-          {/* <h2 className="text-xl font-bold ml-3">Permissions</h2> */}
           {selectedRole && (
             <div className="px-4 max-h-96 overflow-auto">
               <div className="space-y-2">
