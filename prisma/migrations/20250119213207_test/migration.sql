@@ -50,7 +50,6 @@ CREATE TABLE "Role" (
     "name" VARCHAR(100) NOT NULL,
     "description" VARCHAR(180),
     "organizationId" VARCHAR(25),
-    "restaurantId" VARCHAR(25),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "deletedAt" TIMESTAMP(3),
@@ -59,34 +58,59 @@ CREATE TABLE "Role" (
 );
 
 -- CreateTable
-CREATE TABLE "RoleMenu" (
-    "roleId" TEXT NOT NULL,
-    "menuId" TEXT NOT NULL,
+CREATE TABLE "RoleOrganizationMenu" (
+    "id" VARCHAR(25) NOT NULL,
+    "roleId" VARCHAR(25) NOT NULL,
+    "organizationMenuId" VARCHAR(25) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "RoleMenu_pkey" PRIMARY KEY ("roleId","menuId")
+    CONSTRAINT "RoleOrganizationMenu_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "OrganizationMenu" (
+    "id" VARCHAR(25) NOT NULL,
     "organizationId" TEXT NOT NULL,
     "menuId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "OrganizationMenu_pkey" PRIMARY KEY ("organizationId","menuId")
+    CONSTRAINT "OrganizationMenu_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "PermissionAction" (
+CREATE TABLE "OrganizationPermission" (
     "id" VARCHAR(25) NOT NULL,
-    "name" TEXT NOT NULL,
-    "description" TEXT,
+    "organizationMenuId" VARCHAR(25) NOT NULL,
+    "permissionId" VARCHAR(25) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "PermissionAction_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "OrganizationPermission_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "OrganizationSpecificPermission" (
+    "id" VARCHAR(25) NOT NULL,
+    "organizationMenuId" VARCHAR(25) NOT NULL,
+    "specificPermissionId" VARCHAR(25) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "OrganizationSpecificPermission_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SpecificPermission" (
+    "id" VARCHAR(25) NOT NULL,
+    "name" VARCHAR(50) NOT NULL,
+    "description" VARCHAR(180),
+    "menuId" VARCHAR(25) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SpecificPermission_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -109,6 +133,9 @@ CREATE TABLE "Permission" (
 CREATE TABLE "Menu" (
     "id" VARCHAR(25) NOT NULL,
     "name" VARCHAR(100) NOT NULL,
+    "description" VARCHAR(180),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Menu_pkey" PRIMARY KEY ("id")
 );
@@ -421,14 +448,6 @@ CREATE TABLE "Table" (
     CONSTRAINT "Table_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
-CREATE TABLE "_PermissionToPermissionAction" (
-    "A" VARCHAR(25) NOT NULL,
-    "B" VARCHAR(25) NOT NULL,
-
-    CONSTRAINT "_PermissionToPermissionAction_AB_pkey" PRIMARY KEY ("A","B")
-);
-
 -- CreateIndex
 CREATE UNIQUE INDEX "Action_name_key" ON "Action"("name");
 
@@ -463,16 +482,25 @@ CREATE UNIQUE INDEX "Status_name_statusTypeId_key" ON "Status"("name", "statusTy
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
-CREATE INDEX "Role_name_idx" ON "Role"("name");
-
--- CreateIndex
 CREATE INDEX "Role_organizationId_idx" ON "Role"("organizationId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "PermissionAction_name_key" ON "PermissionAction"("name");
+CREATE UNIQUE INDEX "RoleOrganizationMenu_roleId_organizationMenuId_key" ON "RoleOrganizationMenu"("roleId", "organizationMenuId");
 
 -- CreateIndex
-CREATE INDEX "PermissionAction_name_idx" ON "PermissionAction"("name");
+CREATE UNIQUE INDEX "OrganizationMenu_organizationId_menuId_key" ON "OrganizationMenu"("organizationId", "menuId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OrganizationPermission_organizationMenuId_permissionId_key" ON "OrganizationPermission"("organizationMenuId", "permissionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "OrganizationSpecificPermission_organizationMenuId_specificP_key" ON "OrganizationSpecificPermission"("organizationMenuId", "specificPermissionId");
+
+-- CreateIndex
+CREATE INDEX "SpecificPermission_menuId_idx" ON "SpecificPermission"("menuId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SpecificPermission_name_menuId_key" ON "SpecificPermission"("name", "menuId");
 
 -- CreateIndex
 CREATE INDEX "Permission_roleId_idx" ON "Permission"("roleId");
@@ -482,6 +510,9 @@ CREATE INDEX "Permission_menuId_idx" ON "Permission"("menuId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Permission_roleId_menuId_key" ON "Permission"("roleId", "menuId");
+
+-- CreateIndex
+CREATE INDEX "Menu_name_idx" ON "Menu"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "LogType_name_key" ON "LogType"("name");
@@ -600,9 +631,6 @@ CREATE INDEX "Table_restaurantId_idx" ON "Table"("restaurantId");
 -- CreateIndex
 CREATE INDEX "Table_webpage_idx" ON "Table"("webpage");
 
--- CreateIndex
-CREATE INDEX "_PermissionToPermissionAction_B_index" ON "_PermissionToPermissionAction"("B");
-
 -- AddForeignKey
 ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_actionId_fkey" FOREIGN KEY ("actionId") REFERENCES "Action"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -616,16 +644,31 @@ ALTER TABLE "Status" ADD CONSTRAINT "Status_statusTypeId_fkey" FOREIGN KEY ("sta
 ALTER TABLE "Role" ADD CONSTRAINT "Role_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RoleMenu" ADD CONSTRAINT "RoleMenu_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RoleOrganizationMenu" ADD CONSTRAINT "RoleOrganizationMenu_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "RoleMenu" ADD CONSTRAINT "RoleMenu_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "Menu"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "RoleOrganizationMenu" ADD CONSTRAINT "RoleOrganizationMenu_organizationMenuId_fkey" FOREIGN KEY ("organizationMenuId") REFERENCES "OrganizationMenu"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OrganizationMenu" ADD CONSTRAINT "OrganizationMenu_organizationId_fkey" FOREIGN KEY ("organizationId") REFERENCES "Organization"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "OrganizationMenu" ADD CONSTRAINT "OrganizationMenu_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "Menu"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationPermission" ADD CONSTRAINT "OrganizationPermission_organizationMenuId_fkey" FOREIGN KEY ("organizationMenuId") REFERENCES "OrganizationMenu"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationPermission" ADD CONSTRAINT "OrganizationPermission_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationSpecificPermission" ADD CONSTRAINT "OrganizationSpecificPermission_organizationMenuId_fkey" FOREIGN KEY ("organizationMenuId") REFERENCES "OrganizationMenu"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "OrganizationSpecificPermission" ADD CONSTRAINT "OrganizationSpecificPermission_specificPermissionId_fkey" FOREIGN KEY ("specificPermissionId") REFERENCES "SpecificPermission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SpecificPermission" ADD CONSTRAINT "SpecificPermission_menuId_fkey" FOREIGN KEY ("menuId") REFERENCES "Menu"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Permission" ADD CONSTRAINT "Permission_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -731,9 +774,3 @@ ALTER TABLE "Stock" ADD CONSTRAINT "Stock_productId_fkey" FOREIGN KEY ("productI
 
 -- AddForeignKey
 ALTER TABLE "Table" ADD CONSTRAINT "Table_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "Restaurant"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_PermissionToPermissionAction" ADD CONSTRAINT "_PermissionToPermissionAction_A_fkey" FOREIGN KEY ("A") REFERENCES "Permission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "_PermissionToPermissionAction" ADD CONSTRAINT "_PermissionToPermissionAction_B_fkey" FOREIGN KEY ("B") REFERENCES "PermissionAction"("id") ON DELETE CASCADE ON UPDATE CASCADE;

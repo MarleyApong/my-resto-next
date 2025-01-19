@@ -4,5 +4,5 @@ export type PermissionType = {
   create: boolean
   update: boolean
   delete: boolean
-  permissionActions: any[] // Array of specific permission actions
+  specificsPermissions: any[] // Array of specific permission actions
 }

@@ -7,114 +7,152 @@ import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
 import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/db"
 
-// Variable debug pour afficher les détails des opérations
+// Debug mode to log details
 const debug = true
 
-async function seedPermissionActions() {
-  try {
-    const actions = Object.values(SpecificPermissionAction).map((action) => ({
-      name: action,
-      description: `Permission to ${action.toLowerCase().replace(/_/g, " ")}`
-    }))
+// Specific permissions by menu
+const specificPermissionsByMenu: Record<string, SpecificPermissionAction[]> = {
+  organizations: [SpecificPermissionAction.UPDATE_STATUS, SpecificPermissionAction.UPDATE_PICTURE, SpecificPermissionAction.EXPORT_DATA, SpecificPermissionAction.IMPORT_DATA],
+  restaurants: [SpecificPermissionAction.UPDATE_STATUS, SpecificPermissionAction.UPDATE_PICTURE, SpecificPermissionAction.EXPORT_DATA, SpecificPermissionAction.IMPORT_DATA],
+  employees: [SpecificPermissionAction.UPDATE_STATUS, SpecificPermissionAction.UPDATE_PICTURE, SpecificPermissionAction.CHANGE_PASSWORD, SpecificPermissionAction.RESET_PASSWORD],
+  customers: [SpecificPermissionAction.UPDATE_STATUS, SpecificPermissionAction.UPDATE_PICTURE, SpecificPermissionAction.EXPORT_DATA, SpecificPermissionAction.IMPORT_DATA],
+  products: [SpecificPermissionAction.UPDATE_STATUS, SpecificPermissionAction.UPDATE_PICTURE, SpecificPermissionAction.EXPORT_DATA, SpecificPermissionAction.IMPORT_DATA]
+}
 
-    for (const action of actions) {
-      await prisma.permissionAction.upsert({
-        where: { name: action.name },
-        update: { description: action.description },
-        create: action
-      })
-      if (debug) console.log(`Permission action ${action.name} seeded.`)
+// Seed specific permissions
+async function seedSpecificPermissions() {
+  try {
+    for (const [menuId, actions] of Object.entries(specificPermissionsByMenu)) {
+      for (const action of actions) {
+        const permissionData = {
+          name: action,
+          description: `Permission to ${action.toLowerCase().replace(/_/g, " ")}`,
+          menuId: menuId
+        }
+
+        const existingPermission = await prisma.specificPermission.findFirst({
+          where: {
+            name: action,
+            menuId: menuId
+          }
+        })
+
+        if (existingPermission) {
+          await prisma.specificPermission.update({
+            where: { id: existingPermission.id },
+            data: {
+              description: permissionData.description
+            }
+          })
+          if (debug) console.log(`Specific permission ${action} for menu ${menuId} updated.`)
+        } else {
+          await prisma.specificPermission.create({
+            data: permissionData
+          })
+          if (debug) console.log(`Specific permission ${action} for menu ${menuId} created.`)
+        }
+      }
     }
   } catch (error) {
-    console.error("Error seeding permission actions:", error)
+    console.error("Error seeding specific permissions:", error)
     throw error
   }
 }
 
+// Assign specific permissions to a role
 async function assignSpecificPermissions(roleId: string, menuId: string, actions: SpecificPermissionAction[]) {
   try {
-    // Trouver ou créer la permission pour ce rôle et ce menu
+    // Trouver ou créer la permission de base pour ce rôle et ce menu
     let permission = await prisma.permission.findUnique({
       where: {
         roleId_menuId: {
           roleId,
-          menuId
-        }
-      }
-    })
+          menuId,
+        },
+      },
+    });
 
     if (!permission) {
       permission = await prisma.permission.create({
         data: {
-          menuId,
           roleId,
+          menuId,
           view: true,
           create: true,
           update: true,
-          delete: true
-        }
-      })
-      if (debug) console.log(`Permission for ${menuId} created.`)
+          delete: true,
+        },
+      });
+      if (debug) console.log(`Permission for menu ${menuId} created.`);
     }
 
-    // Trouver les actions spécifiques correspondantes
-    const permissionActions = await prisma.permissionAction.findMany({
-      where: {
-        name: {
-          in: actions
-        }
-      }
-    })
+    // Assigner les permissions spécifiques à ce menu
+    for (const action of actions) {
+      // Trouver ou créer la permission spécifique
+      const specificPermission = await prisma.specificPermission.upsert({
+        where: {
+          name_menuId: {
+            name: action,
+            menuId,
+          },
+        },
+        update: {},
+        create: {
+          name: action,
+          description: `Permission to ${action.toLowerCase().replace(/_/g, " ")}`,
+          menuId,
+        },
+      });
 
-    // Associer les actions spécifiques à la permission
-    await prisma.permission.update({
-      where: { id: permission.id },
-      data: {
-        permissionActions: {
-          connect: permissionActions.map((action) => ({ id: action.id }))
-        }
-      }
-    })
-
-    if (debug) console.log(`Specific permissions assigned for menu ${menuId}`)
+      if (debug) console.log(`Specific permission ${action} assigned for menu ${menuId}.`);
+    }
   } catch (error) {
-    console.error(`Error assigning specific permissions for menu ${menuId}:`, error)
-    throw error
+    console.error(`Error assigning specific permissions for menu ${menuId}:`, error);
+    throw error;
   }
 }
 
+// Seed menus
 async function seedMenus() {
   try {
     for (const menuItem of menuItems) {
+      // Créer ou mettre à jour le menu principal
       await prisma.menu.upsert({
-        where: { id: menuItem.id },
-        update: {},
+        where: { id: menuItem.id }, // Utiliser l'ID comme clé unique
+        update: {
+          name: menuItem.title,
+        },
         create: {
           id: menuItem.id,
-          name: menuItem.title
-        }
-      })
-      if (debug) console.log(`Menu ${menuItem.id} seeded.`)
+          name: menuItem.title,
+        },
+      });
+      if (debug) console.log(`Menu ${menuItem.id} seeded.`);
 
+      // Traiter les sous-menus
       for (const subItem of menuItem.subItems || []) {
+        // Créer ou mettre à jour le sous-menu
         await prisma.menu.upsert({
-          where: { id: subItem.id },
-          update: {},
+          where: { id: subItem.id }, // Utiliser l'ID comme clé unique
+          update: {
+            name: subItem.title,
+          },
           create: {
             id: subItem.id,
-            name: subItem.title
-          }
-        })
-        if (debug) console.log(`Submenu ${subItem.id} seeded.`)
+            name: subItem.title,
+          },
+        });
+        if (debug) console.log(`Submenu ${subItem.id} seeded.`);
       }
     }
-    if (debug) console.log("Menus and submenus seeded.")
+    if (debug) console.log("Menus and submenus seeded.");
   } catch (error) {
-    console.error("Error seeding menus:", error)
-    throw error
+    console.error("Error seeding menus:", error);
+    throw error;
   }
 }
 
+// Seed Super Admin role
 async function seedSuperAdminRole() {
   try {
     let superAdminRole = await prisma.role.findUnique({
@@ -124,7 +162,8 @@ async function seedSuperAdminRole() {
     if (!superAdminRole) {
       superAdminRole = await prisma.role.create({
         data: {
-          name: "Super Admin"
+          name: "Super Admin",
+          description: "Super Admin role with full access to all menus and permissions."
         }
       })
       if (debug) console.log("Super Admin role created.")
@@ -133,7 +172,7 @@ async function seedSuperAdminRole() {
     }
 
     for (const menuItem of menuItems) {
-      await prisma.roleMenu.upsert({
+      await prisma.permission.upsert({
         where: {
           roleId_menuId: {
             roleId: superAdminRole.id,
@@ -143,13 +182,22 @@ async function seedSuperAdminRole() {
         update: {},
         create: {
           roleId: superAdminRole.id,
-          menuId: menuItem.id
+          menuId: menuItem.id,
+          view: true,
+          create: true,
+          update: true,
+          delete: true
         }
       })
       if (debug) console.log(`Menu ${menuItem.id} assigned to Super Admin role.`)
 
+      const specificsPermissions = specificPermissionsByMenu[menuItem.id] || []
+      if (specificsPermissions.length > 0) {
+        await assignSpecificPermissions(superAdminRole.id, menuItem.id, specificsPermissions)
+      }
+
       for (const subItem of menuItem.subItems || []) {
-        await prisma.roleMenu.upsert({
+        await prisma.permission.upsert({
           where: {
             roleId_menuId: {
               roleId: superAdminRole.id,
@@ -159,79 +207,22 @@ async function seedSuperAdminRole() {
           update: {},
           create: {
             roleId: superAdminRole.id,
-            menuId: subItem.id
+            menuId: subItem.id,
+            view: true,
+            create: true,
+            update: true,
+            delete: true
           }
         })
         if (debug) console.log(`Submenu ${subItem.id} assigned to Super Admin role.`)
-      }
-    }
 
-    for (const item of menuItems) {
-      for (const subItem of item.subItems || []) {
-        let permission = await prisma.permission.findUnique({
-          where: { roleId_menuId: { roleId: superAdminRole.id, menuId: subItem.id } }
-        })
-
-        if (!permission) {
-          permission = await prisma.permission.create({
-            data: {
-              menuId: subItem.id,
-              roleId: superAdminRole.id,
-              view: true,
-              create: true,
-              update: true,
-              delete: true
-            }
-          })
-          if (debug) console.log(`Permission for ${subItem.id} created.`)
-
-          switch (subItem.id) {
-            case "organizations":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-            case "restaurants":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-            case "employees":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.CHANGE_PASSWORD,
-                SpecificPermissionAction.RESET_PASSWORD
-              ])
-              break
-            case "customers":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-            case "products":
-              await assignSpecificPermissions(superAdminRole.id, subItem.id, [
-                SpecificPermissionAction.UPDATE_STATUS,
-                SpecificPermissionAction.UPDATE_PICTURE,
-                SpecificPermissionAction.EXPORT_DATA,
-                SpecificPermissionAction.IMPORT_DATA
-              ])
-              break
-          }
-        } else {
-          if (debug) console.log(`Permission for ${subItem.id} already exists.`)
+        const subSpecificsPermissions = specificPermissionsByMenu[subItem.id] || []
+        if (subSpecificsPermissions.length > 0) {
+          await assignSpecificPermissions(superAdminRole.id, subItem.id, subSpecificsPermissions)
         }
       }
     }
+
     if (debug) console.log("Super Admin role seeded with all permissions.")
   } catch (error) {
     console.error("Error seeding Super Admin role:", error)
@@ -239,6 +230,7 @@ async function seedSuperAdminRole() {
   }
 }
 
+// Seed Super Admin user
 async function seedSuperAdminUser() {
   try {
     const superAdminRole = await prisma.role.findUnique({
@@ -300,6 +292,7 @@ async function seedSuperAdminUser() {
   }
 }
 
+// Seed status types
 async function seedStatusType(name: string, statuses: string[]) {
   try {
     const statusType = await prisma.statusType.upsert({
@@ -336,6 +329,7 @@ async function seedStatusType(name: string, statuses: string[]) {
   }
 }
 
+// Seed payment statuses
 async function seedPaymentStatus() {
   try {
     const paymentStatuses = Object.values(PaymentStatus).map((status) => ({
@@ -357,6 +351,7 @@ async function seedPaymentStatus() {
   }
 }
 
+// Seed payment methods
 async function seedPaymentMethods() {
   try {
     const paymentMethods = Object.values(PaymentMethod).map((method) => ({
@@ -378,6 +373,7 @@ async function seedPaymentMethods() {
   }
 }
 
+// Seed audit actions
 async function seedActions() {
   try {
     const actions = Object.values(Action).map((action) => ({
@@ -399,6 +395,7 @@ async function seedActions() {
   }
 }
 
+// Main function to run all seeders
 async function main() {
   try {
     await seedStatusType("User", Object.values(StatusUserEnum))
@@ -411,8 +408,8 @@ async function main() {
     await seedActions()
     await seedPaymentStatus()
     await seedPaymentMethods()
-    await seedPermissionActions()
     await seedMenus()
+    await seedSpecificPermissions()
     await seedSuperAdminRole()
     await seedSuperAdminUser()
   } catch (error) {
@@ -423,4 +420,5 @@ async function main() {
   }
 }
 
+// Run the main function
 main()

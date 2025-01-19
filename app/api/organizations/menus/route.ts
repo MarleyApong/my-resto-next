@@ -19,7 +19,7 @@ export const GET = withLogging(
           select: {
             id: true,
             name: true,
-            menus: {
+            organizationsMenus: {
               select: {
                 menuId: true
               }
@@ -30,7 +30,7 @@ export const GET = withLogging(
         const transformedMenusInArray = organizations.map(org => ({
           id: org.id,
           name: org.name,
-          menus: org.menus.map(menu => menu.menuId)
+          menus: org.organizationsMenus.map(menu => menu.menuId)
         }))
 
         return NextResponse.json(transformedMenusInArray)

@@ -38,7 +38,7 @@ export function withPermission(menuId: string, requiredPermission: Permission) {
       // Check specific permissions if needed
       let hasSpecificPermission = false
       if (Object.values(SpecificPermissionAction).includes(requiredPermission as SpecificPermissionAction)) {
-        hasSpecificPermission = permission.permissionActions.includes(requiredPermission)
+        hasSpecificPermission = permission.specificsPermissions.includes(requiredPermission)
       }
 
       // If user lacks required permissions

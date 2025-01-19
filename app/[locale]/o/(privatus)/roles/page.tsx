@@ -265,10 +265,10 @@ const Role = () => {
                       </div>
                     </div>
 
-                    {perm.permissionActions.length > 0 && (
+                    {perm.specificsPermissions.length > 0 && (
                       <div className="mt-4">
                         <ul className="list-none list-inside ml-2 mt-2">
-                          {perm.permissionActions.map((action, idx) => (
+                          {perm.specificsPermissions.map((action, idx) => (
                             <li key={idx} className="text-xs text-gray-800 mb-3">
                               <span className="px-2 py-1 rounded-sm bg-purple-100 text-purple-800 lowercase font-semibold">{action.name}</span> : {action.description}
                             </li>

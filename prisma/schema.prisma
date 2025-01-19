@@ -36,7 +36,7 @@ model AuditLog {
 model StatusType {
   id        String    @id @default(cuid()) @db.VarChar(25)
   name      String    @unique @db.VarChar(50)
-  statuses  Status[]
+  status    Status[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -65,72 +65,101 @@ model Status {
   @@index([name])
 }
 
+// Modèles ajustés
 model Role {
-  id             String        @id @default(cuid()) @db.VarChar(25)
-  name           String        @unique @db.VarChar(100)
-  description    String?       @db.VarChar(180)
-  permissions    Permission[]
-  users          User[]
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-  organizationId String?       @db.VarChar(25)
-  restaurantId   String?       @db.VarChar(25)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  deletedAt      DateTime?
-  menus          RoleMenu[]
+  id                      String                 @id @default(cuid()) @db.VarChar(25)
+  name                    String                 @unique @db.VarChar(100)
+  description             String?                @db.VarChar(180)
+  organization            Organization?          @relation(fields: [organizationId], references: [id])
+  organizationId          String?                @db.VarChar(25) // Null pour les rôles internes
+  permissions             Permission[] // Permissions attribuées à ce rôle
+  users                   User[] // Utilisateurs ayant ce rôle
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+  deletedAt               DateTime?
+  rolesOrganizationsMenus RoleOrganizationMenu[]
 
-  @@index([name])
   @@index([organizationId])
 }
 
-model RoleMenu {
-  roleId    String
-  menuId    String
-  role      Role     @relation(fields: [roleId], references: [id])
-  menu      Menu     @relation(fields: [menuId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model RoleOrganizationMenu {
+  id                 String           @id @default(cuid()) @db.VarChar(25)
+  roleId             String           @db.VarChar(25)
+  organizationMenuId String           @db.VarChar(25) // Référence à OrganizationMenu
+  role               Role             @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  organizationMenu   OrganizationMenu @relation(fields: [organizationMenuId], references: [id], onDelete: Cascade)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
-  @@id([roleId, menuId])
+  @@unique([roleId, organizationMenuId])
 }
 
 model OrganizationMenu {
-  organizationId String
-  menuId         String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  menu           Menu         @relation(fields: [menuId], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                     String                           @id @default(cuid()) @db.VarChar(25)
+  organizationId         String
+  menuId                 String
+  organization           Organization                     @relation(fields: [organizationId], references: [id])
+  menu                   Menu                             @relation(fields: [menuId], references: [id])
+  createdAt              DateTime                         @default(now())
+  updatedAt              DateTime                         @updatedAt
+  permissions            OrganizationPermission[] // Permissions générales personnalisées pour ce menu dans cette organisation
+  specificsPermissions   OrganizationSpecificPermission[] // Permissions spécifiques personnalisées pour ce menu dans cette organisation
+  roleOrganizationsMenus RoleOrganizationMenu[]
 
-  @@id([organizationId, menuId])
+  @@unique([organizationId, menuId])
 }
 
-model PermissionAction {
-  id          String       @id @default(cuid()) @db.VarChar(25)
-  name        String       @unique // e.g., "UPDATE_STATUS", "UPDATE_PICTURE"
-  description String?
-  permissions Permission[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+model OrganizationPermission {
+  id                 String           @id @default(cuid()) @db.VarChar(25)
+  organizationMenuId String           @db.VarChar(25)
+  permissionId       String           @db.VarChar(25)
+  organizationMenu   OrganizationMenu @relation(fields: [organizationMenuId], references: [id], onDelete: Cascade)
+  permission         Permission       @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
-  @@index([name])
+  @@unique([organizationMenuId, permissionId])
+}
+
+model OrganizationSpecificPermission {
+  id                   String             @id @default(cuid()) @db.VarChar(25)
+  organizationMenuId   String             @db.VarChar(25)
+  specificPermissionId String             @db.VarChar(25)
+  organizationMenu     OrganizationMenu   @relation(fields: [organizationMenuId], references: [id], onDelete: Cascade)
+  specificPermission   SpecificPermission @relation(fields: [specificPermissionId], references: [id], onDelete: Cascade)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@unique([organizationMenuId, specificPermissionId])
+}
+
+model SpecificPermission {
+  id                                String                           @id @default(cuid()) @db.VarChar(25)
+  name                              String                           @db.VarChar(50) // Exemple : "UPDATE_STATUS", "DELETE_USER"
+  description                       String?                          @db.VarChar(180)
+  menuId                            String                           @db.VarChar(25)
+  menu                              Menu                             @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  createdAt                         DateTime                         @default(now())
+  updatedAt                         DateTime                         @updatedAt
+  organizationsSpecificsPermissions OrganizationSpecificPermission[]
+
+  @@unique([name, menuId]) // Clé unique composée de name et menuId
+  @@index([menuId])
 }
 
 model Permission {
-  id                String             @id @default(cuid()) @db.VarChar(25)
-  menuId            String             @db.VarChar(50)
-  role              Role               @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  roleId            String
-  // Basic CRUD permissions
-  view              Boolean            @default(false)
-  create            Boolean            @default(false)
-  update            Boolean            @default(false)
-  delete            Boolean            @default(false)
-  // Specific actions permissions through junction table
-  permissionActions PermissionAction[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  deletedAt         DateTime?
+  id                       String                   @id @default(cuid()) @db.VarChar(25)
+  menuId                   String                   @db.VarChar(50)
+  role                     Role                     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId                   String
+  view                     Boolean                  @default(false)
+  create                   Boolean                  @default(false)
+  update                   Boolean                  @default(false)
+  delete                   Boolean                  @default(false)
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  deletedAt                DateTime?
+  organizationsPermissions OrganizationPermission[]
 
   @@unique([roleId, menuId])
   @@index([roleId])
@@ -138,12 +167,18 @@ model Permission {
 }
 
 model Menu {
-  id            String             @id @default(cuid()) @db.VarChar(25)
-  name          String             @db.VarChar(100)
-  roles         RoleMenu[]
-  organizations OrganizationMenu[]
+  id                   String               @id @default(cuid()) @db.VarChar(25)
+  name                 String               @db.VarChar(100)
+  description          String?              @db.VarChar(180)
+  specificsPermissions SpecificPermission[] // Permissions spécifiques liées à ce menu
+  organizationsMenus   OrganizationMenu[] // Menus personnalisés pour une organisation
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([name])
 }
 
+// Modèles existants (inchangés)
 model LogType {
   id        Int        @id @default(autoincrement())
   name      String     @unique @db.VarChar(50)
@@ -214,24 +249,24 @@ model Session {
 }
 
 model Organization {
-  id           String                 @id @default(cuid()) @db.VarChar(25)
-  name         String                 @db.VarChar(100)
-  description  String?                @db.VarChar(185)
-  phone        String                 @db.VarChar(15)
-  email        String?                @unique @db.VarChar(100)
-  city         String?                @db.VarChar(100)
-  neighborhood String?                @db.VarChar(100)
-  picture      String
-  statusId     String
-  status       Status                 @relation(fields: [statusId], references: [id])
-  createdAt    DateTime               @default(now())
-  updatedAt    DateTime               @updatedAt
-  deletedAt    DateTime?
-  users        UserOrganization[]
-  customers    CustomerOrganization[]
-  restaurants  Restaurant[]
-  roles        Role[]
-  menus        OrganizationMenu[]
+  id                 String                 @id @default(cuid()) @db.VarChar(25)
+  name               String                 @db.VarChar(100)
+  description        String?                @db.VarChar(185)
+  phone              String                 @db.VarChar(15)
+  email              String?                @unique @db.VarChar(100)
+  city               String?                @db.VarChar(100)
+  neighborhood       String?                @db.VarChar(100)
+  picture            String
+  statusId           String
+  status             Status                 @relation(fields: [statusId], references: [id])
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  deletedAt          DateTime?
+  users              UserOrganization[]
+  customers          CustomerOrganization[]
+  restaurants        Restaurant[]
+  roles              Role[]
+  organizationsMenus OrganizationMenu[]
 
   @@index([statusId])
   @@index([email])
@@ -363,7 +398,7 @@ model Customer {
   organizations       CustomerOrganization[]
   restaurants         CustomerRestaurant[]
   answers             Answer[]
-  Order               Order[]
+  orders              Order[]
 
   @@index([statusId])
   @@index([email])

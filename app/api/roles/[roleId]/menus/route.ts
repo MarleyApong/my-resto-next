@@ -26,19 +26,29 @@ export const GET = withLogging(
           throw createError(errors.NotFoundError, t("api.errors.roleNotFound"))
         }
 
-        // Fetch the role with its associated menus, permissions, and specific actions
+        // Fetch the role with its menus, permissions, and specific permissions
         const roleWithPermissions = await prisma.role.findUnique({
           where: { id: roleId },
           select: {
             id: true,
             name: true,
-            menus: {
+            rolesOrganizationsMenus: {
               select: {
-                menuId: true,
-                menu: {
+                organizationMenu: {
                   select: {
                     id: true,
-                    name: true
+                    menu: {
+                      select: {
+                        id: true,
+                        name: true,
+                        specificsPermissions: {
+                          select: {
+                            id: true,
+                            name: true
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }
@@ -49,13 +59,7 @@ export const GET = withLogging(
                 view: true,
                 create: true,
                 update: true,
-                delete: true,
-                permissionActions: {
-                  select: {
-                    id: true,
-                    name: true
-                  }
-                }
+                delete: true
               }
             },
             organization: {
@@ -72,23 +76,22 @@ export const GET = withLogging(
         }
 
         // Transform the data to include menus with their permissions and specific actions
-        const menusWithPermissions = roleWithPermissions.menus.map((roleMenu) => {
-          const menuPermissions = roleWithPermissions.permissions.find(
-            (permission) => permission.menuId === roleMenu.menuId
-          );
-        
+        const roleMenuWithPermissions = roleWithPermissions.rolesOrganizationsMenus.map((roleOrganizationMenu) => {
+          const menuId = roleOrganizationMenu.organizationMenu.menu.id
+          const menuPermissions = roleWithPermissions.permissions.find((permission) => permission.menuId === menuId)
+
           return {
-            id: roleMenu.menu.id,
-            name: roleMenu.menu.name,
+            id: roleOrganizationMenu.organizationMenu.menu.id,
+            name: roleOrganizationMenu.organizationMenu.menu.name,
             permissions: {
               view: menuPermissions?.view || false,
               create: menuPermissions?.create || false,
               update: menuPermissions?.update || false,
               delete: menuPermissions?.delete || false
             },
-            specificActions: menuPermissions?.permissionActions || [] // Include specific actions
-          };
-        });
+            specificsPermissions: roleOrganizationMenu.organizationMenu.menu.specificsPermissions || []
+          }
+        })
 
         return NextResponse.json({
           role: {
@@ -96,7 +99,7 @@ export const GET = withLogging(
             name: roleWithPermissions.name,
             organization: roleWithPermissions.organization
           },
-          menus: menusWithPermissions
+          menus: roleMenuWithPermissions
         })
       })
     )
@@ -134,15 +137,15 @@ export const PUT = withLogging(
         // Update the role's menus in a transaction
         const updatedRole = await prisma.$transaction(async (tx) => {
           // Delete existing menu associations for the role
-          await tx.roleMenu.deleteMany({
+          await tx.roleOrganizationMenu.deleteMany({
             where: { roleId }
           })
 
           // Create new menu associations
-          await tx.roleMenu.createMany({
+          await tx.roleOrganizationMenu.createMany({
             data: menuIds.map((menuId: string) => ({
               roleId,
-              menuId
+              organizationMenuId: menuId // Use organizationMenuId instead of menuId
             }))
           })
 

@@ -12,6 +12,7 @@ export const GET = withLogging(
       "view"
     )(
       withErrorHandler(async (request: Request & { user?: any }) => {
+        // Fetch all roles with their associated menus and organization
         const roles = await prisma.role.findMany({
           where: {
             deletedAt: null
@@ -19,9 +20,13 @@ export const GET = withLogging(
           select: {
             id: true,
             name: true,
-            menus: {
+            rolesOrganizationsMenus: {
               select: {
-                menuId: true
+                organizationMenu: {
+                  select: {
+                    menuId: true // Fetch the menuId from OrganizationMenu
+                  }
+                }
               }
             },
             organization: {
@@ -29,16 +34,17 @@ export const GET = withLogging(
                 id: true,
                 name: true
               }
-            },
+            }
           }
         })
 
-        const transformedMenusInArray = roles.map(org => ({
-          id: org.id,
-          name: org.name,
-          menus: org.menus.map(menu => menu.menuId)
+        // Transform the data to include menus in an array
+        const transformedMenusInArray = roles.map((role) => ({
+          id: role.id,
+          name: role.name,
+          organization: role.organization, // Include organization details
+          menus: role.rolesOrganizationsMenus.map((rom) => rom.organizationMenu.menuId) // Extract menuIds
         }))
-
 
         return NextResponse.json(transformedMenusInArray)
       })

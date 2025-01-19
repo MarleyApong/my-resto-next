@@ -68,7 +68,7 @@ export const GET = withLogging(
                   create: true,
                   update: true,
                   delete: true,
-                  permissionActions: {
+                  specificsPermissions: {
                     select: {
                       id: true,
                       name: true,
