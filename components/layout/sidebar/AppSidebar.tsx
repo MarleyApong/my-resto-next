@@ -6,6 +6,7 @@ import { SidebarItem } from "./SidebarItem"
 import { menuItems } from "@/data/mainMenu"
 import { useAuth } from "@/hooks/useAuth"
 import { SpecificalLoader } from "@/components/features/SpecificalLoader"
+import { MenuType } from "@/types/permission"
 
 export function AppSidebar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
@@ -13,10 +14,9 @@ export function AppSidebar() {
   const { toggleSidebar } = useSidebar()
   const { user } = useAuth()
 
-  const hasMenuAccess = (menuId: string) => {
-    return user?.role?.permissions?.some((permission: any) => permission.menuId === menuId && permission.view)
+  const hasMenuAccess = (menuId: string): boolean => {
+    return user?.role?.menus?.some((menu: MenuType) => menu.id === menuId && menu.permissions.view) ?? false
   }
-
   const filteredMenuItems = menuItems
     .map((item) => {
       if (item.subItems?.length) {

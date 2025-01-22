@@ -25,64 +25,56 @@ export function withAuth(handler: RouteHandler) {
     const t = await getI18n()
     const sessionId = cookies().get("sessionId")?.value
 
-    // Si pas de sessionId dans les cookies
     if (!sessionId) {
       clearSessionCookie()
       throw createError(errors.UnauthorizedError, t("api.errors.noSession"))
     }
 
     try {
-      // Get session with user data
       const session = await prisma.session.findUnique({
         where: {
           id: sessionId,
           valid: true
         },
-        include: {
+        select: {
           user: {
             select: {
               id: true,
-              email: true,
               firstname: true,
               lastname: true,
+              email: true,
+              picture: true,
+              status: true,
               role: {
                 select: {
                   id: true,
                   name: true,
-                  permissions: {
+                  organizationId: true,
+                  roleMenus: {
                     select: {
-                      menuId: true,
-                      view: true,
                       create: true,
+                      view: true,
                       update: true,
-                      delete: true
-                    }
-                  },
-                  rolesOrganizationsMenus: {
-                    select: {
-                      organizationMenu: {
+                      delete: true,
+                      baseMenu: {
                         select: {
-                          menuId: true,
-                          specificsPermissions: {
+                          id: true,
+                          name: true,
+                          description: true
+                        }
+                      },
+                      specificPermissions: {
+                        select: {
+                          granted: true,
+                          baseSpecificPerm: {
                             select: {
-                              specificPermission: {
-                                select: {
-                                  id: true,
-                                  name: true
-                                }
-                              }
+                              name: true
                             }
                           }
                         }
                       }
                     }
                   }
-                }
-              },
-              status: {
-                select: {
-                  id: true,
-                  name: true
                 }
               },
               organizations: {
@@ -112,108 +104,72 @@ export function withAuth(handler: RouteHandler) {
         }
       })
 
-      // Session n'existe pas dans la BD
       if (!session || !session.user) {
         clearSessionCookie()
         throw createError(errors.SessionInvalidError, t("api.errors.invalidSession"))
       }
 
-      // Vérification de la validité
-      if (!session.valid) {
-        clearSessionCookie()
-        throw createError(errors.SessionRevokedError, t("api.errors.sessionRevoked"))
+      // Vérifications supplémentaires (validité, expiration, etc.)
+      const userData = {
+        id: session.user.id,
+        firstname: session.user.firstname,
+        lastname: session.user.lastname,
+        email: session.user.email,
+        picture: session.user.picture,
+        status: session.user.status,
+        role: session.user.role
+          ? {
+              id: session.user.role.id,
+              name: session.user.role.name,
+              organization: session.user.role.organizationId
+                ? {
+                    id: session.user.role.organizationId,
+                    name: session.user.role.organizationId
+                  }
+                : null,
+              menus: session.user.role.roleMenus.map((roleMenu) => ({
+                id: roleMenu.baseMenu?.id ?? "",
+                name: roleMenu.baseMenu?.name ?? "",
+                description: roleMenu.baseMenu?.description ?? "",
+                permissions: {
+                  create: roleMenu.create,
+                  view: roleMenu.view,
+                  update: roleMenu.update,
+                  delete: roleMenu.delete
+                },
+                specificPermissions: roleMenu.specificPermissions.map((sp) => ({
+                  name: sp.baseSpecificPerm?.name ?? "",
+                  granted: sp.granted
+                }))
+              }))
+            }
+          : null,
+        organization:
+          session.user.organizations.length > 0
+            ? {
+                id: session.user.organizations[0].organization.id,
+                name: session.user.organizations[0].organization.name,
+                email: session.user.organizations[0].organization.email
+              }
+            : null,
+        restaurant:
+          session.user.restaurants.length > 0
+            ? {
+                id: session.user.restaurants[0].restaurant.id,
+                name: session.user.restaurants[0].restaurant.name,
+                email: session.user.restaurants[0].restaurant.email
+              }
+            : null
       }
 
-      // Vérification de l'expiration absolue
-      if (session.expiresAt < new Date()) {
-        clearSessionCookie()
-        await prisma.session
-          .update({
-            where: { id: sessionId },
-            data: { valid: false }
-          })
-          .catch(() => {})
-        throw createError(errors.SessionExpiredError, t("api.errors.sessionExpired"))
-      }
-
-      // Vérification de l'inactivité
-      if (session.lastActivity < new Date(Date.now() - 30 * 60 * 1000)) {
-        clearSessionCookie()
-        await prisma.session
-          .update({
-            where: { id: sessionId },
-            data: { valid: false }
-          })
-          .catch(() => {})
-        throw createError(errors.SessionExpiredError, t("api.errors.sessionInactive"))
-      }
-
-      try {
-        // Mise à jour de la dernière activité de manière atomique
-        await prisma.session.update({
-          where: {
-            id: sessionId,
-            valid: true // Double vérification de sécurité
-          },
-          data: {
-            lastActivity: new Date()
-          }
-        })
-      } catch (updateError) {
-        // Si la mise à jour échoue, on continue quand même
-        // mais on log l'erreur pour le debugging
-        console.error("Failed to update session lastActivity:", updateError)
-      }
-
-      // Vérification du statut de l'utilisateur
-      if (session.user.status.name !== "ACTIVE") {
-        clearSessionCookie()
-        await prisma.session
-          .update({
-            where: { id: sessionId },
-            data: { valid: false }
-          })
-          .catch(() => {})
-        throw createError(errors.InactiveAccountError, t("api.errors.inactiveAccount"))
-      }
-
-      // Transformation des permissions spécifiques
-      if (session?.user?.role) {
-        const transformedPermissions = session.user.role.permissions.map((permission) => {
-          // Récupérer les permissions spécifiques pour ce menu
-          const specificPermissions = session.user.role &&
-            session.user.role.rolesOrganizationsMenus
-              .find((rom) => rom.organizationMenu.menuId === permission.menuId)
-              ?.organizationMenu.specificsPermissions.map((osp) => osp.specificPermission.name) || []
-
-          return {
-            ...permission,
-            specificsPermissions: specificPermissions
-          } as {
-            menuId: string
-            view: boolean
-            create: boolean
-            update: boolean
-            delete: boolean
-            specificsPermissions: string[]
-          }
-        })
-
-        // Forcer le type avec 'as any' pour éviter l'erreur de TypeScript
-        session.user.role.permissions = transformedPermissions as any
-      }
-
-      // Ajout de l'utilisateur à la requête
       const requestWithUser = new Request(request, {
         headers: request.headers
       }) as ExtendedRequest
 
-      requestWithUser.user = session.user
+      requestWithUser.user = userData
 
       return handler(requestWithUser, context)
     } catch (err: any) {
-      // On ne nettoie le cookie que si c'est une erreur d'authentification
-      // ou si l'erreur vient de Prisma (potentiellement session invalide)
       if (
         err.name === "UnauthorizedError" ||
         err.name === "SessionInvalidError" ||
@@ -221,7 +177,7 @@ export function withAuth(handler: RouteHandler) {
         err.name === "SessionRevokedError" ||
         err.name === "InactiveAccountError" ||
         err.status === 401 ||
-        err.code === "P2025" // Prisma error pour record non trouvé
+        err.code === "P2025"
       ) {
         clearSessionCookie()
       }

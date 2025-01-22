@@ -60,19 +60,28 @@ export const GET = withLogging(
                   name: true
                 }
               },
-              permissions: {
+              roleMenus: {
                 select: {
-                  id: true,
-                  menuId: true,
-                  view: true,
                   create: true,
+                  view: true,
                   update: true,
                   delete: true,
-                  specificsPermissions: {
+                  baseMenu: {
                     select: {
                       id: true,
                       name: true,
                       description: true
+                    }
+                  },
+                  specificPermissions: {
+                    select: {
+                      granted: true,
+                      baseSpecificPerm: {
+                        select: {
+                          name: true,
+                          description: true
+                        }
+                      }
                     }
                   }
                 }
@@ -82,8 +91,30 @@ export const GET = withLogging(
           prisma.role.count({ where })
         ])
 
+        const newStructure = roles.map((role) => ({
+          id: role.id,
+          name: role.name,
+          organization: role.organization,
+          menus: role.roleMenus.map((roleMenu) => ({
+            id: roleMenu.baseMenu?.id ?? "",
+            name: roleMenu.baseMenu?.name ?? "",
+            description: roleMenu.baseMenu?.description ?? "",
+            permissions: {
+              create: roleMenu.create,
+              view: roleMenu.view,
+              update: roleMenu.update,
+              delete: roleMenu.delete
+            },
+            specificPermissions: roleMenu.specificPermissions.map((sp) => ({
+              name: sp.baseSpecificPerm?.name ?? "",
+              granted: sp.granted,
+              description: sp.baseSpecificPerm?.description
+            }))
+          }))
+        }))
+
         return NextResponse.json({
-          data: roles,
+          data: newStructure,
           recordsFiltered: total,
           recordsTotal: total
         })
@@ -121,6 +152,16 @@ export const POST = withLogging(
           throw createError(errors.BadRequestError, t("api.errors.forbiddenRoleName"))
         }
 
+        if (body.organizationId) {
+          const organizationExists = await prisma.organization.findUnique({
+            where: { id: body.organizationId }
+          })
+
+          if (!organizationExists) {
+            throw createError(errors.BadRequestError, t("api.errors.organizationNotFound"))
+          }
+        }
+
         // Create the role within a transaction
         const role = await prisma.$transaction(async (tx) => {
           // Create the role
@@ -128,8 +169,8 @@ export const POST = withLogging(
             data: {
               name: body.name,
               description: body.description,
-              organizationId: body.organizationId,
-              restaurantId: body.restaurantId
+              organizationId: body.organizationId
+              // restaurantId: body.restaurantId
             }
           })
 

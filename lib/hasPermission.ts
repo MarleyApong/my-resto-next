@@ -1,39 +1,40 @@
-import { User } from "@/contexts/AuthContext"
 import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
+import { UserType } from "@/types/user"
 
-type Permission = "view" | "create" | "update" | "delete" | SpecificPermissionAction
+// Types
+type BasicPermission = "view" | "create" | "update" | "delete"
+type Permission = BasicPermission | SpecificPermissionAction
 
-
-export function hasPermission(user: User | null, menuId: string, requiredPermission: Permission): boolean {
+export function hasPermission(user: UserType | null, menuId: string, requiredPermission: Permission): boolean {
   // Check if user is null
   if (!user) {
     return false
   }
 
-  // Check if user has a role and permissions
-  if (!user.role?.permissions) {
+  // Check if user has a role and menus
+  if (!user.role?.menus) {
     return false
   }
 
-  // Find the permission for the given menuId
-  const permission = user.role.permissions.find((p) => p.menuId === menuId)
+  // Find the menu for the given menuId
+  const menu = user.role.menus.find((menu) => menu.id === menuId)
 
-  // If no permission exists for the menuId
-  if (!permission) {
+  // If no menu exists for the menuId
+  if (!menu) {
     return false
   }
 
   // Check basic CRUD permissions
   const hasBasicPermission =
-    (requiredPermission === "view" && permission.view) ||
-    (requiredPermission === "create" && permission.create) ||
-    (requiredPermission === "update" && permission.update) ||
-    (requiredPermission === "delete" && permission.delete)
+    (requiredPermission === "view" && menu.permissions.view) ||
+    (requiredPermission === "create" && menu.permissions.create) ||
+    (requiredPermission === "update" && menu.permissions.update) ||
+    (requiredPermission === "delete" && menu.permissions.delete)
 
   // Check specific permissions if required
   let hasSpecificPermission = false
   if (Object.values(SpecificPermissionAction).includes(requiredPermission as SpecificPermissionAction)) {
-    hasSpecificPermission = permission.specificsPermissions.includes(requiredPermission)
+    hasSpecificPermission = menu.specificPermissions.some((permission) => permission.name === requiredPermission && permission.granted)
   }
 
   return hasBasicPermission || hasSpecificPermission

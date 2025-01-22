@@ -6,29 +6,14 @@ import { api } from "@/lib/axiosConfig"
 import { useError } from "@/hooks/useError"
 import { toast } from "sonner"
 import { RoleType } from "@/types/role"
-
-interface Status {
-  id: string
-  name: string
-}
-
-export type User = {
-  id: string
-  email: string
-  firstname: string
-  lastname: string
-  role: RoleType
-  status: Status
-  organizations: any[] // Replace with a specific type if needed
-  restaurants: any[] // Replace with a specific type if needed
-}
+import { UserType } from "@/types/user"
 
 interface AuthContextType {
   isAuthenticated: boolean
-  user: User | null
+  user: UserType | null
   isLoading: boolean
   setIsLoading: (value: boolean) => void
-  setUser: (user: User | null) => void
+  setUser: (user: UserType | null) => void
   setIsAuthenticated: (value: boolean) => void
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -42,7 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isClient, setIsClient] = useState(false)
 

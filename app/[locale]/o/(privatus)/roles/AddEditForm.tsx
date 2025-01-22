@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
 import { roleSchema, roleUpdateSchema } from "@/schemas/role"
 import { organizationService } from "@/services/organizationService"
@@ -29,7 +28,7 @@ export const AddEditForm = ({
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors,  },
     setValue,
     watch
   } = useForm<CreateRoleType | UpdateRoleType>({

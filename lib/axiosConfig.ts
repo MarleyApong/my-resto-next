@@ -30,6 +30,9 @@ api.interceptors.response.use(
           break
       }
 
+      console.log("reason", reason);
+      
+
       window.location.href = `/${locale}/o/auth/login?reason=${reason}`
       return Promise.reject(error)
     }

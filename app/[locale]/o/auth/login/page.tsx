@@ -66,7 +66,6 @@ const Login: React.FC = () => {
       return false
     }
   }
-  console.log("isLoading", isLoading)
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()

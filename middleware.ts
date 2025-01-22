@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createI18nMiddleware } from "next-international/middleware"
 import { menuItems } from "@/data/mainMenu"
+import { MenuItem } from "./types/sidebar"
 
 const I18nMiddleware = createI18nMiddleware({
   locales: ["en", "fr"],
@@ -109,6 +110,7 @@ export async function middleware(request: NextRequest) {
       if (!userResponse.ok) {
         const errorData = await userResponse.json()
         let reason = "session_expired"
+        console.log("errorData", errorData)
 
         switch (errorData.name) {
           case "SessionExpiredError":
@@ -135,8 +137,7 @@ export async function middleware(request: NextRequest) {
 
       // Verify user has view permission for this menu
       if (menuId) {
-        const hasPermission = user.role.permissions.some((permission: { menuId: string; view: boolean }) => permission.menuId === menuId && permission.view)
-
+        const hasPermission = user.role.menus.some((menu: any) => menu.id === menuId && menu.permissions.view)
         if (!hasPermission) {
           return redirectTo403()
         }
@@ -144,7 +145,9 @@ export async function middleware(request: NextRequest) {
         // Si la route n'a pas de menuId (comme /o), rediriger vers 403
         return redirectTo403()
       }
-    } catch (error) {
+    } catch (e) {
+      console.log("e", e)
+
       return redirectToLogin("server_error")
     }
   }

@@ -1,3 +1,5 @@
+import { RoleType } from "./role"
+
 export type UserType = {
   id: string
   firstname: string
@@ -12,7 +14,7 @@ export type UserType = {
     id: string
     name: string
   }
-  role: string
+  role: RoleType
   phone: string
   email: string
   city?: string

@@ -230,45 +230,45 @@ const Role = () => {
           {selectedRole && (
             <div className="px-4 max-h-96 overflow-auto">
               <div className="space-y-2">
-                {selectedRole.permissions.map((perm, index) => (
+                {selectedRole.menus.map((menu, index) => (
                   <div key={index} className="border rounded-sm">
-                    <h3 className="font-semibold capitalize text-sm p-2 shadow-md bg-primary text-white">{perm.menuId}</h3>
+                    <h3 className="font-semibold capitalize text-sm p-2 shadow-md bg-primary text-white">{menu.name}</h3>
                     <div className="grid grid-cols-1 gap-3 my-3 ml-2 font-semibold">
                       <div className="text-xs">
-                        <span className={`px-2 py-1 rounded-sm text-xs ${perm.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        <span className={`px-2 py-1 rounded-sm text-xs ${menu.permissions.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                           <span className="font-medium">View:</span>{" "}
-                          <span className={`px-2 py-1 rounded-full text-xs ${perm.view ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                            {perm.view ? "Yes" : "No"}
+                          <span className={`px-2 py-1 rounded-full text-xs ${menu.permissions.view ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                            {menu.permissions.view ? "Yes" : "No"}
                           </span>
                         </span>
                       </div>
                       <div className="text-xs">
-                        <span className={`px-2 py-1 rounded-sm text-xs ${perm.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        <span className={`px-2 py-1 rounded-sm text-xs ${menu.permissions.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                           <span className="font-medium">Create:</span>{" "}
-                          <span className={`px-2 py-1 rounded-full text-xs ${perm.create ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                            {perm.create ? "Yes" : "No"}
+                          <span className={`px-2 py-1 rounded-full text-xs ${menu.permissions.create ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                            {menu.permissions.create ? "Yes" : "No"}
                           </span>
                         </span>
                       </div>
                       <div className="text-xs">
-                        <span className={`px-2 py-1 rounded-sm text-xs ${perm.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                        <span className={`px-2 py-1 rounded-sm text-xs ${menu.permissions.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
                           <span className="font-medium">Update:</span>{" "}
-                          <span className={`px-2 py-1 rounded-full text-xs ${perm.update ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                            {perm.update ? "Yes" : "No"}
+                          <span className={`px-2 py-1 rounded-full text-xs ${menu.permissions.update ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                            {menu.permissions.update ? "Yes" : "No"}
                           </span>
                         </span>
                       </div>
                       <div className="text-xs">
-                        <span className={`px-2 py-1 rounded-sm text-xs ${perm.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                          <span className="font-medium">Delete:</span> <span>{perm.delete ? "Yes" : "No"}</span>
+                        <span className={`px-2 py-1 rounded-sm text-xs ${menu.permissions.delete ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          <span className="font-medium">Delete:</span> <span>{menu.permissions.delete ? "Yes" : "No"}</span>
                         </span>
                       </div>
                     </div>
 
-                    {perm.specificsPermissions.length > 0 && (
+                    {menu.specificPermissions.length > 0 && (
                       <div className="mt-4">
                         <ul className="list-none list-inside ml-2 mt-2">
-                          {perm.specificsPermissions.map((action, idx) => (
+                          {menu.specificPermissions.map((action, idx) => (
                             <li key={idx} className="text-xs text-gray-800 mb-3">
                               <span className="px-2 py-1 rounded-sm bg-purple-100 text-purple-800 lowercase font-semibold">{action.name}</span> : {action.description}
                             </li>

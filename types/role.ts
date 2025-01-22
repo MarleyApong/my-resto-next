@@ -1,10 +1,10 @@
-import { PermissionType } from "./permission"
+import { MenuType } from "./permission"
 
 export type RoleType = {
   id: string
   name: string
   description?: string
-  permissions: PermissionType[]
+  menus: MenuType[]
   organization?: {
     id: string
     name: string

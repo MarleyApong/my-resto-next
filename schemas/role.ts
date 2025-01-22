@@ -16,7 +16,7 @@ export const roleSchema = z.object({
     .optional(),
   organizationId: z
     .string()
-    .max(25, "Organization must not exceed 25 characters")
+    .max(36, "Organization must not exceed 36 characters")
     .trim()
     .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
       message: "Special characters are not allowed"

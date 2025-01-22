@@ -1,8 +1,20 @@
 export type PermissionType = {
-  menuId: string
-  view: boolean
   create: boolean
+  view: boolean
   update: boolean
   delete: boolean
-  specificsPermissions: any[] // Array of specific permission actions
+}
+
+export type SpecificPermission = {
+  name: string
+  granted: boolean
+  description?: string
+}
+
+export type MenuType = {
+  id: string
+  name: string
+  description: string
+  permissions: PermissionType
+  specificPermissions: SpecificPermission[]
 }
