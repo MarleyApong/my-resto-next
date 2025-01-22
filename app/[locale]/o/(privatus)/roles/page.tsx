@@ -75,6 +75,8 @@ const Role = () => {
     setIsLoading(true)
     try {
       const res = await roleService.getAll(filterState)
+      console.log(res);
+      
       setRoles({
         data: res.data.data,
         recordsFiltered: res.data.recordsFiltered,

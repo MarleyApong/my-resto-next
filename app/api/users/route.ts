@@ -150,12 +150,14 @@ export const POST = withLogging(
         }
 
         // Check if the organization exists
-        const organization = await prisma.organization.findUnique({
-          where: { id: body.organizationId }
-        })
+        if (body.organizationId) {
+          const organization = await prisma.organization.findUnique({
+            where: { id: body.organizationId }
+          })
 
-        if (!organization) {
-          throw createError(errors.BadRequestError, t("api.errors.invalidOrganization"))
+          if (!organization) {
+            throw createError(errors.BadRequestError, t("api.errors.invalidOrganization"))
+          }
         }
 
         // Check if the restaurant exists (if restaurantId is provided)
@@ -204,11 +206,11 @@ export const POST = withLogging(
               statusId: status.id,
               roleId: body.roleId || undefined,
               password: hashedPassword,
-              organizations: {
+              organizations: body.organizationId ? {
                 create: {
                   organizationId: body.organizationId
                 }
-              },
+              }: undefined,
               restaurants: body.restaurantId
                 ? {
                     create: {

@@ -8,13 +8,14 @@ const PHONE_REGEX = /^\+?[1-9]\d{1,14}$/ // E.164 format
 export const userSchema = z.object({
   organizationId: z
     .string()
-    .min(1, "Organization is required")
-    .max(25, "Organization must not exceed 25 characters")
-    .regex(SANITIZE_REGEX, "Special characters are not allowed")
-    .trim(),
+    .max(36, "Organization must not exceed 36 characters")
+    .trim().refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
   restaurantId: z
     .string()
-    .max(25, "Restaurant must not exceed 25 characters")
+    .max(36, "Restaurant must not exceed 36 characters")
     .trim()
     .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
       message: "Special characters are not allowed"
@@ -22,7 +23,7 @@ export const userSchema = z.object({
     .optional(),
   roleId: z
     .string()
-    .max(25, "Role must not exceed 25 characters")
+    .max(36, "Role must not exceed 36 characters")
     .trim()
     .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
       message: "Special characters are not allowed"
@@ -74,7 +75,7 @@ export const userUpdateSchema = z.object({
   description: z.string().min(70, "Description must be at least 70 characters").max(170, "Description must not exceed 170 characters"),
   phone: z.string().min(1, "Field is required").regex(/^\d+$/, "Phone must contain only numbers"),
   email: z.string().email("Invalid email format").min(1, "Email is required"),
-  roleId: z.string().min(1, "Role is required").max(25, "Role must not exceed 25 characters").trim()
+  roleId: z.string().min(1, "Role is required").max(36, "Role must not exceed 36 characters").trim()
 })
 
 export const userUpdatePictureSchema = z.object({

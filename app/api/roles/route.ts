@@ -94,11 +94,13 @@ export const GET = withLogging(
         const newStructure = roles.map((role) => ({
           id: role.id,
           name: role.name,
+          description: role.description,
+          createdAt: role.createdAt,
           organization: role.organization,
           menus: role.roleMenus.map((roleMenu) => ({
-            id: roleMenu.baseMenu?.id ?? "",
-            name: roleMenu.baseMenu?.name ?? "",
-            description: roleMenu.baseMenu?.description ?? "",
+            id: roleMenu.baseMenu?.id,
+            name: roleMenu.baseMenu?.name,
+            description: roleMenu.baseMenu?.description,
             permissions: {
               create: roleMenu.create,
               view: roleMenu.view,
