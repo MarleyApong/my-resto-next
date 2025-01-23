@@ -1,5 +1,5 @@
 import { MenuItem } from "@/types/sidebar"
-import { Home, Utensils, ClipboardList, Box, Layout, Users, User, LayoutDashboard, Wallet, UserRoundCog, Milestone, Package, HandPlatter, ChartColumnBig, Network, HardHat, Store, AppWindow } from "lucide-react"
+import { Home, Utensils, ClipboardList, Box, Layout, Users, User, LayoutDashboard, Wallet, UserRoundCog, Milestone, Package, HandPlatter, ChartColumnBig, Network, HardHat, Store, AppWindow, Keyboard } from "lucide-react"
 
 export const menuItems: MenuItem[] = [
   {
@@ -150,6 +150,13 @@ export const menuItems: MenuItem[] = [
         title: "Modules & permi.",
         url: "/o/modules-permissions",
         icon: Package,
+        subItems: []
+      },
+      {
+        id: "back-office-manage",
+        title: "Back office",
+        url: "/o/back-office-manage",
+        icon: Keyboard,
         subItems: []
       }
     ]

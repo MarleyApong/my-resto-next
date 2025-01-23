@@ -35,7 +35,7 @@ export const PUT = withLogging(
             data: {
               name: body.name,
               description: body.description,
-              restaurantId: body.restaurantId
+              organizationId: body.organizationId
             }
           })
 

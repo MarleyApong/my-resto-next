@@ -45,9 +45,9 @@ export const PUT = withLogging(
 
           // Create new menu associations
           await tx.organizationMenu.createMany({
-            data: menuIds.map((menuId: string) => ({
+            data: menuIds.map((baseMenuId: string) => ({
               organizationId,
-              menuId
+              baseMenuId
             }))
           })
 

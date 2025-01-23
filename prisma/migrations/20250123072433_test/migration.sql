@@ -13,6 +13,7 @@ CREATE TABLE "BaseMenu" (
 CREATE TABLE "BaseSpecificPermission" (
     "id" VARCHAR(36) NOT NULL,
     "name" TEXT NOT NULL,
+    "description" VARCHAR(180),
     "baseMenuId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -52,8 +53,10 @@ CREATE TABLE "Role" (
     "id" VARCHAR(36) NOT NULL,
     "name" VARCHAR(25) NOT NULL,
     "organizationId" TEXT,
+    "description" VARCHAR(180),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "deletedAt" TIMESTAMP(3),
 
     CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
 );

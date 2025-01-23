@@ -28,6 +28,14 @@ export const roleSchema = z.object({
 export const roleUpdateSchema = z.object({
   name: z.string().min(1, "Field is required"),
   description: z.string().max(180, "Description must not exceed 180 characters").optional(),
+  organizationId: z
+  .string()
+  .max(36, "Organization must not exceed 36 characters")
+  .trim()
+  .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+    message: "Special characters are not allowed"
+  })
+  .optional(),
 })
 
 export const assignMenusSchema = z.object({

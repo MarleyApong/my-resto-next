@@ -171,7 +171,7 @@ export const POST = withLogging(
             data: {
               name: body.name,
               description: body.description,
-              organizationId: body.organizationId
+              organizationId: body.organizationId || null
               // restaurantId: body.restaurantId
             }
           })

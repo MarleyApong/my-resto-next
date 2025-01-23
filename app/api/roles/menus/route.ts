@@ -20,11 +20,23 @@ export const GET = withLogging(
           select: {
             id: true,
             name: true,
-            rolesOrganizationsMenus: {
+            roleMenus: {
               select: {
-                organizationMenu: {
+                baseMenu: {
                   select: {
-                    menuId: true // Fetch the menuId from OrganizationMenu
+                    id: true,
+                    name: true,
+                    description: true
+                  }
+                },
+                specificPermissions: {
+                  select: {
+                    granted: true,
+                    baseSpecificPerm: {
+                      select: {
+                        name: true
+                      }
+                    }
                   }
                 }
               }
@@ -38,15 +50,7 @@ export const GET = withLogging(
           }
         })
 
-        // Transform the data to include menus in an array
-        const transformedMenusInArray = roles.map((role) => ({
-          id: role.id,
-          name: role.name,
-          organization: role.organization, // Include organization details
-          menus: role.rolesOrganizationsMenus.map((rom) => rom.organizationMenu.menuId) // Extract menuIds
-        }))
-
-        return NextResponse.json(transformedMenusInArray)
+        return NextResponse.json(roles)
       })
     )
   )

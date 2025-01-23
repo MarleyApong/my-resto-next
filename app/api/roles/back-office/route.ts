@@ -8,18 +8,19 @@ import { prisma } from "@/lib/db"
 export const GET = withLogging(
   withAuth(
     withPermission(
-      "modules-permissions",
-      "view"
+      "back-office-manage",
+      "create"
     )(
       withErrorHandler(async (request: Request & { user?: any }) => {
-        const organizations = await prisma.organization.findMany({
+        const roles = await prisma.role.findMany({
           where: {
-            deletedAt: null
+            deletedAt: null,
+            organizationId: null
           },
           select: {
             id: true,
             name: true,
-            organizationsMenus: {
+            roleMenus: {
               select: {
                 baseMenuId: true
               }
@@ -27,13 +28,13 @@ export const GET = withLogging(
           }
         })
 
-        const transformedMenusInArray = organizations.map(org => ({
-          id: org.id,
-          name: org.name,
-          menus: org.organizationsMenus.map(menu => menu.baseMenuId)
+        const transformedRoleAndMenusInArray = roles.map(role => ({
+          id: role.id,
+          name: role.name,
+          menus: role.roleMenus.map(menu => menu.baseMenuId)
         }))
 
-        return NextResponse.json(transformedMenusInArray)
+        return NextResponse.json(transformedRoleAndMenusInArray)
       })
     )
   )

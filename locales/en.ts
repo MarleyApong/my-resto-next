@@ -30,7 +30,8 @@ export default {
       "invalidRestaurant": "",
       "invalidRole": "",
       "forbiddenRoleName": "",
-      "roleNotFound": ""
+      "roleNotFound": "",
+      "invalidMenuIds": ""
     },
     "success": {
       "loggedOut": "You have been logged out successfully. See you next time!",

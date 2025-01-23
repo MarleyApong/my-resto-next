@@ -38,71 +38,43 @@ export const GET = withLogging(
           select: {
             id: true,
             name: true,
-            rolesOrganizationsMenus: {
+            roleMenus: {
               select: {
-                organizationMenu: {
+                baseMenu: {
                   select: {
                     id: true,
-                    menu: {
+                    name: true,
+                    description: true
+                  }
+                },
+                specificPermissions: {
+                  select: {
+                    granted: true,
+                    baseSpecificPerm: {
                       select: {
-                        id: true,
                         name: true
-                      }
-                    },
-                    specificsPermissions: {
-                      select: {
-                        specificPermission: {
-                          select: {
-                            id: true,
-                            name: true,
-                            description: true
-                          }
-                        }
                       }
                     }
                   }
                 }
               }
             },
-            permissions: {
+            organization: {
               select: {
-                menuId: true,
-                view: true,
-                create: true,
-                update: true,
-                delete: true
+                id: true,
+                name: true
               }
             }
           }
         })
 
-        // Transformer les données pour inclure les permissions et permissions spécifiques
-        const transformedRoles = roles.map((role) => ({
+        const transformedMenusInArray = roles.map(role => ({
           id: role.id,
           name: role.name,
-          menus: role.rolesOrganizationsMenus.map((roleOrganizationMenu) => {
-            const menuId = roleOrganizationMenu.organizationMenu.menu.id
-            const permissions = role.permissions.find((p) => p.menuId === menuId)
-
-            return {
-              id: menuId,
-              name: roleOrganizationMenu.organizationMenu.menu.name,
-              permissions: {
-                view: permissions?.view || false,
-                create: permissions?.create || false,
-                update: permissions?.update || false,
-                delete: permissions?.delete || false
-              },
-              specificsPermissions: roleOrganizationMenu.organizationMenu.specificsPermissions.map((osp) => ({
-                id: osp.specificPermission.id,
-                name: osp.specificPermission.name,
-                description: osp.specificPermission.description
-              }))
-            }
-          })
+          menus: role.roleMenus.map(menu => menu.baseMenu?.id)
         }))
 
-        return NextResponse.json(transformedRoles)
+        return NextResponse.json(transformedMenusInArray)
       })
     )
   )

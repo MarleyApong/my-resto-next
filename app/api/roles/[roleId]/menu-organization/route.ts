@@ -27,39 +27,30 @@ export const GET = withLogging(
         }
 
         // Fetch the role with its menus, permissions, and specific permissions
-        const roleWithPermissions = await prisma.role.findUnique({
+        const roles = await prisma.role.findUnique({
           where: { id: roleId },
           select: {
             id: true,
             name: true,
-            rolesOrganizationsMenus: {
+            roleMenus: {
               select: {
-                organizationMenu: {
+                baseMenu: {
                   select: {
                     id: true,
-                    menu: {
+                    name: true,
+                    description: true,
+                  }
+                },
+                specificPermissions: {
+                  select: {
+                    granted: true,
+                    baseSpecificPerm: {
                       select: {
-                        id: true,
-                        name: true,
-                        specificsPermissions: {
-                          select: {
-                            id: true,
-                            name: true
-                          }
-                        }
+                        name: true
                       }
                     }
                   }
                 }
-              }
-            },
-            permissions: {
-              select: {
-                menuId: true,
-                view: true,
-                create: true,
-                update: true,
-                delete: true
               }
             },
             organization: {
@@ -71,36 +62,24 @@ export const GET = withLogging(
           }
         })
 
-        if (!roleWithPermissions) {
+        if (!roles) {
           throw createError(errors.NotFoundError, t("api.errors.roleNotFound"))
         }
 
-        // Transform the data to include menus with their permissions and specific actions
-        const roleMenuWithPermissions = roleWithPermissions.rolesOrganizationsMenus.map((roleOrganizationMenu) => {
-          const menuId = roleOrganizationMenu.organizationMenu.menu.id
-          const menuPermissions = roleWithPermissions.permissions.find((permission) => permission.menuId === menuId)
+        const roleWithPermissions = {
+          menus: roles.roleMenus.map((menu) => ({
+            id: menu.baseMenu?.id,
+            name: menu.baseMenu?.name
+          })),
+          permissions: roles.roleMenus.map(menu => {
+            menu.specificPermissions.map(perm => ({
+              name: perm.baseSpecificPerm,
+              granted: perm.granted
+            }))
+          })
+        }
 
-          return {
-            id: roleOrganizationMenu.organizationMenu.menu.id,
-            name: roleOrganizationMenu.organizationMenu.menu.name,
-            permissions: {
-              view: menuPermissions?.view || false,
-              create: menuPermissions?.create || false,
-              update: menuPermissions?.update || false,
-              delete: menuPermissions?.delete || false
-            },
-            specificsPermissions: roleOrganizationMenu.organizationMenu.menu.specificsPermissions || []
-          }
-        })
-
-        return NextResponse.json({
-          role: {
-            id: roleWithPermissions.id,
-            name: roleWithPermissions.name,
-            organization: roleWithPermissions.organization
-          },
-          menus: roleMenuWithPermissions
-        })
+        return NextResponse.json(roleWithPermissions)
       })
     )
   )
@@ -134,18 +113,35 @@ export const PUT = withLogging(
           throw createError(errors.NotFoundError, t("api.errors.roleNotFound"))
         }
 
+        // Check if the menuIds exist in the OrganizationMenu table
+        const existingMenus = await prisma.organizationMenu.findMany({
+          where: {
+            baseMenuId: {
+              in: menuIds
+            }
+          },
+          select: {
+            id: true
+          }
+        })
+
+        // If not all menuIds exist, throw an error
+        if (existingMenus.length !== menuIds.length) {
+          throw createError(errors.BadRequestError, t("api.errors.invalidMenuIds"))
+        }
+
         // Update the role's menus in a transaction
         const updatedRole = await prisma.$transaction(async (tx) => {
           // Delete existing menu associations for the role
-          await tx.roleOrganizationMenu.deleteMany({
+          await tx.roleMenu.deleteMany({
             where: { roleId }
           })
 
           // Create new menu associations
-          await tx.roleOrganizationMenu.createMany({
-            data: menuIds.map((menuId: string) => ({
+          await tx.roleMenu.createMany({
+            data: menuIds.map((baseMenuId: string) => ({
               roleId,
-              organizationMenuId: menuId // Use organizationMenuId instead of menuId
+              baseMenuId
             }))
           })
 

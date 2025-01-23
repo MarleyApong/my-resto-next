@@ -116,7 +116,7 @@ const ModuleAndPermission = () => {
         setIsLoading(false)
       }
     },
-    [setIsLoading, showError]
+    [showError]
   )
 
   // Handle organization change in Tab 2
@@ -162,7 +162,7 @@ const ModuleAndPermission = () => {
         setIsLoading(false)
       }
     },
-    [setIsLoading, showError]
+    [showError]
   )
 
   // Fetch menus for the selected role in Tab 3
@@ -171,6 +171,8 @@ const ModuleAndPermission = () => {
       setIsLoading(true)
       try {
         const res = await roleService.getMenusByRole(roleId)
+        console.log("res", res);
+        
         // Extract the menus from the API response
         setMenusTab3(res.data.menus.map((menu: any) => ({ id: menu.id, name: menu.name })))
       } catch (e) {
@@ -179,7 +181,7 @@ const ModuleAndPermission = () => {
         setIsLoading(false)
       }
     },
-    [setIsLoading, showError]
+    [showError]
   )
 
   // Handle organization change in Tab 3
@@ -200,7 +202,7 @@ const ModuleAndPermission = () => {
     } else {
       setMenusTab3([])
     }
-  }, [selectedRoleTab3, fetchMenusByRole])
+  }, [selectedRoleTab3])
 
   // Handle menu selection in Tab 1
   const handleMenuSelectionTab1 = useCallback((selectedIds: string[]) => {
@@ -255,7 +257,7 @@ const ModuleAndPermission = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [orgTab1, selectedMenuIdsTab1, backendMenuIdsTab1, setIsLoading, fetchOrganizationsAndMenus, showError])
+  }, [orgTab1, selectedMenuIdsTab1, backendMenuIdsTab1, fetchOrganizationsAndMenus, showError])
 
   // Handle assigning menus to role in Tab 2
   const handleAssignMenusToRoleTab2 = useCallback(async () => {
@@ -266,7 +268,7 @@ const ModuleAndPermission = () => {
 
     setIsLoading(true)
     try {
-      await roleService.assignMenusToRole(selectedRoleTab2, selectedMenuIdsTab2)
+      await roleService.assignMenusToRoleOrganization(selectedRoleTab2, selectedMenuIdsTab2)
       toast.success(selectedMenuIdsTab2.length === 0 ? "Menus assigned successfully!" : "Menus updated successfully!")
       fetchRolesByOrg(orgTab2)
     } catch (e) {
@@ -275,7 +277,7 @@ const ModuleAndPermission = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [orgTab2, selectedRoleTab2, selectedMenuIdsTab2, setIsLoading, fetchRolesByOrg, showError])
+  }, [orgTab2, selectedRoleTab2, selectedMenuIdsTab2, fetchRolesByOrg, showError])
 
   // Transform organizations into Combobox options
   const organizationOptions = useMemo(() => {
