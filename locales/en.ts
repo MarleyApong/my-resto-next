@@ -31,7 +31,8 @@ export default {
       "invalidRole": "",
       "forbiddenRoleName": "",
       "roleNotFound": "",
-      "invalidMenuIds": ""
+      "invalidMenuIds": "",
+      "attributionNotFound": ""
     },
     "success": {
       "loggedOut": "You have been logged out successfully. See you next time!",

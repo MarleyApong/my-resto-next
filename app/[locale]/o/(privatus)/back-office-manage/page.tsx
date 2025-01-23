@@ -80,7 +80,7 @@ const BackOfficeManage = () => {
     async (menuId: string) => {
       setIsLoading(true)
       try {
-        const res = await roleService.getRolesBackOffice()
+        const res = await roleService.getPermissionByMenu(menuId)
         setSpecificPermissionsTab2(res.data)
       } catch (e) {
         console.error("Failed to fetch specific permissions:", e)
