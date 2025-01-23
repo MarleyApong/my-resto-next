@@ -22,6 +22,7 @@ interface Permission {
 }
 
 interface SpecificPermission {
+  id: string
   name: string
   granted: boolean
 }
@@ -74,6 +75,23 @@ const BackOfficeManage = () => {
     }
   }, [showError])
 
+  // Fetch specific permissions for a menu
+  const fetchSpecificPermissions = useCallback(
+    async (menuId: string) => {
+      setIsLoading(true)
+      try {
+        const res = await roleService.getRolesBackOffice()
+        setSpecificPermissionsTab2(res.data)
+      } catch (e) {
+        console.error("Failed to fetch specific permissions:", e)
+        showError(e)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [showError]
+  )
+
   // Fetch data on component mount
   useEffect(() => {
     fetchRoles()
@@ -109,17 +127,12 @@ const BackOfficeManage = () => {
 
   // Handle menu change in Tab 2
   useEffect(() => {
-    if (selectedRoleTab2 && selectedMenuTab2) {
-      const role = rolesTab2.find((role) => role.id === selectedRoleTab2)
-      if (role && role.permissions && role.permissions[selectedMenuTab2]) {
-        setPermissionsTab2(role.permissions[selectedMenuTab2].permissions)
-        setSpecificPermissionsTab2(role.permissions[selectedMenuTab2].specificPermissions)
-      } else {
-        setPermissionsTab2({ create: false, view: false, update: false, delete: false })
-        setSpecificPermissionsTab2([])
-      }
+    if (selectedMenuTab2) {
+      fetchSpecificPermissions(selectedMenuTab2)
+    } else {
+      setSpecificPermissionsTab2([])
     }
-  }, [selectedRoleTab2, selectedMenuTab2, rolesTab2])
+  }, [selectedMenuTab2, fetchSpecificPermissions])
 
   // Handle menu selection in Tab 1
   const handleMenuSelectionTab1 = useCallback((selectedIds: string[]) => {
@@ -169,30 +182,26 @@ const BackOfficeManage = () => {
 
     setIsLoading(true)
     try {
-      // await roleService.assignPermissionsToRole(selectedRoleTab2, selectedMenuTab2, {
-      //   permissions: permissionsTab2,
-      //   specificPermissions: specificPermissionsTab2
-      // })
-      // toast.success("Permissions assigned successfully!")
-      // fetchRoles()
+      const response = await fetch(`/api/roles/${selectedRoleTab2}/permissions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          menuId: selectedMenuTab2,
+          specificPermissions: specificPermissionsTab2
+        })
+      })
+      if (!response.ok) throw new Error("Failed to assign permissions")
+      toast.success("Permissions assigned successfully!")
+      fetchRoles()
     } catch (e) {
-      console.error("Failed to assign permissions to role:", e)
+      console.error("Failed to assign permissions:", e)
       showError(e)
     } finally {
       setIsLoading(false)
     }
-  }, [selectedRoleTab2, selectedMenuTab2, permissionsTab2, specificPermissionsTab2, fetchRoles, showError])
-
-  // Check if there are changes in Tab 1
-  const hasChangesTab1 = useCallback(() => {
-    const role = rolesTab1.find((role) => role.id === selectedRoleTab1)
-    if (!role) return false
-    return (
-      selectedMenuIdsTab1.length !== (role.menus?.length || 0) ||
-      selectedMenuIdsTab1.some((id) => !role.menus?.includes(id)) ||
-      role.menus?.some((id) => !selectedMenuIdsTab1.includes(id))
-    )
-  }, [selectedRoleTab1, rolesTab1, selectedMenuIdsTab1])
+  }, [selectedRoleTab2, selectedMenuTab2, specificPermissionsTab2, fetchRoles, showError])
 
   // Tabs configuration
   const tabs: TabsData[] = useMemo(
@@ -219,21 +228,15 @@ const BackOfficeManage = () => {
               <Button
                 onClick={handleAssignMenusToRoleTab1}
                 disabled={
-                  !selectedRoleTab1 || // Désactivé si aucun rôle n'est sélectionné
-                  isLoading || // Désactivé pendant le chargement
-                  selectedMenuIdsTab1.length === 0 || // Désactivé si aucun menu n'est sélectionné
-                  !hasChangesTab1() // Désactivé si aucun changement
+                  !selectedRoleTab1 ||
+                  isLoading ||
+                  selectedMenuIdsTab1.length === 0 ||
+                  JSON.stringify(selectedMenuIdsTab1) === JSON.stringify(rolesTab1.find((role) => role.id === selectedRoleTab1)?.menus || [])
                 }
                 variant={rolesTab1.find((role) => role.id === selectedRoleTab1)?.menus?.length === 0 ? "default" : "sun"}
               >
-                {isLoading ? (
-                  <Loader />
-                ) : (
-                  <>
-                    <PlugZap />
-                    {rolesTab1.find((role) => role.id === selectedRoleTab1)?.menus?.length === 0 ? "Assign" : "Update"}
-                  </>
-                )}
+                {isLoading ? <Loader /> : <PlugZap />}
+                {rolesTab1.find((role) => role.id === selectedRoleTab1)?.menus?.length === 0 ? "Assign" : "Update"}
               </Button>
             </div>
           </div>
@@ -279,7 +282,7 @@ const BackOfficeManage = () => {
               <Label>Specific Permissions</Label>
               <div className="flex flex-col gap-4 mt-2 ml-2">
                 {specificPermissionsTab2.map((permission, index) => (
-                  <div key={permission.name} className="flex items-center gap-2">
+                  <div key={permission.id} className="flex items-center gap-2">
                     <input type="checkbox" checked={permission.granted} onChange={(e) => handleSpecificPermissionChangeTab2(index, e.target.checked)} />
                     <Label>{permission.name}</Label>
                   </div>
@@ -310,8 +313,7 @@ const BackOfficeManage = () => {
       handlePermissionChangeTab2,
       handleSpecificPermissionChangeTab2,
       handleAssignPermissionsToRoleTab2,
-      isLoading,
-      hasChangesTab1
+      isLoading
     ]
   )
 
