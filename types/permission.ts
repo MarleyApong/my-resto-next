@@ -6,6 +6,7 @@ export type PermissionType = {
 }
 
 export type SpecificPermission = {
+  id?: string
   name: string
   granted: boolean
   description?: string

@@ -1,3 +1,5 @@
+import { z } from "zod"
+import { NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { createError, errors } from "@/lib/errors"
 import { getI18n } from "@/locales/server"
@@ -6,7 +8,79 @@ import { withErrorHandler } from "@/middlewares/withErrorHandler"
 import { withLogging } from "@/middlewares/withLogging"
 import { withPermission } from "@/middlewares/withPermission"
 import { assignPermissionToMenuSchema } from "@/schemas/permission"
-import { NextResponse } from "next/server"
+
+export const GET = withLogging(
+  withAuth(
+    withPermission(
+      "modules-permissions",
+      "view"
+    )(
+      withErrorHandler(async (request: Request, { params }: { params: { roleId: string; menuId: string } }) => {
+        const t = await getI18n()
+        const { roleId, menuId } = params
+
+        // Récupérer les permissions générales
+        const roleMenu = await prisma.roleMenu.findUnique({
+          where: {
+            roleId_baseMenuId: {
+              roleId,
+              baseMenuId: menuId
+            }
+          },
+          select: {
+            create: true,
+            view: true,
+            update: true,
+            delete: true
+          }
+        })
+
+        if (!roleMenu) {
+          throw createError(errors.NotFoundError, t("api.errors.attributionNotFound"))
+        }
+
+        // Récupérer les permissions spécifiques
+        const roleSpecificPermissions = await prisma.roleSpecificPermission.findMany({
+          where: {
+            roleMenu: {
+              roleId,
+              baseMenuId: menuId
+            }
+          },
+          select: {
+            baseSpecificPerm: {
+              select: {
+                id: true,
+                name: true,
+                description: true
+              }
+            },
+            granted: true
+          }
+        })
+
+        // Formater les permissions spécifiques
+        const specificPermissions = roleSpecificPermissions.map((perm) => ({
+          id: perm?.baseSpecificPerm?.id,
+          name: perm?.baseSpecificPerm?.name,
+          description: perm?.baseSpecificPerm?.description,
+          granted: perm.granted
+        }))
+
+        // Renvoyer la réponse
+        return NextResponse.json({
+          permissions: {
+            create: roleMenu.create,
+            view: roleMenu.view,
+            update: roleMenu.update,
+            delete: roleMenu.delete
+          },
+          specificPermissions
+        })
+      })
+    )
+  )
+)
 
 export const PUT = withLogging(
   withAuth(
@@ -20,17 +94,18 @@ export const PUT = withLogging(
 
         // Valider le corps de la requête
         try {
-          assignPermissionToMenuSchema.parse(body)
+          assignPermissionToMenuSchema.parse(body) // Valider les données avec Zod
         } catch (error) {
+          console.error("Validation error:", error) // Log l'erreur de validation
           throw createError(errors.BadRequestError, t("api.errors.invalidInput"))
         }
 
         const { roleId, menuId } = params
-        const { menuIds, permissions, specificPermissions } = body
+        const { permissions, specificPermissions } = body
 
         // Vérifier si le menuId existe
         const roleMenu = await prisma.roleMenu.findUnique({
-          where: { roleId_baseMenuId: { roleId: roleId, baseMenuId: menuId } }
+          where: { roleId_baseMenuId: { roleId, baseMenuId: menuId } }
         })
         if (!roleMenu) {
           throw createError(errors.NotFoundError, t("api.errors.attributionNotFound"))
@@ -38,29 +113,25 @@ export const PUT = withLogging(
 
         // Mettre à jour les permissions du rôle dans une transaction
         const updatedRole = await prisma.$transaction(async (tx) => {
-          // Supprimer les associations de menus existantes pour le rôle
-          await tx.roleMenu.deleteMany({
-            where: { roleId }
+          // Mettre à jour les permissions générales
+          await tx.roleMenu.update({
+            where: { id: roleMenu.id },
+            data: { ...permissions }
           })
 
-          // Créer de nouvelles associations de menus
-          await tx.roleMenu.createMany({
-            data: menuIds.map((baseMenuId: string) => ({
-              roleId,
-              baseMenuId,
-              ...permissions // Ajouter les permissions générales
-            }))
-          })
-
-          // Ajouter les permissions spécifiques si elles existent
+          // Ajouter ou mettre à jour les permissions spécifiques
           if (specificPermissions && specificPermissions.length > 0) {
-            await tx.roleSpecificPermission.createMany({
-              data: specificPermissions.map((perm: any) => ({
-                roleMenuId: roleMenu.id,
-                baseSpecificPermId: perm.id,
-                granted: true // Ou une autre logique selon vos besoins
-              }))
-            })
+            for (const perm of specificPermissions) {
+              await tx.roleSpecificPermission.upsert({
+                where: { roleMenuId_baseSpecificPermId: { roleMenuId: roleMenu.id, baseSpecificPermId: perm.id } },
+                update: { granted: perm.granted || false }, // Utiliser `false` comme valeur par défaut si `granted` est manquant
+                create: {
+                  roleMenuId: roleMenu.id,
+                  baseSpecificPermId: perm.id,
+                  granted: perm.granted || false // Utiliser `false` comme valeur par défaut si `granted` est manquant
+                }
+              })
+            }
           }
 
           // Journaliser l'action d'attribution des permissions

@@ -13,18 +13,14 @@ import { toast } from "sonner"
 import { Loader } from "@/components/features/SpecificalLoader"
 import { PlugZap } from "lucide-react"
 import { menuItems } from "@/data/mainMenu"
+import { SpecificPermission } from "@/types/permission"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Permission {
   create: boolean
   view: boolean
   update: boolean
   delete: boolean
-}
-
-interface SpecificPermission {
-  id: string
-  name: string
-  granted: boolean
 }
 
 interface Role {
@@ -80,8 +76,27 @@ const BackOfficeManage = () => {
     async (menuId: string) => {
       setIsLoading(true)
       try {
+        // Get specific permissions valaible for this menu
         const res = await roleService.getPermissionByMenu(menuId)
-        setSpecificPermissionsTab2(res.data)
+
+        // Get permissions attributed to role for this menu
+        if (selectedRoleTab2) {
+          const res2 = await roleService.getPermissionAttibutedByMenu(selectedRoleTab2, menuId)
+
+          // Mettre à jour les permissions spécifiques avec les valeurs attribuées
+          const updatedSpecificPermissions = res.data.map((perm: SpecificPermission) => {
+            const grantedPermission = res2.data.specificPermissions.find((grantedPerm: SpecificPermission) => grantedPerm.id === perm.id)
+            return {
+              ...perm,
+              granted: grantedPermission ? grantedPermission.granted : false // Default value
+            }
+          })
+
+          setSpecificPermissionsTab2(updatedSpecificPermissions)
+
+          //Update base permission
+          setPermissionsTab2(res2.data.permissions)
+        }
       } catch (e) {
         console.error("Failed to fetch specific permissions:", e)
         showError(e)
@@ -89,7 +104,7 @@ const BackOfficeManage = () => {
         setIsLoading(false)
       }
     },
-    [showError]
+    [selectedRoleTab2, showError]
   )
 
   // Fetch data on component mount
@@ -182,26 +197,29 @@ const BackOfficeManage = () => {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/roles/${selectedRoleTab2}/permissions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          menuId: selectedMenuTab2,
-          specificPermissions: specificPermissionsTab2
-        })
-      })
-      if (!response.ok) throw new Error("Failed to assign permissions")
-      toast.success("Permissions assigned successfully!")
-      fetchRoles()
+      const res = await roleService.assignPermissionToRoleMenu(
+        selectedRoleTab2, // roleId
+        selectedMenuTab2, // menuId
+        permissionsTab2, // permissions
+        specificPermissionsTab2 // specificPermissions
+      )
+      toast.success(res.data.message)
+
+      await fetchRoles()
+      await fetchSpecificPermissions(selectedMenuTab2)
     } catch (e) {
       console.error("Failed to assign permissions:", e)
       showError(e)
     } finally {
       setIsLoading(false)
     }
-  }, [selectedRoleTab2, selectedMenuTab2, specificPermissionsTab2, fetchRoles, showError])
+  }, [selectedRoleTab2, selectedMenuTab2, permissionsTab2, specificPermissionsTab2, fetchRoles, showError, fetchSpecificPermissions])
+
+  const isAnyPermissionGranted = useMemo(() => {
+    const basePermissionsGranted = Object.values(permissionsTab2).some((value) => value)
+    const specificPermissionsGranted = specificPermissionsTab2.some((perm) => perm.granted)
+    return basePermissionsGranted || specificPermissionsGranted
+  }, [permissionsTab2, specificPermissionsTab2])
 
   // Tabs configuration
   const tabs: TabsData[] = useMemo(
@@ -272,7 +290,7 @@ const BackOfficeManage = () => {
               <div className="flex flex-col gap-4 mt-2 ml-2">
                 {Object.entries(permissionsTab2).map(([key, value]) => (
                   <div key={key} className="flex items-center gap-2">
-                    <input type="checkbox" checked={value} onChange={(e) => handlePermissionChangeTab2(key as keyof Permission, e.target.checked)} />
+                    <Checkbox checked={value} onCheckedChange={(checked) => handlePermissionChangeTab2(key as keyof Permission, checked as boolean)} />
                     <Label>{key}</Label>
                   </div>
                 ))}
@@ -283,16 +301,20 @@ const BackOfficeManage = () => {
               <div className="flex flex-col gap-4 mt-2 ml-2">
                 {specificPermissionsTab2.map((permission, index) => (
                   <div key={permission.id} className="flex items-center gap-2">
-                    <input type="checkbox" checked={permission.granted} onChange={(e) => handleSpecificPermissionChangeTab2(index, e.target.checked)} />
+                    <Checkbox checked={permission.granted} onCheckedChange={(checked) => handleSpecificPermissionChangeTab2(index, checked as boolean)} />
                     <Label>{permission.name}</Label>
                   </div>
                 ))}
               </div>
             </div>
             <div className="flex gap-2 items-center mt-2">
-              <Button onClick={handleAssignPermissionsToRoleTab2} disabled={!selectedRoleTab2 || !selectedMenuTab2 || isLoading}>
+              <Button
+                onClick={handleAssignPermissionsToRoleTab2}
+                disabled={!selectedRoleTab2 || !selectedMenuTab2 || isLoading}
+                variant={isAnyPermissionGranted ? "sun" : "default"}
+              >
                 {isLoading ? <Loader /> : <PlugZap />}
-                Assign
+                {isAnyPermissionGranted ? "Update" : "Assign"}
               </Button>
             </div>
           </div>

@@ -39,6 +39,13 @@ export const roleService = {
     return await api.get(`${route}/menus/${menuId}/permissions`)
   },
 
+  getPermissionAttibutedByMenu: async (roleId: string, menuId: string) => {
+    console.log("roleId", roleId);
+    console.log("menuId", menuId);
+    
+    return await api.get(`${route}/${roleId}/menus/${menuId}`)
+  },
+
   create: async (data: CreateRoleType) => {
     return await api.post(`${route}`, data)
   },
@@ -55,8 +62,8 @@ export const roleService = {
     return await api.put(`${route}/${roleId}/menu-role`, { menuIds })
   },
 
-  assignPermissionToRoleMenu: async (roleId: string, menuId: string, menuIds: string[]) => {
-    return await api.put(`${route}/${roleId}/menus/${menuId}`, { menuIds })
+  assignPermissionToRoleMenu: async (roleId: string, menuId: string, permissions: any, specificPermissions: any[]) => {
+    return await api.put(`${route}/${roleId}/menus/${menuId}`, { permissions, specificPermissions })
   },
 
   delete: async (roleId: string) => {
