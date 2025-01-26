@@ -16,6 +16,8 @@ import { toast } from "sonner"
 import { PlugZap } from "lucide-react"
 import { Loader } from "@/components/features/SpecificalLoader"
 import { Combobox } from "@/components/features/Combobox"
+import { PermissionType, SpecificPermission } from "@/types/permission"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface TabsData {
   value: string
@@ -68,7 +70,11 @@ const ModuleAndPermission = () => {
   const [selectedMenuIdsTab3, setSelectedMenuIdsTab3] = useState<string[]>([])
   const [rolesTab3, setRolesTab3] = useState<{ id: string; name: string; menus: string[] }[]>([])
   const [selectedRoleTab3, setSelectedRoleTab3] = useState<string>("")
-  const [menusTab3, setMenusTab3] = useState<{ id: string; name: string }[]>([]);
+  const [menusTab3, setMenusTab3] = useState<{ id: string; name: string }[]>([])
+  const [permissionsTab3, setPermissionsTab3] = useState<PermissionType>({ create: false, view: false, update: false, delete: false })
+  const [specificPermissionsTab3, setSpecificPermissionsTab3] = useState<SpecificPermission[]>([])
+  const [initialPermissionsTab3, setInitialPermissionsTab3] = useState<PermissionType>({ create: false, view: false, update: false, delete: false })
+  const [initialSpecificPermissionsTab3, setInitialSpecificPermissionsTab3] = useState<SpecificPermission[]>([])
 
   // Fetch organizations and their assigned menus
   const fetchOrganizationsAndMenus = useCallback(async () => {
@@ -171,9 +177,6 @@ const ModuleAndPermission = () => {
       setIsLoading(true)
       try {
         const res = await roleService.getMenusByRole(roleId)
-        console.log("res", res);
-        
-        // Extract the menus from the API response
         setMenusTab3(res.data.menus.map((menu: any) => ({ id: menu.id, name: menu.name })))
       } catch (e) {
         showError(e)
@@ -183,6 +186,76 @@ const ModuleAndPermission = () => {
     },
     [showError]
   )
+
+  // Fetch permissions for the selected menu in Tab 3
+  const fetchPermissionsByMenu = useCallback(
+    async (menuId: string) => {
+      setIsLoading(true)
+      try {
+        // Fetch available permissions for the menu
+        const res = await roleService.getPermissionByMenu(menuId)
+
+        // Fetch permissions attributed to the role for this menu
+        if (selectedRoleTab3) {
+          const res2 = await roleService.getPermissionAttibutedByMenu(selectedRoleTab3, menuId)
+
+          // Update specific permissions with granted values
+          const updatedSpecificPermissions = res.data.map((perm: SpecificPermission) => {
+            const grantedPermission = res2.data.specificPermissions.find((grantedPerm: SpecificPermission) => grantedPerm.id === perm.id)
+            return {
+              ...perm,
+              granted: grantedPermission ? grantedPermission.granted : false // Default value
+            }
+          })
+
+          setSpecificPermissionsTab3(updatedSpecificPermissions)
+          setInitialSpecificPermissionsTab3(updatedSpecificPermissions) // Update initial specific permissions
+
+          // Update base permissions
+          setPermissionsTab3(res2.data.permissions)
+          setInitialPermissionsTab3(res2.data.permissions) // Update initial base permissions
+        }
+      } catch (e) {
+        console.error("Failed to fetch permissions:", e)
+        showError(e)
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [selectedRoleTab3, showError]
+  )
+
+  // For base permissions
+  const handleBasePermissionChange = (key: keyof PermissionType, checked: boolean) => {
+    setPermissionsTab3((prev) => ({
+      ...prev,
+      [key]: checked
+    }))
+  }
+
+  // For specific permissions
+  const handleSpecificPermissionChange = (index: number, checked: boolean) => {
+    setSpecificPermissionsTab3((prev) => prev.map((permission, idx) => (idx === index ? { ...permission, granted: checked } : permission)))
+  }
+
+  // Check if there are changes in permissions or specific permissions
+  const hasChangesTab3 = useCallback(() => {
+    const basePermissionsChanged = Object.keys(permissionsTab3).some((key) => permissionsTab3[key as keyof PermissionType] !== initialPermissionsTab3[key as keyof PermissionType])
+
+    const specificPermissionsChanged = specificPermissionsTab3.some((perm, index) => perm.granted !== initialSpecificPermissionsTab3[index]?.granted)
+
+    return basePermissionsChanged || specificPermissionsChanged
+  }, [permissionsTab3, initialPermissionsTab3, specificPermissionsTab3, initialSpecificPermissionsTab3])
+
+  // Handle menu change in Tab 3
+  useEffect(() => {
+    if (selectedMenuIdsTab3.length > 0) {
+      fetchPermissionsByMenu(selectedMenuIdsTab3[0])
+    } else {
+      setPermissionsTab3({ create: false, view: false, update: false, delete: false })
+      setSpecificPermissionsTab3([])
+    }
+  }, [selectedMenuIdsTab3, fetchPermissionsByMenu])
 
   // Handle organization change in Tab 3
   useEffect(() => {
@@ -278,6 +351,33 @@ const ModuleAndPermission = () => {
       setIsLoading(false)
     }
   }, [orgTab2, selectedRoleTab2, selectedMenuIdsTab2, fetchRolesByOrg, showError])
+
+  // Handle assigning permissions to role in Tab 3
+  const handleAssignPermissionsToRoleTab3 = useCallback(async () => {
+    if (!selectedRoleTab3 || !selectedMenuIdsTab3[0]) {
+      toast.warning("Please select a role and a menu first.")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const res = await roleService.assignPermissionToRoleMenu(
+        selectedRoleTab3, // roleId
+        selectedMenuIdsTab3[0], // menuId
+        permissionsTab3, // permissions
+        specificPermissionsTab3 // specificPermissions
+      )
+      toast.success(res.data.message)
+
+      // Refresh permissions
+      await fetchPermissionsByMenu(selectedMenuIdsTab3[0])
+    } catch (e) {
+      console.error("Failed to assign permissions:", e)
+      showError(e)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [selectedRoleTab3, selectedMenuIdsTab3, permissionsTab3, specificPermissionsTab3, fetchPermissionsByMenu, showError])
 
   // Transform organizations into Combobox options
   const organizationOptions = useMemo(() => {
@@ -388,11 +488,37 @@ const ModuleAndPermission = () => {
                 />
               </div>
             </div>
-            <div className="">
-              <SelectableList data={permissions} onSelectionChange={handleMenuSelectionTab3} />
+            <div className="mt-4">
+              <Label>Permissions</Label>
+              <div className="flex flex-col gap-4 mt-2 ml-2">
+                {Object.entries(permissionsTab3).map(([key, value]) => (
+                  <div key={key} className="flex items-center gap-2">
+                    <Checkbox checked={value} onCheckedChange={(checked) => handleBasePermissionChange(key as keyof PermissionType, checked as boolean)} />
+                    <Label>{key}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-4">
+              <Label>Specific Permissions</Label>
+              <div className="flex flex-col gap-4 mt-2 ml-2">
+                {specificPermissionsTab3.map((permission, index) => (
+                  <div key={permission.id} className="flex items-center gap-2">
+                    <Checkbox checked={permission.granted} onCheckedChange={(checked) => handleSpecificPermissionChange(index, checked as boolean)} />
+                    <Label>{permission.name}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="flex gap-2 items-center mt-2">
-              <Button className="">Assign</Button>
+              <Button
+                onClick={handleAssignPermissionsToRoleTab3}
+                disabled={!selectedRoleTab3 || !selectedMenuIdsTab3[0] || isLoading || !hasChangesTab3()}
+                variant={hasChangesTab3() ? "sun" : "default"}
+              >
+                {isLoading ? <Loader /> : <PlugZap />}
+                {hasChangesTab3() ? "Update" : "Assign"}
+              </Button>
             </div>
           </div>
         )
@@ -420,7 +546,13 @@ const ModuleAndPermission = () => {
       selectedRoleTab3,
       backendMenuIdsTab1,
       backendMenuIdsTab2,
-      menusTab3
+      menusTab3,
+      permissionsTab3,
+      specificPermissionsTab3,
+      handleBasePermissionChange,
+      handleSpecificPermissionChange,
+      handleAssignPermissionsToRoleTab3,
+      hasChangesTab3
     ]
   )
 

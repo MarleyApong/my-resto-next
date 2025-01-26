@@ -278,7 +278,7 @@ const BackOfficeManage = () => {
               <div className="flex items-center gap-2 mb-2">
                 <Label>Menu</Label>
                 <Combobox
-                  options={selectedRoleTab2 ? rolesTab2.find((role) => role.id === selectedRoleTab2)?.menus.map((menuId) => ({ value: menuId, label: menuId })) || [] : []}
+                  options={selectedRoleTab2 ? rolesTab2.find((role) => role.id === selectedRoleTab2)?.menus.map((menu: any) => ({ value: menu.id, label: menu.name })) || [] : []}
                   value={selectedMenuTab2}
                   onValueChange={setSelectedMenuTab2}
                   placeholder="Select menu"

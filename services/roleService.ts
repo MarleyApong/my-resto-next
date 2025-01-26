@@ -32,7 +32,7 @@ export const roleService = {
   },
 
   getMenusByRole: async (roleId: string) => {
-    return await api.get(`${route}/${roleId}/menus`)
+    return await api.get(`${route}/${roleId}/menu-organization`)
   },
 
   getPermissionByMenu: async (menuId: string) => {
@@ -40,9 +40,6 @@ export const roleService = {
   },
 
   getPermissionAttibutedByMenu: async (roleId: string, menuId: string) => {
-    console.log("roleId", roleId);
-    console.log("menuId", menuId);
-    
     return await api.get(`${route}/${roleId}/menus/${menuId}`)
   },
 
