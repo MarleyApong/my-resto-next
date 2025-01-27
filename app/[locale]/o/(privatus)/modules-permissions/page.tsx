@@ -490,25 +490,29 @@ const ModuleAndPermission = () => {
             </div>
             <div className="mt-4">
               <Label>Permissions</Label>
-              <div className="flex flex-col gap-4 mt-2 ml-2">
-                {Object.entries(permissionsTab3).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <Checkbox checked={value} onCheckedChange={(checked) => handleBasePermissionChange(key as keyof PermissionType, checked as boolean)} />
-                    <Label>{key}</Label>
-                  </div>
-                ))}
-              </div>
+              {selectedMenuIdsTab3.length > 0 && (
+                <div className="flex flex-col gap-4 mt-2 ml-2">
+                  {Object.entries(permissionsTab3).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <Checkbox checked={value} onCheckedChange={(checked) => handleBasePermissionChange(key as keyof PermissionType, checked as boolean)} />
+                      <Label>{key}</Label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="mt-4">
               <Label>Specific Permissions</Label>
-              <div className="flex flex-col gap-4 mt-2 ml-2">
-                {specificPermissionsTab3.map((permission, index) => (
-                  <div key={permission.id} className="flex items-center gap-2">
-                    <Checkbox checked={permission.granted} onCheckedChange={(checked) => handleSpecificPermissionChange(index, checked as boolean)} />
-                    <Label>{permission.name}</Label>
-                  </div>
-                ))}
-              </div>
+              {selectedMenuIdsTab3.length > 0 && (
+                <div className="flex flex-col gap-4 mt-2 ml-2">
+                  {specificPermissionsTab3.map((permission, index) => (
+                    <div key={permission.id} className="flex items-center gap-2">
+                      <Checkbox checked={permission.granted} onCheckedChange={(checked) => handleSpecificPermissionChange(index, checked as boolean)} />
+                      <Label>{permission.name}</Label>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex gap-2 items-center mt-2">
               <Button
