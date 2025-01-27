@@ -37,6 +37,9 @@ interface PrivatusLayoutProps {
 const PrivatusLayout = ({ children, defaultOpen }: PrivatusLayoutProps) => {
   const pathname = usePathname()
 
+  // Vérifier si la route est "/en/o"
+  const shouldShowSidebar = !pathname.endsWith("/en/o")
+
   return (
     <>
       <InactivityHandler />
@@ -50,7 +53,7 @@ const PrivatusLayout = ({ children, defaultOpen }: PrivatusLayoutProps) => {
             <OrderCartProvider>
               {pathname.includes("sales-terminal") ? <HeaderForTerminalSale /> : !pathname.includes("surveys/design/") && <Header />}
               <div className="relative flex w-screen h-[100vh] transition-all pt- bg-secondary">
-                <AppSidebar />
+                {shouldShowSidebar && <AppSidebar />} {/* Condition pour afficher ou non le sidebar */}
                 <main
                   className={`relative flex-1 flex flex-col bg-secondary ${!pathname.includes("sales-terminal") || !pathname.includes("surveys/design/") ? "mt-0 p-2 pt-0" : "mt-5 p-2"} overflow-y-auto max-h-[calc(100vh - 600px)]`}
                 >

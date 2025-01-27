@@ -1,48 +1,70 @@
 "use client"
 
-import { CustomerStatistics } from "@/components/layout/dashboard/customer"
-import { OrganizationStatistics } from "@/components/layout/dashboard/organization"
-import { ProductStatistics } from "@/components/layout/dashboard/product"
-import { RestaurantStatistics } from "@/components/layout/dashboard/restaurant"
-import { SurveyStatistics } from "@/components/layout/dashboard/survey"
-import { TableStatistics } from "@/components/layout/dashboard/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import React from "react"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+import * as Icons from "lucide-react"
+import { menuItems } from "@/data/mainMenu"
+import { MenuType } from "@/types/permission"
+import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 
-interface TabsData {
-  value: string
-  label: string
-  content: React.ReactNode
+interface SectionMenus {
+  [key: string]: MenuType[]
 }
 
-const tabs: TabsData[] = [
-  { value: "organization", label: "Organisation", content: <OrganizationStatistics />},
-  { value: "restaurant", label: "Restaurant", content: <RestaurantStatistics/> },
-  { value: "survey", label: "Enquête", content: <SurveyStatistics/> },
-  { value: "product", label: "Produit", content: <ProductStatistics/> },
-  { value: "table", label: "Table", content: <TableStatistics/> },
-  { value: "client", label: "Customer", content: <CustomerStatistics/> }
-]
+const Home: React.FC = () => {
+  const { user } = useAuth()
+  const router = useRouter()
 
-const Dashboard: React.FC = () => {
+  const getMenuIcon = (menuId: string) => {
+    const menuItem = menuItems.find((item) => item.id === menuId) || menuItems.flatMap((item) => item.subItems || []).find((sub) => sub.id === menuId)
+    const IconComponent = menuItem?.icon || Icons.File
+    return <IconComponent className="h-6 w-6 text-primary" />
+  }
+
+  const getMenusBySection = (menus: MenuType[]): SectionMenus => {
+    const sections: SectionMenus = {}
+    menus.forEach((menu) => {
+      const parentMenu = menuItems.find((item) => item.subItems?.some((sub) => sub.id === menu.id && sub.url !== null))
+      if (parentMenu) {
+        const menuItem = parentMenu.subItems?.find((sub) => sub.id === menu.id)
+        if (menuItem?.url) {
+          if (!sections[parentMenu.title]) {
+            sections[parentMenu.title] = []
+          }
+          sections[parentMenu.title].push(menu)
+        }
+      }
+    })
+    return sections
+  }
+
+  const handleCardClick = (menuId: string) => {
+    const menuItem = menuItems.flatMap((item) => item.subItems || []).find((sub) => sub.id === menuId)
+    if (menuItem?.url) {
+      router.push(menuItem.url)
+    }
+  }
+
   return (
-    <div className="pt-2">
-      <Tabs defaultValue={tabs[0].value} className="w-full">
-        <TabsList className="fixed top-[3.5rem] flex justify-start gap-4 border border-[var(--border)] bg-secondary overflow-x-aut">
-          {tabs.map((tab) => (
-            <TabsTrigger key={tab.value} value={tab.value} className="px-4 py-1 text-sm font-medium text-gray-600 hover:text-gray-900">
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {tabs.map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="mt-11">
-            {tab.content}
-          </TabsContent>
-        ))}
-      </Tabs>
+    <div className="mt-10">
+      {Object.entries(getMenusBySection(user?.role?.menus || [])).map(([section, menus]) => (
+        <div key={section} className="mb-8">
+          <h2 className="text-lg font-bold text-primary mb-4">{section}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-2">
+            {menus.map((menu) => (
+              <Card key={menu.id} className="hover:shadow-lg transition-shadow cursor-pointer border-primary" onClick={() => handleCardClick(menu.id)}>
+                <CardHeader className="flex flex-row items-center gap-2">
+                  {getMenuIcon(menu.id)}
+                  <CardTitle className="font-normal">{menu.name}</CardTitle>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
 
-export default Dashboard
+export default Home

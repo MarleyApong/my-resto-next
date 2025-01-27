@@ -17,6 +17,7 @@ export function AppSidebar() {
   const hasMenuAccess = (menuId: string): boolean => {
     return user?.role?.menus?.some((menu: MenuType) => menu.id === menuId && menu.permissions.view) ?? false
   }
+  
   const filteredMenuItems = menuItems
     .map((item) => {
       if (item.subItems?.length) {
