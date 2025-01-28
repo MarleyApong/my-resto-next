@@ -151,7 +151,6 @@ const Restaurant = () => {
   }
 
   const handleAddOrEdit = async (data: RestaurantType) => {
-    console.log("Submitting Form Data:", data)
     setIsLoading(true)
     try {
       if (isEditing?.id) {
@@ -190,7 +189,7 @@ const Restaurant = () => {
 
   const handleImageClick = () => {
     if (!canUpdatePicture) return
-    
+
     const fileInput = document.createElement("input")
     fileInput.type = "file"
     fileInput.accept = "image/*"

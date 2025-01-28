@@ -51,7 +51,7 @@ const Home: React.FC = () => {
       {Object.entries(getMenusBySection(user?.role?.menus || [])).map(([section, menus]) => (
         <div key={section} className="mb-8">
           <h2 className="text-lg font-bold text-primary mb-4">{section}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 ml-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 ml-2">
             {menus.map((menu) => (
               <Card key={menu.id} className="hover:shadow-lg transition-shadow cursor-pointer border-primary" onClick={() => handleCardClick(menu.id)}>
                 <CardHeader className="flex flex-row items-center gap-2">

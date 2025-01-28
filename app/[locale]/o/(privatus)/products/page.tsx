@@ -1,36 +1,48 @@
 "use client"
 
-import { useState, useRef, ChangeEvent } from "react"
+import { useState, useRef, ChangeEvent, useEffect } from "react"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { DataTable, FilterState } from "@/components/features/DataTable"
-import { Trash2, Edit, Eye, Plus, ImagePlus, PhoneIcon, Calendar1, X, HardDriveDownload, ImageUp, SaveOff, Building, ConciergeBell, DollarSign, Utensils, Layers3 } from "lucide-react"
+import {
+  Trash2,
+  Edit,
+  Eye,
+  Plus,
+  ImagePlus,
+  PhoneIcon,
+  Calendar1,
+  X,
+  HardDriveDownload,
+  ImageUp,
+  SaveOff,
+  Building,
+  ConciergeBell,
+  DollarSign,
+  Utensils,
+  Layers3
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Params } from "@/types/param"
+import { ParamsType } from "@/types/param"
 import { statusRestaurant } from "@/data/statusFilter"
-import { filterOptionOrganization } from "@/data/optionFilter"
-import {Level2} from "@/components/features/Level2"
+import { filterOptionOrganization, filterOptionProduct } from "@/data/optionFilter"
+import { Level2 } from "@/components/features/Level2"
+import { hasPermission } from "@/lib/hasPermission"
+import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
+import { useError } from "@/hooks/useError"
+import { useAuth } from "@/hooks/useAuth"
+import { productService } from "@/services/productService"
+import { toast } from "sonner"
+import { ProductType } from "@/types/product"
+import { Loader } from "@/components/features/SpecificalLoader"
+import { AddEditForm } from "./AddEditForm"
 
 // Type and Validation Schema
-type Product = {
-  name: string
-  category: string
-  organization: string
-  restaurant: string
-  description: string
-  price: string | number
-  specialPrice: string | number
-  picture: string
-  status: "active" | "inactive"
-  createAt: string
-}
-
 const productSchema = z.object({
   name: z.string().min(1, "Name is required"),
   category: z.string().min(1, "Category is required"),
@@ -44,7 +56,7 @@ const productSchema = z.object({
 })
 
 // Dummy Data
-const initialRestaurants: Product[] = [
+const initialRestaurants: ProductType[] = [
   {
     name: "Product 1",
     category: "Boissson",
@@ -91,15 +103,20 @@ const categories = [
 ]
 
 const Product = () => {
-  const [isEditing, setIsEditing] = useState<Product | null>(null)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
-  const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState(false)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [selectedProduct, setSelectedRestaurant] = useState<Product | null>(null)
-  const [filterState, setFilterState] = useState<Params>({
+  const { showError } = useError()
+  const { setIsLoading, isLoading, user } = useAuth()
+
+  const [isEditing, setIsEditing] = useState<ProductType | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
+  const [isAddOrEditDialogOpen, setIsAddOrEditDialogOpen] = useState<boolean>(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState<boolean>(false)
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState<boolean>(false)
+  const [newStatus, setNewStatus] = useState<"ACTIVE" | "INACTIVE">("ACTIVE")
+  const [selectedProduct, setSelectedProduct] = useState<ProductType | null>(null)
+  const [filterState, setFilterState] = useState<ParamsType>({
+    order: "desc",
     page: 0,
     size: 20,
-    type: "sms",
     filter: "name",
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date(),
@@ -107,7 +124,7 @@ const Product = () => {
     status: "*"
   })
   const [products, setProducts] = useState<{
-    data: Product[]
+    data: ProductType[]
     recordsFiltered: number
     recordsTotal: number
   }>({
@@ -115,52 +132,159 @@ const Product = () => {
     recordsFiltered: 0,
     recordsTotal: 0
   })
+  const [tempImage, setTempImage] = useState<string | null>(null)
+
+  // Check permissions
+  const canUpdateStatus = hasPermission(user, "product", SpecificPermissionAction.UPDATE_STATUS)
+  const canUpdatePicture = hasPermission(user, "product", SpecificPermissionAction.UPDATE_PICTURE)
+  const canDelete = hasPermission(user, "product", "delete")
+  const canEdit = hasPermission(user, "product", "update")
+  const canCreate = hasPermission(user, "product", "create")
 
   const handlePageChange = (page: number) => {
     setFilterState((prev) => ({ ...prev, page }))
   }
 
-  const handleSearchChange = (searchValue: string) => {
-    setFilterState((prev) => ({ ...prev, search: searchValue }))
-  }
-
-  const handleDelete = () => {
-    if (selectedProduct) {
-      setProducts((prevState) => ({
-        ...prevState,
-        data: prevState.data.filter((product) => product !== selectedProduct)
-      }))
-      setIsDeleteDialogOpen(false)
-    }
+  const handleSizeChange = (size: number) => {
+    setFilterState((prev) => ({ ...prev, size }))
   }
 
   const handleFilterChange = (filters: FilterState) => {
     setFilterState((prev) => ({
       ...prev,
-      filter: filters.filterBy || "name",
+      order: filters.order || "desc",
+      filter: filters.filter || "name",
       status: filters.status || "*",
       startDate: filters.dateRange?.from || prev.startDate,
       endDate: filters.dateRange?.to || prev.endDate,
-      search: filters.searchValue
+      search: filters.search
     }))
   }
 
-  console.log("filterState", filterState)
-
-  const handleAddOrEdit = (data: Product) => {
-    if (isEditing) {
-      setProducts((prevState) => ({
-        ...prevState,
-        data: prevState.data.map((org) => (org === isEditing ? { ...isEditing, ...data } : org))
-      }))
-      setIsEditing(null)
-    } else {
-      setProducts((prevState) => ({
-        ...prevState,
-        data: [...prevState.data, data]
-      }))
+  const loadData = async () => {
+    setIsLoading(true)
+    try {
+      const res = await productService.getAll(filterState)
+      setProducts({
+        data: res.data.data,
+        recordsFiltered: res.data.recordsFiltered,
+        recordsTotal: res.data.recordsTotal
+      })
+    } catch (err) {
+      showError(err)
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [filterState])
+
+  const handleStatusChange = async () => {
+    if (selectedProduct) {
+      setIsLoading(true)
+      try {
+        const res = await productService.updateStatus(selectedProduct.id, newStatus)
+        const updatedResto = await productService.getById(selectedProduct.id)
+        toast.success(res.data?.message)
+
+        setSelectedProduct(updatedResto.data.data)
+        loadData()
+        setIsStatusDialogOpen(false)
+      } catch (err) {
+        showError(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  const handleUpdatePicture = async (id: string, picture: string) => {
+    setIsLoading(true)
+    try {
+      const res = await productService.updatePicture(id, picture)
+      const updatedProduct = await productService.getById(selectedProduct!.id)
+
+      toast.success(res.data?.message)
+      setSelectedProduct(updatedProduct.data.data)
+      loadData()
+    } catch (err) {
+      showError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (selectedProduct?.id) {
+      setIsLoading(true)
+      try {
+        const res = await productService.delete(selectedProduct.id)
+        toast.success(res.data?.message)
+        loadData()
+        setIsDeleteDialogOpen(false)
+      } catch (err) {
+        showError(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  }
+
+  const handleAddOrEdit = async (data: ProductType) => {
+    console.log("Submitting Form Data:", data)
+    setIsLoading(true)
+    try {
+      if (isEditing?.id) {
+        const res = await productService.update(isEditing.id, data)
+        toast.success(res.data?.message)
+      } else {
+        const res = await productService.create(data)
+        toast.success(res.data?.message)
+      }
+      loadData()
+      setIsAddOrEditDialogOpen(false)
+      setIsEditing(null)
+    } catch (err) {
+      showError(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCancel = () => {
     setIsAddOrEditDialogOpen(false)
+    setIsEditing(null)
+  }
+
+  const handleImageChange = (e: Event) => {
+    const fileInput = e.target as HTMLInputElement
+    const file = fileInput.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setTempImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleImageClick = () => {
+    if (!canUpdatePicture) return
+
+    const fileInput = document.createElement("input")
+    fileInput.type = "file"
+    fileInput.accept = "image/*"
+    fileInput.onchange = handleImageChange
+    fileInput.click()
+  }
+
+  const handleUploadPicture = () => {
+    if (tempImage && selectedProduct) {
+      handleUpdatePicture(selectedProduct.id, tempImage)
+      setTempImage(null)
+    }
   }
 
   const columns = [
@@ -182,42 +306,54 @@ const Product = () => {
     },
     {
       id: "actions",
-      header: "Actions",
+      header: () => <div className="text-right">Actions</div>,
       cell: ({ row }: any) => {
-        const org = row.original
+        const product = row.original
         return (
           <div className="flex justify-end gap-1">
+            {/* View Button */}
             <Button
               variant="default"
               size="icon"
+              disabled={isLoading}
               onClick={() => {
-                setSelectedRestaurant(org)
+                setNewStatus(product?.status === "ACTIVE" ? "INACTIVE" : "ACTIVE")
+                setSelectedProduct(product)
                 setIsViewDialogOpen(true)
               }}
             >
               <Eye className="w-4 h-4" />
             </Button>
 
-            <Button
-              variant="sun"
-              size="icon"
-              onClick={() => {
-                setIsEditing(org)
-                setIsAddOrEditDialogOpen(true)
-              }}
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => {
-                setSelectedRestaurant(org)
-                setIsDeleteDialogOpen(true)
-              }}
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {/* Edit Button */}
+            {canEdit && (
+              <Button
+                variant="sun"
+                size="icon"
+                disabled={isLoading}
+                onClick={() => {
+                  setIsEditing(product)
+                  setIsAddOrEditDialogOpen(true)
+                }}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+            )}
+
+            {/* Delete Button */}
+            {canDelete && (
+              <Button
+                variant="destructive"
+                size="icon"
+                disabled={isLoading}
+                onClick={() => {
+                  setSelectedProduct(product)
+                  setIsDeleteDialogOpen(true)
+                }}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         )
       }
@@ -226,11 +362,13 @@ const Product = () => {
 
   return (
     <div>
-      <Level2 title="Products">
-        <Button variant="default" size="sm" onClick={() => setIsAddOrEditDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Product
-        </Button>
+      <Level2>
+        {canCreate && (
+          <Button variant="default" size="sm" disabled={isLoading} onClick={() => setIsAddOrEditDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Product
+          </Button>
+        )}
       </Level2>
 
       <DataTable
@@ -239,10 +377,11 @@ const Product = () => {
         pageSize={filterState.size}
         onFilterChange={handleFilterChange}
         onPageChange={handlePageChange}
+        onSizeChange={handleSizeChange}
         columns={columns}
         data={products.data}
         statusOptions={statusRestaurant}
-        filterByOptions={filterOptionOrganization}
+        filterByOptions={filterOptionProduct}
       />
 
       {/* Add/Edit Dialog */}
@@ -360,177 +499,51 @@ const Product = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm status */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Status Change</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>{`Are you sure you want to change the status to "${newStatus}"?`}</DialogDescription>
+          <DialogFooter>
+            {canUpdateStatus && (
+              <Button size="sm" variant="sun" disabled={isLoading} onClick={handleStatusChange}>
+                {isLoading ? <Loader /> : <SendToBack className="w-4 h-4" />}
+                Confirm
+              </Button>
+            )}
+            <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsStatusDialogOpen(false)}>
+              <X className="w-4 h-4" />
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>{`Are you sure you want to delete the product "${selectedProduct?.name}" ?`}</DialogDescription>
+          <DialogFooter>
+            {canDelete && (
+              <Button size="sm" variant="destructive" disabled={isLoading} onClick={handleDelete}>
+                {isLoading ? <Loader /> : <SaveOff className="w-4 h-4" />}
+                Delete
+              </Button>
+            )}
+            <Button size="sm" variant="close" disabled={isLoading} onClick={() => setIsDeleteDialogOpen(false)}>
+              <X className="w-4 h-4" />
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  )
-}
-
-// Add/Edit Form
-const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Product | null; onSubmit: (data: Product) => void; onCancel: () => void }) => {
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors }
-  } = useForm<Product>({
-    defaultValues: defaultValues || {
-      name: "",
-      price: 0,
-      specialPrice: 0,
-      organization: "",
-      restaurant: "",
-      description: "",
-      picture: "",
-      status: "active"
-    },
-    resolver: zodResolver(productSchema)
-  })
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const pictureUrl = watch("picture")
-  const description = watch("description", "")
-  const remainingChars = 50 - description.length
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setValue("picture", reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
-  }
-
-  const handleImageClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-3 gap-4 lg:grid-cols-3 max-h-[calc(100vh-12rem)] overflow-y-auto">
-      {/* Left side - Form Fields */}
-      <div className="col-span-3 lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-2">
-        <div>
-          <Label htmlFor="name">Product name</Label>
-          <Input id="name" {...register("name")} placeholder="Product Name" />
-          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
-        </div>
-        <div>
-          <Label htmlFor="category">Category</Label>
-          <Select value={watch("restaurant")} onValueChange={(value) => setValue("restaurant", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Restaurant" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((product) => (
-                <SelectItem key={product.id} value={product.name}>
-                  {product.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
-        </div>
-        <div>
-          <Label htmlFor="organization">Organization</Label>
-          <Select value={watch("organization")} onValueChange={(value) => setValue("organization", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Organization" />
-            </SelectTrigger>
-            <SelectContent>
-              {organizations.map((product) => (
-                <SelectItem key={product.id} value={product.name}>
-                  {product.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
-        </div>
-        <div className="sm:col-span-1 lg:col-span-1">
-          <Label htmlFor="restaurant">Restaurant</Label>
-          <Select value={watch("restaurant")} onValueChange={(value) => setValue("restaurant", value)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Restaurant" />
-            </SelectTrigger>
-            <SelectContent>
-              {restaurants.map((product) => (
-                <SelectItem key={product.id} value={product.name}>
-                  {product.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.restaurant && <p className="text-red-600 text-xs">{errors.restaurant.message}</p>}
-        </div>
-        <div>
-          <Label htmlFor="price">Price</Label>
-          <Input id="price" {...register("price")} placeholder="Price" />
-          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
-        </div>
-
-        <div>
-          <Label htmlFor="specialPrice">Special price</Label>
-          <Input id="specialPrice" {...register("specialPrice")} placeholder="Special price" />
-          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
-        </div>
-
-        <div className="sm:col-span-2 lg:col-span-2">
-          <Label htmlFor="description">Description</Label>
-          <Input id="description" {...register("description")} placeholder="Description" />
-          <p className="text-xs text-gray-500">{remainingChars} characters remaining</p>
-          {errors.description && <p className="text-red-600 text-xs">{errors.description.message}</p>}
-        </div>
-
-        <div>
-          <Label htmlFor="status">Status</Label>
-          <Select value={watch("status")} onValueChange={(value) => setValue("status", value as "active" | "inactive")}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Right side - Picture Upload */}
-      <div className="col-span-3 lg:col-span-1 row-span-1 mr-2">
-        <Label htmlFor="picture">Picture</Label>
-        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
-        <div
-          className="w-full min-h-[196px] max-h-[196px] overflow-hidden flex items-center justify-center cursor-pointer border-2 border-dashed border-blue-950"
-          onClick={handleImageClick}
-        >
-          {pictureUrl ? (
-            <img src={pictureUrl} alt="Preview" className="w-full h-full object-cover" />
-          ) : (
-            <div className="flex flex-col items-center">
-              <ImagePlus className="w-12 h-12 text-gray-500 mb-2" />
-              <span>Click to add an image</span>
-            </div>
-          )}
-        </div>
-        <Button type="button" variant="secondary" className="mt-2 w-full" onClick={handleImageClick}>
-          <ImageUp className="w-4 h-4" />
-          {pictureUrl ? "Change Image" : "Choose image"}
-        </Button>
-      </div>
-
-      {/* Footer */}
-      <DialogFooter className="flex gap-1 col-span-3 justify-end p-1 border-t">
-        <Button type="submit" size="sm">
-          <HardDriveDownload className="w-4 h-4" />
-          Save
-        </Button>
-        <Button variant="close" size="sm" onClick={onCancel}>
-          <X className="h-4 w-4" />
-          Cancel
-        </Button>
-      </DialogFooter>
-    </form>
   )
 }
 

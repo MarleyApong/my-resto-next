@@ -13,6 +13,10 @@ export const filterOptionRestaurant = [
   { value: "enail", label: 'Email' },
 ]
 
+export const filterOptionProduct = [
+  { value: "name", label: 'Name' },
+]
+
 export const filterOptionUser = [
   { value: "firstname", label: 'Firstname' },
   { value: "lastname", label: 'Lastname' },

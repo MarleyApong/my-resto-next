@@ -5,7 +5,7 @@ export const menuItems: MenuItem[] = [
   {
     id: "dashboard",
     title: "Tableau de bord",
-    url: "/o",
+    url: "/o/dashboard",
     icon: LayoutDashboard,
     subItems: []
   },
