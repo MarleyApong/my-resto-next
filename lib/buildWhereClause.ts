@@ -2,7 +2,7 @@ import { z } from "zod"
 import { ParamsType } from "@/types/param"
 import { prisma } from "./db"
 
-export type EntityType = "ORGANIZATION" | "RESTAURANT" | "USER" | "ROLE" | "SURVEY" | "CUSTOMER" | "PRODUCT" | "ORDER"
+export type EntityType = "ORGANIZATION" | "RESTAURANT" | "USER" | "ROLE" | "SURVEY" | "CUSTOMER" | "PRODUCT" | "PRODUCT_CATEGORIES" | "ORDER"
 
 const entityFilterFields: Record<EntityType, string[]> = {
   ORGANIZATION: ["name", "email", "phone", "createdAt", "updatedAt"],
@@ -12,6 +12,7 @@ const entityFilterFields: Record<EntityType, string[]> = {
   SURVEY: ["name", "createdAt", "updatedAt"],
   CUSTOMER: ["firstName", "lastName", "email", "phone", "city", "createdAt", "updatedAt"],
   PRODUCT: ["name", "description", "price", "createdAt", "updatedAt"],
+  PRODUCT_CATEGORIES: ["name", "description", "createdAt", "updatedAt"],
   ORDER: ["orderNumber", "totalAmount", "createdAt", "updatedAt"]
 }
 
@@ -22,7 +23,7 @@ function createFilterSchema(entityType: EntityType) {
     order: z.enum(["asc", "desc"]).default("desc"),
     filter: z.enum(entityFilterFields[entityType] as [string, ...string[]]).default("createdAt"),
     status: z.string().optional(),
-    search: z.string().trim().optional(),
+    search: z.string().optional(),
     startDate: z.coerce.date().optional(),
     endDate: z.coerce.date().optional()
   })
@@ -41,6 +42,16 @@ export async function buildWhereClause(
   skip: number
   take: number
 }> {
+  console.log("params", params)
+
+  if (!params) {
+    throw new Error("Params are required")
+  }
+
+  if (!entityFilterFields[entityType]) {
+    throw new Error(`Invalid entity type: ${entityType}`)
+  }
+
   const filterSchema = createFilterSchema(entityType)
   const validatedParams = filterSchema.parse(params)
   const { page, size, order, filter, status, search, startDate, endDate } = validatedParams
@@ -60,6 +71,12 @@ export async function buildWhereClause(
         }
       }
     })
+
+    if (statusRecord) {
+      where.statusId = statusRecord.id
+    } else {
+      console.warn(`Status record not found for status: ${status} and entity type: ${entityType}`)
+    }
 
     console.log("statusRecord", statusRecord)
     console.log("entityType", entityType)

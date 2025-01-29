@@ -7,9 +7,21 @@ const PHONE_REGEX = /^\+?[1-9]\d{1,14}$/ // E.164 format
 // Schema for creating an organization
 export const organizationSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must not exceed 100 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim(),
-  description: z.string().max(170, "Description must not exceed 170 characters").optional(),
+  description: z
+    .string()
+    .max(170, "Description must not exceed 170 characters")
+    .trim()
+    .refine((val) => val === "" || SANITIZE_REGEX.test(val), {
+      message: "Special characters are not allowed"
+    })
+    .optional(),
   city: z.string().min(1, "City is required").max(50, "City must not exceed 50 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim(),
-  neighborhood: z.string().min(1, "Neighborhood is required").max(50, "Neighborhood must not exceed 50 characters").regex(SANITIZE_REGEX, "Special characters are not allowed").trim(),
+  neighborhood: z
+    .string()
+    .min(1, "Neighborhood is required")
+    .max(50, "Neighborhood must not exceed 50 characters")
+    .regex(SANITIZE_REGEX, "Special characters are not allowed")
+    .trim(),
   phone: z.string().min(1, "Phone is required").regex(PHONE_REGEX, "Invalid phone number format").trim(),
   status: z.enum(["ACTIVE", "INACTIVE"]),
   picture: z.string().refine((str) => str.startsWith("data:image/") || str === "", {
@@ -22,7 +34,7 @@ export const organizationUpdateSchema = z.object({
   description: z.string().min(70, "Description must be at least 70 characters").max(170, "Description must not exceed 170 characters"),
   city: z.string().min(1, "Field is required"),
   neighborhood: z.string().min(1, "Field is required"),
-  phone: z.string().min(1, "Phone is required").regex(PHONE_REGEX, "Invalid phone number format").trim(),
+  phone: z.string().min(1, "Phone is required").regex(PHONE_REGEX, "Invalid phone number format").trim()
 })
 
 export const organizationUpdatePictureSchema = z.object({

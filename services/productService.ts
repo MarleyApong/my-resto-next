@@ -1,7 +1,7 @@
 import { api } from "@/lib/axiosConfig"
 import { compressImage } from "@/lib/imageCompression"
-import { RestaurantType } from "@/types/restaurant"
 import { ParamsType } from "@/types/param"
+import { ProductType } from "@/types/product"
 
 const route = "/products"
 
@@ -16,7 +16,7 @@ export const productService = {
     return await api.get(`${route}/${id}`)
   },
 
-  create: async (data: RestaurantType) => {
+  create: async (data: ProductType) => {
     if (data.picture) {
       // Compression de l'image avant envoi
       const compressedImage = await compressImage(data.picture)
@@ -25,7 +25,7 @@ export const productService = {
     return await api.post(`${route}`, data)
   },
 
-  update: async (id: string, data: RestaurantType) => {
+  update: async (id: string, data: ProductType) => {
     if (data.picture && data.picture.startsWith("data:image")) {
       // Ne compresse que si c'est une nouvelle image (en base64)
       const compressedImage = await compressImage(data.picture)

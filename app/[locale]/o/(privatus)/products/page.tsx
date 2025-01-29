@@ -1,36 +1,28 @@
 "use client"
 
-import { useState, useRef, ChangeEvent, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
 import { DataTable, FilterState } from "@/components/features/DataTable"
 import {
   Trash2,
   Edit,
   Eye,
   Plus,
-  ImagePlus,
-  PhoneIcon,
   Calendar1,
   X,
-  HardDriveDownload,
-  ImageUp,
   SaveOff,
   Building,
   ConciergeBell,
   DollarSign,
   Utensils,
-  Layers3
+  Layers3,
+  SendToBack
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ParamsType } from "@/types/param"
-import { statusRestaurant } from "@/data/statusFilter"
-import { filterOptionOrganization, filterOptionProduct } from "@/data/optionFilter"
+import { statusProduct } from "@/data/statusFilter"
+import { filterOptionProduct } from "@/data/optionFilter"
 import { Level2 } from "@/components/features/Level2"
 import { hasPermission } from "@/lib/hasPermission"
 import { SpecificPermissionAction } from "@/enums/specificPermissionAction"
@@ -41,66 +33,6 @@ import { toast } from "sonner"
 import { ProductType } from "@/types/product"
 import { Loader } from "@/components/features/SpecificalLoader"
 import { AddEditForm } from "./AddEditForm"
-
-// Type and Validation Schema
-const productSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  category: z.string().min(1, "Category is required"),
-  price: z.number().min(1, "Price is required"),
-  specialPrice: z.number().optional(),
-  organization: z.string().min(1, "Organization is required"),
-  restaurant: z.string().min(1, "Restaurant is required"),
-  description: z.string().min(30, "Description must be at least 30 characters").max(50, "Description must not exceed 50 characters"),
-  picture: z.string(),
-  status: z.enum(["active", "inactive"])
-})
-
-// Dummy Data
-const initialRestaurants: ProductType[] = [
-  {
-    name: "Product 1",
-    category: "Boissson",
-    price: 5000,
-    specialPrice: 3000,
-    organization: "Organization 1",
-    restaurant: "Restaurant 1",
-    description: "Organisation dédiée à l'accueil chaleureux et une expérience unique.",
-    picture: "/assets/img/avatar/product.jpg",
-    status: "active",
-    createAt: "2024-12-22"
-  },
-  {
-    name: "Product 2",
-    category: "Boissson",
-    price: 4000,
-    specialPrice: 3000,
-    organization: "Organization 1",
-    restaurant: "Restaurant 1",
-    description: "Organisation dédiée à l'accueil chaleureux et une expérience unique.",
-    picture: "/assets/img/avatar/product.jpg",
-    status: "active",
-    createAt: "2024-12-22"
-  }
-]
-
-const organizations = [
-  { id: "org1", name: "Organization A" },
-  { id: "org2", name: "Organization B" },
-  { id: "org3", name: "Organization C" }
-]
-
-const restaurants = [
-  { id: "resto1", name: "Restaurant A" },
-  { id: "resto2", name: "Restaurant B" },
-  { id: "resto3", name: "Restaurant C" }
-]
-
-const categories = [
-  { id: "resto1", name: "Boisson" },
-  { id: "resto2", name: "Main Courses" },
-  { id: "resto3", name: "Starters" },
-  { id: "resto3", name: "Chef’s Specials" }
-]
 
 const Product = () => {
   const { showError } = useError()
@@ -128,18 +60,18 @@ const Product = () => {
     recordsFiltered: number
     recordsTotal: number
   }>({
-    data: initialRestaurants,
+    data: [],
     recordsFiltered: 0,
     recordsTotal: 0
   })
   const [tempImage, setTempImage] = useState<string | null>(null)
 
   // Check permissions
-  const canUpdateStatus = hasPermission(user, "product", SpecificPermissionAction.UPDATE_STATUS)
-  const canUpdatePicture = hasPermission(user, "product", SpecificPermissionAction.UPDATE_PICTURE)
-  const canDelete = hasPermission(user, "product", "delete")
-  const canEdit = hasPermission(user, "product", "update")
-  const canCreate = hasPermission(user, "product", "create")
+  const canUpdateStatus = hasPermission(user, "products", SpecificPermissionAction.UPDATE_STATUS)
+  const canUpdatePicture = hasPermission(user, "products", SpecificPermissionAction.UPDATE_PICTURE)
+  const canDelete = hasPermission(user, "products", "delete")
+  const canEdit = hasPermission(user, "products", "update")
+  const canCreate = hasPermission(user, "products", "create")
 
   const handlePageChange = (page: number) => {
     setFilterState((prev) => ({ ...prev, page }))
@@ -380,7 +312,7 @@ const Product = () => {
         onSizeChange={handleSizeChange}
         columns={columns}
         data={products.data}
-        statusOptions={statusRestaurant}
+        statusOptions={statusProduct}
         filterByOptions={filterOptionProduct}
       />
 

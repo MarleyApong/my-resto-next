@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/hooks/useAuth"
 import { useError } from "@/hooks/useError"
+import { productSchema } from "@/schemas/product"
 import { restaurantSchema, restaurantUpdateSchema } from "@/schemas/restaurant"
 import { organizationService } from "@/services/organizationService"
 import { ProductType } from "@/types/product"
@@ -17,7 +18,7 @@ import { HardDriveDownload, HardDriveUpload, ImagePlus, ImageUp, X } from "lucid
 import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 
-export const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: Product | null; onSubmit: (data: Product) => void; onCancel: () => void }) => {
+export const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValues?: ProductType | null; onSubmit: (data: ProductType) => void; onCancel: () => void }) => {
   const {
     register,
     handleSubmit,
@@ -33,7 +34,7 @@ export const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValu
       restaurant: "",
       description: "",
       picture: "",
-      status: "active"
+      status: "INACTIVE"
     },
     resolver: zodResolver(productSchema)
   })

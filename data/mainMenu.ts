@@ -1,5 +1,5 @@
 import { MenuItem } from "@/types/sidebar"
-import { Home, Utensils, ClipboardList, Box, Layout, Users, User, LayoutDashboard, Wallet, UserRoundCog, Milestone, Package, HandPlatter, ChartColumnBig, Network, HardHat, Store, AppWindow, Keyboard } from "lucide-react"
+import { Home, Utensils, ClipboardList, Box, Layout, Users, User, LayoutDashboard, Wallet, UserRoundCog, Milestone, Package, HandPlatter, ChartColumnBig, Network, HardHat, Store, AppWindow, Keyboard, ChartBarStacked } from "lucide-react"
 
 export const menuItems: MenuItem[] = [
   {
@@ -32,6 +32,12 @@ export const menuItems: MenuItem[] = [
         title: "Produits",
         url: "/o/products",
         icon: Box,
+      },
+      {
+        id: "product-categories",
+        title: "Cat. de Produits",
+        url: "/o/product-categories",
+        icon: ChartBarStacked,
       },
       {
         id: "tables",
