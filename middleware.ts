@@ -47,7 +47,7 @@ export async function middleware(request: NextRequest) {
   const cleanPathname = pathname.replace(/^\/(en|fr)\//, "/")
 
   // Skip middleware for specific routes
-  if (cleanPathname.startsWith("/api/auth/me") || publicRoutes.includes(cleanPathname)) {
+  if (cleanPathname === "/o" || cleanPathname.startsWith("/api/auth/me") || publicRoutes.includes(cleanPathname)) {
     return response
   }
 

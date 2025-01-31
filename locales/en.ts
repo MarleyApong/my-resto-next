@@ -33,7 +33,8 @@ export default {
       "roleNotFound": "",
       "invalidMenuIds": "",
       "attributionNotFound": "",
-      "productCategoryNotFound": ""
+      "productCategoryNotFound": "",
+      "productNotFound": ""
     },
     "success": {
       "loggedOut": "You have been logged out successfully. See you next time!",
@@ -60,7 +61,10 @@ export default {
       "menusAssigned": "",
       "productCategoryCreated": "",
       "productCategoryUpdated": "",
-      "productCategoryDeleted": ""
+      "productCategoryDeleted": "",
+      "productCreated": "",
+      "productUpdated": "",
+      "productDeleted": ""
     }
   },
   "sessionExpired": ""

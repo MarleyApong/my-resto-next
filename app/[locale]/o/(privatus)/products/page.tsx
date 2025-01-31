@@ -3,21 +3,7 @@
 import { useState, useEffect } from "react"
 import { z } from "zod"
 import { DataTable, FilterState } from "@/components/features/DataTable"
-import {
-  Trash2,
-  Edit,
-  Eye,
-  Plus,
-  Calendar1,
-  X,
-  SaveOff,
-  Building,
-  ConciergeBell,
-  DollarSign,
-  Utensils,
-  Layers3,
-  SendToBack
-} from "lucide-react"
+import { Trash2, Edit, Eye, Plus, Calendar1, X, SaveOff, Building, ConciergeBell, DollarSign, Utensils, Layers3, SendToBack } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ParamsType } from "@/types/param"
@@ -118,10 +104,10 @@ const Product = () => {
       setIsLoading(true)
       try {
         const res = await productService.updateStatus(selectedProduct.id, newStatus)
-        const updatedResto = await productService.getById(selectedProduct.id)
+        const updatedProduct = await productService.getById(selectedProduct.id)
         toast.success(res.data?.message)
 
-        setSelectedProduct(updatedResto.data.data)
+        setSelectedProduct(updatedProduct.data.data)
         loadData()
         setIsStatusDialogOpen(false)
       } catch (err) {
@@ -373,7 +359,7 @@ const Product = () => {
                   <div className="flex flex-col gap-2 ml-2">
                     <div className="flex items-center gap-2">
                       <Calendar1 className="w-4 h-4" />
-                      <p className="text-gray-600 text-sm">{selectedProduct.createAt}</p>
+                      <p className="text-gray-600 text-sm">{selectedProduct.createdAt}</p>
                     </div>
                   </div>
                 </div>

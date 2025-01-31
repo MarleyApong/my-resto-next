@@ -1,10 +1,7 @@
 import { z } from "zod"
 
-// Regex for validation
 const SANITIZE_REGEX = /^[^<>*%&]+$/
-const PHONE_REGEX = /^\+?[1-9]\d{1,14}$/ // E.164 format
 
-// Schema for creating an restaurant
 export const productSchema = z.object({
   organizationId: z.string().min(1, "Organization is required").max(36, "Organization must not exceed 36 characters"),
   restaurantId: z.string().min(1, "Restaurant is required").max(36, "Restaurant must not exceed 36 characters"),
@@ -18,6 +15,7 @@ export const productSchema = z.object({
   category: z.string().min(1, "Category is required"),
   price: z.number().min(1, "Price is required"),
   specialPrice: z.number().optional(),
+  quantity: z.number().min(0, "Quantity must be a positive number"), // Nouveau champ pour la quantité
   organization: z.string().min(1, "Organization is required"),
   restaurant: z.string().min(1, "Restaurant is required"),
   status: z.enum(["ACTIVE", "INACTIVE"]),
@@ -39,6 +37,7 @@ export const productUpdateSchema = z.object({
   category: z.string().min(1, "Category is required").trim(),
   price: z.number().min(1, "Price is required"),
   specialPrice: z.number().optional(),
+  quantity: z.number().min(0, "Quantity must be a positive number") // Nouveau champ pour la quantité
 })
 
 export const productUpdatePictureSchema = z.object({

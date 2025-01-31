@@ -9,10 +9,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { useAuth } from "@/hooks/useAuth"
 import { useError } from "@/hooks/useError"
 import { productSchema } from "@/schemas/product"
-import { restaurantSchema, restaurantUpdateSchema } from "@/schemas/restaurant"
 import { organizationService } from "@/services/organizationService"
+import { restaurantService } from "@/services/restaurantService"
+import { productCategoryService } from "@/services/productCategoryService"
 import { ProductType } from "@/types/product"
-import { RestaurantType } from "@/types/restaurant"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { HardDriveDownload, HardDriveUpload, ImagePlus, ImageUp, X } from "lucide-react"
 import { ChangeEvent, useEffect, useRef, useState } from "react"
@@ -30,8 +30,9 @@ export const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValu
       name: "",
       price: 0,
       specialPrice: 0,
-      organization: "",
-      restaurant: "",
+      quantity: 0, // Nouveau champ pour la quantité
+      organizationId: "",
+      restaurantId: "",
       description: "",
       picture: "",
       status: "INACTIVE"
@@ -43,6 +44,38 @@ export const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValu
   const pictureUrl = watch("picture")
   const description = watch("description", "")
   const remainingChars = 50 - description.length
+
+  const [organizations, setOrganizations] = useState<{ id: string; name: string }[]>([])
+  const [restaurants, setRestaurants] = useState<{ id: string; name: string }[]>([])
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([])
+
+  const { setIsLoading } = useAuth()
+  const { showError } = useError()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        // Fetch organizations
+        const orgsResponse = await organizationService.getAll({ page: 0, size: 100, order: "asc", filter: "name" })
+        setOrganizations(orgsResponse.data.data.map((org: any) => ({ id: org.id, name: org.name })))
+
+        // Fetch restaurants
+        const restosResponse = await restaurantService.getAll({ page: 0, size: 100, order: "asc", filter: "name" })
+        setRestaurants(restosResponse.data.data.map((resto: any) => ({ id: resto.id, name: resto.name })))
+
+        // Fetch product categories
+        const categoriesResponse = await productCategoryService.getAll({ page: 0, size: 100, order: "asc", filter: "name" })
+        setCategories(categoriesResponse.data.data.map((cat: any) => ({ id: cat.id, name: cat.name })))
+      } catch (err) {
+        showError(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -70,82 +103,89 @@ export const AddEditForm = ({ defaultValues, onSubmit, onCancel }: { defaultValu
         </div>
         <div>
           <Label htmlFor="category">Category</Label>
-          <Select value={watch("restaurant")} onValueChange={(value) => setValue("restaurant", value)}>
+          <Select value={watch("category")} onValueChange={(value) => setValue("category", value)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select Restaurant" />
+              <SelectValue placeholder="Select Category" />
             </SelectTrigger>
             <SelectContent>
-              {categories.map((product) => (
-                <SelectItem key={product.id} value={product.name}>
-                  {product.name}
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
+          {errors.category && <p className="text-red-600 text-xs">{errors.category.message}</p>}
         </div>
         <div>
           <Label htmlFor="organization">Organization</Label>
-          <Select value={watch("organization")} onValueChange={(value) => setValue("organization", value)}>
+          <Select value={watch("organizationId")} onValueChange={(value) => setValue("organizationId", value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select Organization" />
             </SelectTrigger>
             <SelectContent>
-              {organizations.map((product) => (
-                <SelectItem key={product.id} value={product.name}>
-                  {product.name}
+              {organizations.map((org) => (
+                <SelectItem key={org.id} value={org.id}>
+                  {org.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.organization && <p className="text-red-600 text-xs">{errors.organization.message}</p>}
+          {errors.organizationId && <p className="text-red-600 text-xs">{errors.organizationId.message}</p>}
         </div>
         <div className="sm:col-span-1 lg:col-span-1">
           <Label htmlFor="restaurant">Restaurant</Label>
-          <Select value={watch("restaurant")} onValueChange={(value) => setValue("restaurant", value)}>
+          <Select value={watch("restaurantId")} onValueChange={(value) => setValue("restaurantId", value)}>
             <SelectTrigger>
               <SelectValue placeholder="Select Restaurant" />
             </SelectTrigger>
             <SelectContent>
-              {restaurants.map((product) => (
-                <SelectItem key={product.id} value={product.name}>
-                  {product.name}
+              {restaurants.map((resto) => (
+                <SelectItem key={resto.id} value={resto.id}>
+                  {resto.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          {errors.restaurant && <p className="text-red-600 text-xs">{errors.restaurant.message}</p>}
+          {errors.restaurantId && <p className="text-red-600 text-xs">{errors.restaurantId.message}</p>}
         </div>
         <div>
           <Label htmlFor="price">Price</Label>
-          <Input id="price" {...register("price")} placeholder="Price" />
-          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
+          <Input id="price" {...register("price", { valueAsNumber: true })} placeholder="Price" />
+          {errors.price && <p className="text-red-600 text-xs">{errors.price.message}</p>}
         </div>
 
         <div>
           <Label htmlFor="specialPrice">Special price</Label>
-          <Input id="specialPrice" {...register("specialPrice")} placeholder="Special price" />
-          {errors.name && <p className="text-red-600 text-xs">{errors.name.message}</p>}
+          <Input id="specialPrice" {...register("specialPrice", { valueAsNumber: true })} placeholder="Special price" />
+          {errors.specialPrice && <p className="text-red-600 text-xs">{errors.specialPrice.message}</p>}
+        </div>
+
+        <div>
+          <Label htmlFor="quantity">Quantity</Label>
+          <Input id="quantity" {...register("quantity", { valueAsNumber: true })} placeholder="Quantity" />
+          {errors.quantity && <p className="text-red-600 text-xs">{errors.quantity.message}</p>}
         </div>
 
         <div className="sm:col-span-2 lg:col-span-2">
           <Label htmlFor="description">Description</Label>
-          <Input id="description" {...register("description")} placeholder="Description" />
+          <Textarea id="description" {...register("description")} placeholder="Description" />
           <p className="text-xs text-gray-500">{remainingChars} characters remaining</p>
           {errors.description && <p className="text-red-600 text-xs">{errors.description.message}</p>}
         </div>
 
         <div>
           <Label htmlFor="status">Status</Label>
-          <Select value={watch("status")} onValueChange={(value) => setValue("status", value as "active" | "inactive")}>
+          <Select value={watch("status")} onValueChange={(value) => setValue("status", value as "ACTIVE" | "INACTIVE")}>
             <SelectTrigger>
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="ACTIVE">Active</SelectItem>
+              <SelectItem value="INACTIVE">Inactive</SelectItem>
             </SelectContent>
           </Select>
+          {errors.status && <p className="text-red-600 text-xs">{errors.status.message}</p>}
         </div>
       </div>
 

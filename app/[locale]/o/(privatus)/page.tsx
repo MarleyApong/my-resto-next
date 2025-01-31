@@ -7,6 +7,7 @@ import { menuItems } from "@/data/mainMenu"
 import { MenuType } from "@/types/permission"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
+import { MenuItem } from "@/types/sidebar"
 
 interface SectionMenus {
   [key: string]: MenuType[]
@@ -24,8 +25,11 @@ const Home: React.FC = () => {
 
   const getMenusBySection = (menus: MenuType[]): SectionMenus => {
     const sections: SectionMenus = {}
+
     menus.forEach((menu) => {
+      // Vérifie si c'est un sous-menu
       const parentMenu = menuItems.find((item) => item.subItems?.some((sub) => sub.id === menu.id && sub.url !== null))
+
       if (parentMenu) {
         const menuItem = parentMenu.subItems?.find((sub) => sub.id === menu.id)
         if (menuItem?.url) {
@@ -34,14 +38,32 @@ const Home: React.FC = () => {
           }
           sections[parentMenu.title].push(menu)
         }
+      } else {
+        // Vérifie si c'est un menu principal avec une URL
+        const mainMenu = menuItems.find((item) => item.id === menu.id && item.url !== null)
+        if (mainMenu) {
+          if (!sections["Menus Principaux"]) {
+            sections["Menus Principaux"] = []
+          }
+          sections["Menus Principaux"].push(menu)
+        }
       }
     })
+
     return sections
   }
 
   const handleCardClick = (menuId: string) => {
-    const menuItem = menuItems.flatMap((item) => item.subItems || []).find((sub) => sub.id === menuId)
-    if (menuItem?.url) {
+    // Vérifie d'abord si c'est un sous-menu
+    let menuItem = menuItems.flatMap((item) => item.subItems || []).find((sub) => sub.id === menuId) as MenuItem | undefined
+
+    // Si ce n'est pas un sous-menu, cherche parmi les menus principaux
+    if (!menuItem) {
+      menuItem = menuItems.find((item) => item.id === menuId) as MenuItem | undefined
+    }
+
+    // Vérifie si `menuItem` existe et si `url` est bien une string avant de naviguer
+    if (menuItem && typeof menuItem.url === "string") {
       router.push(menuItem.url)
     }
   }

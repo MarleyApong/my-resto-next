@@ -1,13 +1,17 @@
-export type ProductType = {
+export interface ProductType {
   id: string
   name: string
+  description: string
   category: string
+  price: number
+  specialPrice?: number
+  organizationId: string
+  restaurantId: string
   organization: string
   restaurant: string
-  description: string
-  price: string | number
-  specialPrice: string | number
-  picture: string
   status: "ACTIVE" | "INACTIVE"
-  createAt: string
+  picture: string
+  createdAt: string
+  updatedAt: string
+  deletedAt?: string
 }

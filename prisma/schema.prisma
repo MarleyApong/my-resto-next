@@ -308,6 +308,7 @@ model Restaurant {
   orders            Order[]
   tables            Table[]
   ProductCategories ProductCategory[]
+  Product           Product[]
 
   @@index([city, neighborhood])
   @@index([statusId])
@@ -445,10 +446,13 @@ model Product {
   name              String
   description       String?
   price             Decimal
+  specialPrice      Decimal?
   picture           String
   statusId          String
   status            Status          @relation(fields: [statusId], references: [id])
   productCategoryId String
+  restaurantId      String
+  restaurant        Restaurant      @relation(fields: [restaurantId], references: [id])
   categories        ProductCategory @relation(fields: [productCategoryId], references: [id])
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
@@ -456,7 +460,7 @@ model Product {
   stocks            Stock[]
   orderProduct      OrderProduct[]
 
-  @@index([statusId])
+  @@index([statusId, restaurantId])
   @@index([productCategoryId])
 }
 
